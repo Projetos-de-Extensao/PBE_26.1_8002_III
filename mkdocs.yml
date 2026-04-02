@@ -96,7 +96,13 @@ plugins:
   - minify:
       minify_html: true
   - search
-
+  - build_plantuml:
+      render: "server"
+      server: "https://www.plantuml.com/plantuml"
+      output_format: "svg"
+      diagram_root: "docs/assets/diagramas"
+      output_folder: "out"
+      input_folder: "src"
 theme:
   name: material
   logo: assets/ibmec_logo.png
