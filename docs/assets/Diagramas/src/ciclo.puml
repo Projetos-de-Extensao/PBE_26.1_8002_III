@@ -1,0 +1,11 @@
+@startmindmap
+*Aluno aprovado em estágio
+**Empresa emite contrato
+***Universidade valida
+****Válido
+*****Periodo de estágio
+******Universidade compara periodo de estágio com contrato	
+****Inválido
+*****Retorna à Empresa para correção
+****** Retorna a etapa de validação da universidade
+@endmindmap

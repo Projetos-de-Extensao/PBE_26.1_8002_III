@@ -100,7 +100,7 @@ plugins:
       render: "server"
       server: "https://www.plantuml.com/plantuml"
       output_format: "svg"
-      diagram_root: "docs/assets/diagramas"
+      diagram_root: "docs/assets/Diagramas"
       output_folder: "out"
       input_folder: "src"
 theme:
