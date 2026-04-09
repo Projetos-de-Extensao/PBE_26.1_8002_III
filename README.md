@@ -1,12 +1,74 @@
-# Projeto Back-End 
+<h1 align="center">📄 Gestão de Documentação de Estágio Obrigatório</h1>
 
-**Código da Disciplina**: IBM8936<br>
+<p align="center">
+  <em>API RESTful inteligente para automatizar o fluxo de documentação de estágio do Ibmec</em>
+</p>
 
-## Sobre 
-Descreva o seu projeto em linhas gerais. 
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/Django-5.x-092E20?logo=django&logoColor=white" alt="Django">
+  <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white" alt="MySQL">
+  <img src="https://img.shields.io/badge/Gemini_API-AI-8E75B2?logo=google&logoColor=white" alt="Gemini">
+  <img src="https://img.shields.io/badge/LLaMA-AI-0467DF?logo=meta&logoColor=white" alt="LLaMA">
+</p>
 
-## Instalação 
-**Linguagens**: Python, Django<br>
-**Tecnologias**: Github, Visual Studio Code<br>
- os pré-requisitos para rodar o seu projeto são UX, Engenharia de Dados, POO.
+---
 
+## 📋 Sobre o Projeto
+
+Projeto desenvolvido durante a disciplina de **Projeto Back-End 26.1** com o objetivo de resolver gargalos enfrentados pela **Secretaria** e pelo **CASA** do Ibmec na gestão de documentação de estágio obrigatório.
+
+A maior parte das tarefas que envolvem o processo de estágio é manual, simples e repetitiva — o que gera maior chance de erros e retrabalho. Nossa solução busca **automatizar processos repetitivos** e **reduzir a complexidade** do versionamento e validação de documentos.
+
+---
+
+## 👥 Equipe
+
+| Membro | Papel |
+|--------|-------|
+| Bernardo | Desenvolvedor |
+| Caio | Desenvolvedor |
+| Daniel | Desenvolvedor |
+| Lucas | Desenvolvedor |
+| Otto | Desenvolvedor |
+
+**Cliente:** CASA e Secretaria do Ibmec
+
+---
+
+## 🛠️ Tecnologias
+
+| Tecnologia | Descrição |
+|------------|-----------|
+| **Python** | Linguagem principal |
+| **Django + DRF** | Framework web e API RESTful |
+| **MySQL** | Banco de dados relacional |
+| **Gemini API** | Modelo de IA para processamento de documentos |
+| **LLaMA** | Modelo de IA complementar |
+
+---
+
+## 🚀 Como Executar
+
+```bash
+# Clone o repositório
+git clone https://github.com/Projetos-de-Extensao/PBE_26.1_8002_III.git
+
+# Crie e ative o ambiente virtual
+python -m venv .venv
+source .venv/bin/activate
+
+# Instale as dependências
+pip install -r requirements.txt
+
+# Rode a documentação localmente
+mkdocs serve
+```
+
+---
+
+## 📂 Repositórios Relacionados
+
+| Repositório | Descrição |
+|-------------|-----------|
+| [**PBE_26.1_8002_III**](https://github.com/Projetos-de-Extensao/PBE_26.1_8002_III) | Repositório Oficial da API. |
