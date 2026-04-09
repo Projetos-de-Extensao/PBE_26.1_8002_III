@@ -43,9 +43,8 @@ A maior parte das tarefas que envolvem o processo de estágio é manual, simples
 | **Python** | Linguagem principal |
 | **Django + DRF** | Framework web e API RESTful |
 | **MySQL** | Banco de dados relacional |
-| **Gemini API** | Modelo de IA para processamento de documentos |
-| **LLaMA** | Modelo de IA complementar |
-
+| **LLaMA** | Modelo de IA para processamento de documentos |
+| **Gemini API** | Modelo de IA complementar |
 ---
 
 ## 🚀 Como Executar
