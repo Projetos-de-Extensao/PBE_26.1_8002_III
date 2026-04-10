@@ -15,9 +15,9 @@ A equipe se reuniu para debater ideias gerais sobre o projeto via..., começou .
  
 ## Brainstorm
  <p>
-- Marcador de Erros no contrato(sublinhar em vermelho o que está errado)
-- Integração com LLM para pesquisar o historico da empresa
-- Documentar todas as rotas da API
+* Marcador de Erros no contrato(sublinhar em vermelho o que está errado)
+* Integração com LLM para pesquisar o historico da empresa
+* Documentar todas as rotas da API
  </p>
 
 ## Versão 1.0
@@ -27,16 +27,16 @@ A equipe se reuniu para debater ideias gerais sobre o projeto via..., começou .
 ### 1. Qual o objetivo principal da aplicação?
  
 <p align = "justify">
-<b>XXXX</b> - Deve ser uma plataforma onde possa se Genrenciar e Validar contratos para os alunos na IBMEC.
+<b>XXXX</b> - Deve ser uma plataforma onde possa se **Genrenciar e Validar** contratos para os alunos na IBMEC.
 </p>
  
-<b>ZZZ</b> - A plataforma deve fornece Envio de contratos, certificação de validação, armazenamento dos contratos até o fim do periodo do aluno e visualização do contrato.
+<b>ZZZ</b> - A plataforma deve fornecer o Envio de contratos, a **Certificação de Validação**, o **Armazenamento dos contratos** até o fim do periodo do Aluno e a Visualização do contrato.
  
-<b>YYYY</b> - O objetivo da aplicação é Genrenciar e Validar contratos.
+<b>YYYY</b> - O objetivo da aplicação é **Genrenciar** e **Validar** contratos.
  
-<b>WWWW</b> - O principal objetivo da aplicação é a Automação na validação básica dos contratos.
+<b>WWWW</b> - O principal objetivo da aplicação é a **Automação** na validação básica dos contratos.
  
-<b>KKKK</b> - A plataforma deve permitir a troca egestãode contratos entre aluno e casa.
+<b>KKKK</b> - A plataforma deve permitir a **Troca e Gestão** de contratos entre Aluno e CASA.
 </p>
  
 ---
@@ -44,11 +44,11 @@ A equipe se reuniu para debater ideias gerais sobre o projeto via..., começou .
 ### 2. Como será o processo para cadastrar um novo cliente?
  
 <p align = "justify">
-<b>XXXX</b> - O moderador deverá fazer login e cadastrar o aluno para o envio do contrato.
+<b>XXXX</b> - O moderador deverá fazer **Login** e Cadastrar o Aluno para o envio do contrato.
  
 <b>YYYY</b> - O cliente...
  
-<b>WWWW</b> - Com o usuário logado, terá uma interface de envio dps contratos e aguardar a validação.
+<b>WWWW</b> - Com o Usuário Logado, devo ter uma **interface de Envio de contratos** e aguardar a sua Validação.
 
 <b>ZZZZ</b> - O cliente...
  
