@@ -16,7 +16,7 @@ Mapa mental consiste em criar resumos cheios de símbolos, cores, setas e frases
 ## 🛠️ Metodologia
  
 <p align = "justify">
-Foram levantados dados através de entrevistas com o CASA e pesquisas acerca de todo processo de estágio envolvendo Universidade e Empresa. Com os problemas e processos em mãos foi mapeado todas as concepções lógicas para fácil acesso e consulta.
+Foram levantados dados através de entrevistas com a Secretaria e pesquisas acerca de todo o processo documental e validação de estágio envolvendo Universidade e Empresa. Com os problemas em mãos foi mapeado todas as concepções lógicas para fácil acesso e consulta.
 </p>
  
  

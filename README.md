@@ -16,9 +16,9 @@
 
 ## 📋 Sobre o Projeto
 
-Projeto desenvolvido durante a disciplina de **Projeto Back-End 26.1** com o objetivo de resolver gargalos enfrentados pela **Secretaria** e pelo **CASA** do Ibmec na gestão de documentação de estágio obrigatório.
+Este projeto foi desenvolvido durante a disciplina de **Projeto Back-End 26.1** com o objetivo de solucionar os gargalos operacionais enfrentados pela **Secretaria** do Ibmec na gestão e na validação da documentação de estágio obrigatório.
 
-A maior parte das tarefas que envolvem o processo de estágio é manual, simples e repetitiva — o que gera maior chance de erros e retrabalho. Nossa solução busca **automatizar processos repetitivos** e **reduzir a complexidade** do versionamento e validação de documentos.
+Atualmente, o processo de estágio envolve diversas tarefas manuais, burocráticas e repetitivas, o que aumenta a incidência de erros e a necessidade de retrabalho. Nossa solução visa **automatizar esses fluxos** e **reduzir a complexidade** associada ao recebimento, versionamento e validação de documentos.
 
 ---
 

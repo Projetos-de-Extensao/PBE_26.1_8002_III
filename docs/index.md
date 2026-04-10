@@ -6,21 +6,24 @@ hide:
 
 # 📄 Gestão de Documentação de Estágio
 
-Bem-vindo à documentação oficial do projeto da disciplina de **Projeto Back-End 26.1**. O nosso objetivo é otimizar o fluxo de encaminhamento e análise de documentos de estágio para o Ibmec.
+Bem-vindo à documentação oficial do projeto da disciplina de **Projeto Back-End 26.1**! 
+
+O nosso objetivo é otimizar a gestão de documentos e a validação de estágios obrigatórios dos alunos feitos pela Secretaria do Ibmec.
 
 ---
 
 ## 🎯 O Problema
 
 * O processo atual da Secretaria é manual, repetitivo e muito sujeito a erros.
-* Há dificuldades com o versionamento dos arquivos.
+* Há dificuldades em lidar com muitas versões de documentos.
 * Ocorre uma sobrecarga de trabalho e confusão geral.
 
 ## 💡 Nossa Solução
 
-* Automatizar tarefas repetitivas.
-* Criar uma **API RESTful** inteligente.
-* Incorporar **Inteligência Artificial** para analisar documentos e produzir insights.
+* Automatizar tarefas repetitivas e pouco variáveis.
+* Criar um banco de dados para armazenar os documentos.
+* Criar uma **API RESTful** com recursos para gestão dos arquivos.
+* Incorporar **Inteligência Artificial** para analisar contratos e produzir insights.
 
 ---
 
@@ -51,9 +54,9 @@ Projeto desenvolvido e mantido por:
 
 ---
 
-## ▶️ Como Executar a Documentação
+## ▶️ Como Executar o projeto localmente
 
-Para iniciar o projeto ou sua própria cópia da documentação de modo local:
+Para iniciar o projeto e sua própria cópia da documentação de modo local:
 
 ```bash
 # Clone o repositório
