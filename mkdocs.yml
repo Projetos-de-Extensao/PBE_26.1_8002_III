@@ -100,29 +100,27 @@ theme:
   name: material
   logo: assets/Ibmec_logo.png
   palette:
-    
     - media: "(prefers-color-scheme)"
-      toggle:
-        icon: material/toggle-switch
-        name: Switch to light mode
-    - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: indigo
+      primary: custom
       accent: black
       toggle:
         icon: material/toggle-switch-off
-        name: Switch to dark mode
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      primary: deep orange
-      accent: amber
+        name: Mudar para modo claro
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: black
       toggle:
         icon: material/toggle-switch-off
-        name: Switch to system preference
-      color_mode: dark
-      language: pt-BR
-      favicon: images/favicon.png
-      user_color_mode_toggle: true
+        name: Mudar para modo escuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: amber
+      toggle:
+        icon: material/toggle-switch
+        name: Preferência do sistema
   
   features:
     - content.code.copy

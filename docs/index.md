@@ -51,6 +51,7 @@ Projeto desenvolvido e mantido por:
 ## 🔗 Informações Adicionais
 
 * 🚀 **Repositório Oficial**: Acesse o código fonte e as contribuições no nosso repositório. [Acessar API PBE_26.1_8002_III ➔](https://github.com/Projetos-de-Extensao/PBE_26.1_8002_III)
+* 🚀 **Site da disciplina**: [Acessar Site da Disciplina ➔](https://jonh-carvalho.github.io/PBE_26.1_8002)
 
 ---
 
