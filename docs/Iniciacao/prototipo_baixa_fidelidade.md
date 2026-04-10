@@ -24,13 +24,19 @@ Prioridade:
 * Modal de anexar documentos
 * Tela de login
 * Tela de documentos
- -Documentos com nome e status.Status do processo de estágio (Parecido com mercado livre no envio de encomenda).
+ - Documentos com nome e status.Status do processo de estágio (Parecido com mercado livre no envio de encomenda).
+ - Filtragem de Documentos.
 * Tela de perfil
  -Informações do usuário.
 * Tela de detalhes do documento
  -Documento expandido, Informações da validação, status, Justificativa do status( caso erro ), Botão de download, Botão de reenvio(0), Botão de report(1).
 * Tela de avaliação de documentos
- - Tela de detalhes do documento + opções de : validar, reprovar.
+ - Tela de detalhes do documento + opções de : validar, reprovar, mensagem de aviso (opcional).
+ - Tela de Historico de empresas (0)
+* Tela Secretaria -> Empresa de Estágio
+ - Receber documentos das empresas Estagiarias do aluno para validação
+* Tela de busca de alunos (Secretaria)
+ - Por Matricula ou Nome
 
 
 
