@@ -2,3 +2,30 @@
     color:red;
     font-weight:bold;
 }
+
+:root {
+    --md-primary-fg-color: #002B5C;
+}
+
+[data-md-color-scheme="slate"] {
+    --md-primary-fg-color: #002B5C; /* Mantém o header azul marinho */
+    --md-typeset-a-color: #FFD54F; /* Muda a cor dos links dentro do texto para amarelo claro */
+}
+
+/* Garante que os links da barra lateral (ativos) e as abas fiquem amarelos no modo escuro */
+[data-md-color-scheme="slate"] .md-nav__link--active,
+[data-md-color-scheme="slate"] .md-tabs__link--active,
+[data-md-color-scheme="slate"] .md-nav__link:hover {
+    color: #FFD54F !important;
+}
+
+/* Ajuste visual fino para centralizar a logo com o título */
+.md-header__button.md-logo img {
+    /* Sobe a logo um pouco se necessário */
+    transform: translateY(-2px);
+}
+
+.md-header__title {
+    /* Desce o título para alinhar com o texto da logo */
+    transform: translateY(4px);
+}
