@@ -2,10 +2,10 @@
 
 ---
 
-## 1. ⚖️ Base Legal e Normativas
+## ⚖️ Base Legal e Normativas
 Nesta seção, consolidamos as regras que regem o estágio a nível nacional.
 
-### 1.1. Legislação Trabalhista (Lei 11.788/08)
+### Legislação Trabalhista (Lei 11.788/08)
 O estágio é um ato educativo escolar supervisionado. Para sua validade jurídica, deve cumprir:
 
 **Requisitos Formais:**
@@ -26,7 +26,7 @@ O estágio é um ato educativo escolar supervisionado. Para sua validade jurídi
 * **Recesso Remunerado:** Direito a 30 dias a cada 12 meses (preferencialmente nas férias escolares) ou proporcional ao período estagiado.
 * **Seguro:** Apólice de seguro contra acidentes pessoais obrigatória sob responsabilidade da empresa.
 
-### 1.2. Legislação MEC e DCNs
+### Legislação MEC e DCNs
 Enquanto a Lei do Estágio dita as regras contratuais, as Diretrizes Curriculares Nacionais (DCNs) e o MEC focam no valor pedagógico:
 
 * **Integração Curricular:** O estágio deve constar no Projeto Pedagógico do Curso (PPC) como extensão do aprendizado.
@@ -37,7 +37,7 @@ Enquanto a Lei do Estágio dita as regras contratuais, as Diretrizes Curriculare
 
 ---
 
-## 2. 🏛️ Normas Acadêmicas Ibmec
+## 🏛️ Normas Acadêmicas Ibmec
 Regras específicas para alunos da instituição e o ecossistema YDUQS.
 
 * **Documentação Obrigatória:** O processo inicia com a validação do TCE e do Plano de Atividades, contendo dados da Concedente, Interveniente e Estagiário.
@@ -47,7 +47,7 @@ Regras específicas para alunos da instituição e o ecossistema YDUQS.
 
 ---
 
-## 3. ⚙️ Regras de Negócio e Validação (Backend)
+## ⚙️ Regras de Negócio e Validação (Backend)
 Esta seção descreve como o sistema automatiza a conformidade jurídica. O backend deve implementar as seguintes travas lógicas baseadas na Lei 11.788/08:
 
 | Requisito | Regra de Validação | Ação do Sistema |
@@ -60,7 +60,7 @@ Esta seção descreve como o sistema automatiza a conformidade jurídica. O back
 
 ---
 
-## 4. 🔍 Benchmarking (Pesquisa de Aplicativos)
+## 🔍 Benchmarking (Pesquisa de Aplicativos)
 Análise de soluções existentes no mercado que serviram de referência para o projeto:
 
 * **Zuna:** Foco em desburocratização e conexão direta entre talentos e empresas.
