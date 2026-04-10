@@ -2,28 +2,76 @@
 hide:
   - navigation
   - toc
----  
+---
 
-# PBE_25.2_8003
+# 📄 Gestão de Documentação de Estágio
 
-<div class="grid cards" markdown>
+Bem-vindo à documentação oficial do projeto da disciplina de **Projeto Back-End 26.1**! 
 
--   :material-github:{ .lg .right } __PBE_25.21_8003_I__
+O nosso objetivo é otimizar a gestão de documentos e a validação de estágios obrigatórios dos alunos feitos pela Secretaria do Ibmec.
 
-    ---
+---
 
-    Lorem Ipsum     Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum
+## 🎯 O Problema
 
-    [:octicons-arrow-right-24: Repositório](https://github.com/Projetos-de-Extensao/PBE_25.2_8003_I)
+* O processo atual da Secretaria é manual, repetitivo e muito sujeito a erros.
+* Há dificuldades em lidar com muitas versões de documentos.
+* Ocorre uma sobrecarga de trabalho e confusão geral.
 
--   :material-github:{ .lg .middle } __PBE_25.2_8003_II__
+## 💡 Nossa Solução
 
-    ---
+* Automatizar tarefas repetitivas e pouco variáveis.
+* Criar um banco de dados para armazenar os documentos.
+* Criar uma **API RESTful** com recursos para gestão dos arquivos.
+* Incorporar **Inteligência Artificial** para analisar contratos e produzir insights.
 
-    Lorem Ipsum Lorem Ipsum Lorem Ipsum
+---
 
-    [:octicons-arrow-right-24: Repositório](https://github.com/Projetos-de-Extensao/PBE_25.2_8003_II)
+## 🛠️ Tecnologias Utilizadas
 
+* 🐍 **Python**: Linguagem de programação base da aplicação.
+* 🌐 **Django & DRF**: Core do backend para a estruturação da API REST.
+* 🐬 **MySQL**: Sistema de gerenciamento para o Banco de Dados relacional.
+* 🤖 **IA Generativa**: Integração principal com **LLaMA** e **Gemini API** para processamento e análise técnica dos documentos.
 
-</div>
+---
+
+## 👥 Equipe de Desenvolvimento
+
+Projeto desenvolvido e mantido por:
+
+* 👨‍💻 Bernardo
+* 👨‍💻 Caio
+* 👨‍💻 Daniel
+* 👨‍💻 Lucas
+* 👨‍💻 Otto
+
+---
+
+## 🔗 Informações Adicionais
+
+* 🚀 **Repositório Oficial**: Acesse o código fonte e as contribuições no nosso repositório. [Acessar API PBE_26.1_8002_III ➔](https://github.com/Projetos-de-Extensao/PBE_26.1_8002_III)
+* 🚀 **Site da disciplina**: [Acessar Site da Disciplina ➔](https://jonh-carvalho.github.io/PBE_26.1_8002)
+
+---
+
+## ▶️ Como Executar o projeto localmente
+
+Para iniciar o projeto e sua própria cópia da documentação de modo local:
+
+```bash
+# Clone o repositório
+git clone https://github.com/Projetos-de-Extensao/PBE_26.1_8002_III.git
+
+# Crie e ative o ambiente virtual
+python -m venv .venv
+source .venv/bin/activate
+
+# Instale as dependências
+pip install -r requirements.txt
+
+# Inicialize o servidor MkDocs localmente
+mkdocs serve
+```
+
 

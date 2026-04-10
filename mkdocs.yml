@@ -6,13 +6,6 @@ copyright: Copyright ©️ 2025, Jonh Carvalho
 
 nav: 
   - Home: index.md
-  - Disciplina:
-      - Aulas: Disciplina/aulas.md
-      - Ambiente: Disciplina/ambiente.md
-      - Github: Disciplina/github.md
-      - Mkdocs: Disciplina/mkdocs.md
-      - CodeSpace: Disciplina/codespace.md
-      - Avaliações: Disciplina/avaliacoes.md
   - Iniciação: 
       - Index: Iniciacao/index.md
       - Pesquisa: Iniciacao/pesquisa.md
@@ -96,34 +89,38 @@ plugins:
   - minify:
       minify_html: true
   - search
-
+  - build_plantuml:
+      render: "server"
+      server: "https://www.plantuml.com/plantuml"
+      output_format: "svg"
+      diagram_root: "docs/assets/Diagramas"
+      output_folder: "out"
+      input_folder: "src"
 theme:
   name: material
-  logo: assets/ibmec_logo.png
+  logo: assets/Ibmec_logo.png
   palette:
-    
     - media: "(prefers-color-scheme)"
-      toggle:
-        icon: material/toggle-switch
-        name: Switch to light mode
-    - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: indigo
+      primary: custom
       accent: black
       toggle:
         icon: material/toggle-switch-off
-        name: Switch to dark mode
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      primary: deep orange
-      accent: amber
+        name: Mudar para modo claro
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: black
       toggle:
         icon: material/toggle-switch-off
-        name: Switch to system preference
-      color_mode: dark
-      language: pt-BR
-      favicon: images/favicon.png
-      user_color_mode_toggle: true
+        name: Mudar para modo escuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: amber
+      toggle:
+        icon: material/toggle-switch
+        name: Preferência do sistema
   
   features:
     - content.code.copy
