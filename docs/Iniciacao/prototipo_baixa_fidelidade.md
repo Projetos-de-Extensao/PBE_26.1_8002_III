@@ -5,45 +5,50 @@ title: Protótipo Baixa Fidelidade
 ## 🚀 Introdução
 
 <p align = "justify">
-A construção do protótipo de baixa fidelidade tem como objetivo principal alinhar as ideias da equipe e estruturar a arquitetura de informação do sistema de forma rápida e iterativa. Diferente de focar em detalhes visuais, esta etapa permite validar o fluxo de navegação, mapear as interações essenciais e garantir que a disposição dos elementos atenda aos requisitos levantados. Além disso, fornece uma base sólida para o gerenciamento do projeto, facilitando a priorização das funcionalidades e a estimativa de esforço.
+
+Um protótipo de baixa fidelidade é uma representação visual simplificada de um sistema ou aplicação, voltada para comunicação universal de suas funcionalidades e fluxos. A ideia não é que sejam técnicos nem bonitos mas sim que permitam validar de maneira palpável as ideias da equipe e permitir maior entendimento do funcionamento da aplicação.
 </p>
 
 ## 🛠️ Metodologia
 
 <p align = "justify">
-Iniciamos o projeto através de levantamentos e discussões em equipe sobre as necessidades dos usuários finais (estudantes e secretaria).
+Iniciamos a concepção do protótipo através de levantamentos,discussões e mapas mentais em equipe sobre as necessidades dos usuários finais, Secretaria e Aluno (Brainstorming).
 </p>
 
 ## 📐 Protótipo de Baixa Fidelidade
 
-Prioridade:
-0 - Opcional
-1 - Desejável
-2 - Necessário
+### 🧩 Componentes
 
-* Modal de anexar documentos
+Prioridade: D - Desejável, O - Opcional
 
-* Tela de login
+* [Modal de anexar documentos]()
 
-* Tela de documentos
+* [Tela de login]()
+    - Login com matricula e senha.
+    - Esqueci minha senha. - D
+    - OAuth Microsoft. - O
+
+* [Tela de documentos]()
     - Documentos com nome e status. Status do processo de estágio (Parecido com mercado livre no envio de encomenda).
-    - Filtragem de Documentos.
+    - Filtragem de Documentos. - D
 
-* Tela de perfil
+* [Tela de perfil]()
     - Informações do usuário.
 
-* Tela de detalhes do documento
-    - Documento expandido, Informações da validação, status, Justificativa do status(caso erro), Botão de download, Botão de reenvio(0), Botão de report(1).
+* [Tela de detalhes do documento]()
+    - Documento expandido, Informações da validação, status, Justificativa do status (caso erro), Botão de download, Botão de reenvio, Botão de report - D.
 
-* Tela de avaliação de documentos
+* [Tela de avaliação de documentos]()
     - Tela de detalhes do documento + opções de : validar, reprovar, mensagem de aviso (opcional).
-    - Tela de Historico de empresas (0)
+    - Tela de Historico de empresas - O
 
-* Tela Secretaria -> Empresa de Estágio
+* [Tela Secretaria -> Empresa de Estágio]()
     - Receber documentos das empresas Estagiarias do aluno para validação
 
-* Tela de busca de alunos (Secretaria)
-    - Por Matricula ou Nome
+* [Tela de busca de alunos (Secretaria)]()
+    - Nome
+    - Matricula - D
+    
 
 ## Conclusão
 
@@ -55,6 +60,8 @@ A elaboração do protótipo de baixa fidelidade permitiu à equipe visualizar a
 
 | Data     | Versão | Descrição                                     | Autor(es)                                                                  |
 | -------- | --- | -------------------------------------------- | ------------------------------------------------------------------------------ |
-| 10/04/26 | 1.0 | Criação e preenchimento do documento         | Lucas jesus, Otto Balestrassi, Caio Ximenes, Bernardo Esteves e Daniel Alberto |
-| 10/04/26 | 2.0 | Atualização do Protótipo de Baixa Fidelidade | Lucas jesus, Otto Balestrassi, Caio Ximenes, Bernardo Esteves e Daniel Alberto |
-| 10/04/26 | 2.5 | Correções e adição de detalhes               | Lucas jesus, Otto Balestrassi, Caio Ximenes, Bernardo Esteves e Daniel Alberto |
+| 10/04/26 | 1.0 | Elaboração das primeiras telas         | Lucas jesus, Otto Balestrassi, Caio Ximenes, Bernardo Esteves e Daniel Alberto |
+
+
+
+### Anexar Documentos
