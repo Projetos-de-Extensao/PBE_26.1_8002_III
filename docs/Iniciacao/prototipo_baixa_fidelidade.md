@@ -23,7 +23,7 @@ Prioridade: D - Desejável, O - Opcional
 
 * [Modal de anexar documentos]()
 
-* [Tela de login]()
+* [Tela de login](#login)
     - Login com matricula e senha.
     - Esqueci minha senha. - D
     - OAuth Microsoft. - O
@@ -48,7 +48,14 @@ Prioridade: D - Desejável, O - Opcional
 * [Tela de busca de alunos (Secretaria)]()
     - Nome
     - Matricula - D
-    
+
+
+
+### Login
+Tela de login que permitirá entrar com matrícula e senha já utilizadas pelo aluno no sitema do IBMEC.
+
+![Login](../assets/Diagramas/out/login.svg)
+
 
 ## Conclusão
 

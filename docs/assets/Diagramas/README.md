@@ -270,6 +270,7 @@ Referência rápida dos comandos e sintaxes mais utilizados no PlantUML, organiz
 ### 🖼️ Salt (Wireframes / Protótipos de Interface)
 
 Salt é o módulo do PlantUML para criar wireframes e mockups de interfaces gráficas.
+É obrigatório que o conteúdo esteja entre chaves.
 
 #### Estrutura e Inicialização
 
@@ -286,6 +287,7 @@ Salt é o módulo do PlantUML para criar wireframes e mockups de interfaces grá
 | `"Texto"` | Label / texto estático | Texto exibido na interface |
 | `"Insira aqui"` | Campo de texto (input) | Caixa de entrada de texto |
 | `"**Negrito**"` | Texto em negrito | Label com formatação negrito |
+| `<u>Texto</u>` | Texto sublinhado | Label com sublinhado |
 | `[Botão]` | Botão clicável | Botão retangular com texto |
 | `()  Opção` | Radio button desmarcado | Círculo vazio + texto |
 | `(X) Opção` | Radio button marcado | Círculo preenchido + texto |
