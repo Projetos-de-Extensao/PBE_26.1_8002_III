@@ -4,62 +4,148 @@ hide:
   - toc
 ---
 
-# 📄 Gestão de Documentação de Estágio
+<!-- Hero Section -->
+<section class="lp-hero" markdown>
 
-Bem-vindo à documentação oficial do projeto da disciplina de **Projeto Back-End 26.1**! 
+<div class="lp-hero__content" markdown>
 
-O nosso objetivo é otimizar a gestão de documentos e a validação de estágios obrigatórios dos alunos feitos pela Secretaria do Ibmec.
+# Gestão de Documentação de Estágio
 
----
+Automatize a validação de estágios obrigatórios e a gestão de documentos da Secretaria do Ibmec com **IA Generativa** e uma **API RESTful** moderna e robusta.
 
-## 🎯 O Problema
+[Acessar Repositório](https://github.com/Projetos-de-Extensao/PBE_26.1_8002_III){ .lp-btn .lp-btn--primary }
+[Site da Disciplina](https://jonh-carvalho.github.io/PBE_26.1_8002){ .lp-btn .lp-btn--outline }
 
-* O processo atual da Secretaria é manual, repetitivo e muito sujeito a erros.
-* Há dificuldades em lidar com muitas versões de documentos.
-* Muitos requerimentos abertos.
-* Comunicação entre agentes dos processos muito manual.
+</div>
 
-## 💡 Nossa Solução
+</section>
 
-* Automatizar tarefas repetitivas e pouco variáveis.
-* Criar um banco de dados para armazenar os documentos.
-* Criar uma **API RESTful** com recursos para gestão dos arquivos e validação de horas.
-* Incorporar **Inteligência Artificial** para analisar contratos e produzir insights para o carreiras.
-* Centralizar a comunicação entre agentes dos processos.
+<!-- Problem / Solution -->
+<section class="lp-section" markdown>
 
----
+## Visão Geral do Projeto
 
-## 🛠️ Tecnologias Utilizadas
+<div class="lp-two-col" markdown>
 
-* 🐍 **Python**: Linguagem de programação base da aplicação.
-* 🌐 **Django & DRF**: Core do backend para a estruturação da API REST.
-* 🐬 **MySQL**: Sistema de gerenciamento para o Banco de Dados relacional.
-* 🤖 **IA Generativa**: Integração principal com **LLaMA** e **Gemini API** para processamento e análise técnica dos documentos.
+<div class="lp-card lp-card--problem" markdown>
 
----
+### :material-alert-circle-outline:{ .lp-icon--problem } Desafios Atuais
 
-## 👥 Equipe de Desenvolvimento
+- Processos manuais, repetitivos e sujeitos a erros operacionais.
+- Dificuldade no versionamento e controle de documentação.
+- Excesso de requerimentos e processos em aberto.
+- Comunicação descentralizada entre os agentes institucionais.
 
-Projeto desenvolvido e mantido por:
+</div>
 
-* 👨‍💻 Bernardo
-* 👨‍💻 Caio
-* 👨‍💻 Daniel
-* 👨‍💻 Lucas
-* 👨‍💻 Otto
+<div class="lp-card lp-card--solution" markdown>
 
----
+### :material-check-circle-outline:{ .lp-icon--solution } Proposta de Solução
 
-## 🔗 Informações Adicionais
+- Automação de tarefas repetitivas e padronização de fluxos.
+- Repositório unificado para armazenamento de documentos.
+- **API RESTful** para gestão de arquivos e validação de horas.
+- **IA Generativa** para análise automática de contratos e geração de insights.
 
-* 🚀 **Repositório Oficial**: Acesse o código fonte e as contribuições no nosso repositório. [Acessar API PBE_26.1_8002_III ➔](https://github.com/Projetos-de-Extensao/PBE_26.1_8002_III)
-* 🚀 **Site da disciplina**: [Acessar Site da Disciplina ➔](https://jonh-carvalho.github.io/PBE_26.1_8002)
+</div>
 
----
+</div>
 
-## ▶️ Como Executar o projeto localmente
+</section>
 
-Para iniciar o projeto e sua própria cópia da documentação de modo local:
+<!-- Tech Stack -->
+<section class="lp-section lp-section--alt" markdown>
+
+## Arquitetura e Tecnologias
+
+<div class="lp-tech-grid" markdown>
+
+<div class="lp-tech-card" markdown>
+:material-language-python:{ .lp-tech-icon }
+
+<div class="lp-tech-info" markdown>
+**Python**
+
+Linguagem base da aplicação.
+</div>
+</div>
+
+<div class="lp-tech-card" markdown>
+:simple-django:{ .lp-tech-icon }
+
+<div class="lp-tech-info" markdown>
+**Django & DRF**
+
+Core do backend e API REST.
+</div>
+</div>
+
+<div class="lp-tech-card" markdown>
+:simple-mysql:{ .lp-tech-icon }
+
+<div class="lp-tech-info" markdown>
+**MySQL**
+
+Banco de Dados relacional.
+</div>
+</div>
+
+<div class="lp-tech-card" markdown>
+:material-robot-outline:{ .lp-tech-icon }
+
+<div class="lp-tech-info" markdown>
+**IA Generativa**
+
+Integração LLaMA & Gemini.
+</div>
+</div>
+
+</div>
+
+</section>
+
+<!-- Team -->
+<section class="lp-section" markdown>
+
+## Equipe de Desenvolvimento
+
+<div class="lp-team" markdown>
+
+<div class="lp-avatar" markdown>
+:fontawesome-solid-user:{ .lp-avatar-icon }
+**Bernardo**
+</div>
+
+<div class="lp-avatar" markdown>
+:fontawesome-solid-user:{ .lp-avatar-icon }
+**Caio**
+</div>
+
+<div class="lp-avatar" markdown>
+:fontawesome-solid-user:{ .lp-avatar-icon }
+**Daniel**
+</div>
+
+<div class="lp-avatar" markdown>
+:fontawesome-solid-user:{ .lp-avatar-icon }
+**Lucas**
+</div>
+
+<div class="lp-avatar" markdown>
+:fontawesome-solid-user:{ .lp-avatar-icon }
+**Otto**
+</div>
+
+</div>
+
+</section>
+
+<!-- Getting Started -->
+<section class="lp-section lp-section--alt" markdown>
+
+## Ambiente Local
+
+Para espelhar a documentação do projeto localmente:
 
 ```bash
 # Clone o repositório
@@ -76,4 +162,4 @@ pip install -r requirements.txt
 mkdocs serve
 ```
 
-
+</section>

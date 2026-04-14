@@ -29,3 +29,261 @@
     /* Desce o título para alinhar com o texto da logo */
     transform: translateY(4px);
 }
+
+/* ===================================
+   Landing Page Styles - Minimalist Corporate
+   =================================== */
+
+/* ---------- General ---------- */
+.lp-section {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 3rem 0;
+}
+.lp-section h2 {
+    text-align: left;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    color: #002B5C;
+    border-bottom: 1px solid var(--md-default-fg-color--lightest);
+    padding-bottom: 0.5rem;
+}
+.lp-section--alt {
+    background: #f8fafc;
+    border-radius: 0;
+    padding: 3.5rem 2rem;
+    margin-bottom: 0;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+/* ---------- Hero ---------- */
+.lp-hero {
+    text-align: left;
+    padding: 5rem 1.5rem 4rem;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    margin: -1rem -1rem 2rem;
+    color: #1e293b;
+}
+.lp-hero h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1.2rem;
+    color: #002B5C !important;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+}
+.lp-hero p {
+    font-size: 1.15rem;
+    max-width: 700px;
+    margin: 0 0 2.5rem;
+    opacity: 0.9;
+    line-height: 1.6;
+    color: #475569;
+}
+
+/* Hero buttons */
+.lp-btn {
+    display: inline-block;
+    padding: 0.6rem 1.4rem;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none !important;
+    transition: background 0.2s ease, border-color 0.2s ease;
+    margin-right: 1rem;
+    margin-bottom: 0.5rem;
+}
+.lp-btn--primary {
+    background: #002B5C;
+    color: #ffffff !important;
+    border: 1px solid #002B5C;
+}
+.lp-btn--primary:hover {
+    background: #001a38;
+}
+.lp-btn--outline {
+    border: 1px solid #cbd5e1;
+    color: #002B5C !important;
+    background: transparent;
+}
+.lp-btn--outline:hover {
+    background: #f1f5f9;
+}
+
+/* ---------- Two-col grid ---------- */
+.lp-two-col {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+.lp-card {
+    border-radius: 4px;
+    padding: 2rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.lp-card h3 {
+    margin-top: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+.lp-card ul {
+    padding-left: 1.2rem;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    color: #475569;
+    margin-bottom: 0;
+}
+.lp-icon--problem, .lp-icon--solution {
+    color: #64748b;
+}
+
+/* ---------- Tech grid ---------- */
+.lp-tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+}
+.lp-tech-card {
+    display: flex;
+    align-items: center;
+    text-align: left;
+    padding: 1.2rem;
+    border-radius: 4px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+}
+.lp-tech-icon {
+    font-size: 1.8rem;
+    color: #002B5C;
+    margin-right: 1rem;
+}
+.lp-tech-info {
+    flex: 1;
+}
+.lp-tech-info strong {
+    display: block;
+    font-size: 0.95rem;
+    color: #1e293b;
+}
+.lp-tech-info p {
+    margin: 0.2rem 0 0;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+/* ---------- Team ---------- */
+.lp-team {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1.5rem;
+}
+.lp-avatar {
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.lp-avatar-icon {
+    font-size: 1.4rem;
+    color: #64748b;
+    background: #f1f5f9;
+    border-radius: 4px;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+}
+.lp-avatar p {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #1e293b;
+    margin: 0;
+}
+
+/* ---------- Dark mode overrides ---------- */
+[data-md-color-scheme="slate"] .lp-hero {
+    background: var(--md-default-bg-color);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+}
+[data-md-color-scheme="slate"] .lp-hero h1 {
+    color: #f8fafc !important;
+}
+[data-md-color-scheme="slate"] .lp-hero p {
+    color: #cbd5e1;
+}
+[data-md-color-scheme="slate"] .lp-btn--primary {
+    background: #e2e8f0;
+    color: #002B5C !important;
+    border-color: #e2e8f0;
+}
+[data-md-color-scheme="slate"] .lp-btn--primary:hover {
+    background: #ffffff;
+}
+[data-md-color-scheme="slate"] .lp-btn--outline {
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #e2e8f0 !important;
+}
+[data-md-color-scheme="slate"] .lp-btn--outline:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+[data-md-color-scheme="slate"] .lp-section--alt {
+    border-color: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.02);
+}
+[data-md-color-scheme="slate"] .lp-section h2 {
+    color: #e2e8f0;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+[data-md-color-scheme="slate"] .lp-card {
+    background: var(--md-default-bg-color);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+[data-md-color-scheme="slate"] .lp-card h3 {
+    color: #e2e8f0;
+}
+[data-md-color-scheme="slate"] .lp-card ul {
+    color: #94a3b8;
+}
+[data-md-color-scheme="slate"] .lp-tech-card {
+    background: var(--md-default-bg-color);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+[data-md-color-scheme="slate"] .lp-tech-info strong {
+    color: #e2e8f0;
+}
+[data-md-color-scheme="slate"] .lp-tech-info p {
+    color: #94a3b8;
+}
+[data-md-color-scheme="slate"] .lp-tech-icon {
+    color: #94a3b8;
+}
+[data-md-color-scheme="slate"] .lp-avatar-icon {
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+}
+[data-md-color-scheme="slate"] .lp-avatar p {
+    color: #e2e8f0;
+}
+
+@media (max-width: 600px) {
+    .lp-hero {
+        padding: 3rem 1rem 2rem;
+    }
+    .lp-hero h1 {
+        font-size: 2rem;
+    }
+    .lp-tech-grid {
+        grid-template-columns: 1fr;
+    }
+}
