@@ -27,13 +27,28 @@ Foram levantados dados através de entrevistas com a Secretaria e pesquisas acer
 ![Mapa mental Ciclos](../assets/Diagramas/out/ciclo.svg)
  
  
-### 📋 Responsabilidades da Secretaria
+### 👥 Responsabilidades da Secretaria
     
 <p align = "justify">
     A maior parte das tarefas que envolvem o processo de estágio é muito manual, simples e repetitiva, o que ocasiona uma maior chance de erros e cansaço desnecessário. Quando se trata de versionamento, ou seja, de gerir as diferentes versões dos documentos, o processo se torna um problema ainda maior, pois gera possibilidades de confusão, mau atendimento e invalidação equivocada diante do volume de variantes de documentos de diversos estudantes juntos.
 </p>
  
-![Mapa mental Problemas](../assets/Diagramas/out/problemas.svg)
+![Mapa mental Responsabilidades](../assets/Diagramas/out/responsabilidades.svg)
+
+
+### 📋 Critérios de Validação de Contratos
+
+![Mapa mental Critérios de Validação](../assets/Diagramas/out/criterios-validacao.svg)
+
+
+### ⏱️ Critérios de Validação de Horas
+
+![Mapa mental Critérios de Horas](../assets/Diagramas/out/criterios-horas.svg)
+
+
+### 🏢 Carreiras
+
+![Mapa mental Carreiras](../assets/Diagramas/out/carreiras.svg)
 
 
 ## 📚 Referências

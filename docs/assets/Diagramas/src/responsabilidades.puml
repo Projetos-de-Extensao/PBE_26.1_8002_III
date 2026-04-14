@@ -1,15 +1,22 @@
 @startmindmap
-*Gestão de estágios
+
+
+
+
+*Secretaria
 **Gestão de contratos
 ***Validação de contratos
 ***Gestão de documentos
 ***Versionamento dos contratos
-***Reputação da empresa
-**Validação do período de estágio
-***Verificação de área de conhecimento
-***Verificação de carga horária
 **Gestão de alunos
 ***Cadastro de alunos
 ***Gestão de documentos     
 ***Versionamento dos documentos
+*Carreiras
+**Reputação da empresa
+**Gestão de ofertas de vagas
+*Coordenação
+**Validação do período de estágio
+
+
 @endmindmap

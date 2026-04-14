@@ -1,11 +1,30 @@
-@startmindmap
-*Aluno aprovado em estágio
-**Empresa emite contrato
-***Universidade valida
-****Válido
-*****Periodo de estágio
-******Universidade compara periodo de estágio com contrato	
-****Inválido
-*****Retorna à Empresa para correção
-****** Retorna a etapa de validação da universidade
-@endmindmap
+@startuml
+
+|Aluno|
+start
+:Aluno aprovado em estágio
+entra em contato com a Secretaria;
+
+|Secretaria|
+:Envia contrato para aluno repassar à empresa;
+
+|Empresa|
+:Preenche o contrato;
+
+|Secretaria|
+:Valida o contrato;
+
+|Carreiras|
+:Guarda para controle interno;
+
+|Aluno|
+:Realiza o período de estágio;
+
+|Coordenação|
+:Compara período de estágio
+com o contrato;
+:Valida as horas;
+
+stop
+
+@enduml

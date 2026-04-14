@@ -16,14 +16,16 @@ O nosso objetivo é otimizar a gestão de documentos e a validação de estágio
 
 * O processo atual da Secretaria é manual, repetitivo e muito sujeito a erros.
 * Há dificuldades em lidar com muitas versões de documentos.
-* Ocorre uma sobrecarga de trabalho e confusão geral.
+* Muitos requerimentos abertos.
+* Comunicação entre agentes dos processos muito manual.
 
 ## 💡 Nossa Solução
 
 * Automatizar tarefas repetitivas e pouco variáveis.
 * Criar um banco de dados para armazenar os documentos.
-* Criar uma **API RESTful** com recursos para gestão dos arquivos.
-* Incorporar **Inteligência Artificial** para analisar contratos e produzir insights.
+* Criar uma **API RESTful** com recursos para gestão dos arquivos e validação de horas.
+* Incorporar **Inteligência Artificial** para analisar contratos e produzir insights para o carreiras.
+* Centralizar a comunicação entre agentes dos processos.
 
 ---
 
