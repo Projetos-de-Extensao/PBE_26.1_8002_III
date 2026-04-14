@@ -1,0 +1,23 @@
+@startmindmap
+
+* Validação
+** Contratos
+*** Dados do Aluno
+**** Nome do aluno
+**** Matrícula
+**** CPF
+**** Curso
+**** Matrícula na disciplina Estágio
+*** Datas
+**** Duração: início e fim
+*** Seguros
+**** Apólice de seguros
+*** Horários e Atividades
+**** Conflito com horário de aula
+**** Existência de plano de atividade
+*** Assinaturas
+**** Assinatura do aluno
+**** Assinatura da empresa com carimbo
+**** Assinatura do IBMEC
+
+@endmindmap
