@@ -1,0 +1,10 @@
+@startsalt
+{+
+  Matrícula: 
+  "Digite sua matrícula"
+  Senha:   
+  "Digite sua senha"
+  --
+  [  Entrar  ]
+}
+@endsalt
