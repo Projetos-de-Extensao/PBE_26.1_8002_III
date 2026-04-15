@@ -1,53 +1,132 @@
 @startuml
 
-' abstract class Usuario {
-'     # matricula : int
-'     # nome : string
-'     # email : string
-'     # senha : string
+' --- Estilos ---
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+}
 
-'     + Usuario(matricula : int, nome : string, email : string)
-'     # redefinirSenha(novaSenha : string)
-' }
+' --- Enums ---
+enum StatusProcesso {
+    ABERTO
+    EM_ANALISE_SECRETARIA
+    EM_ANALISE_COORDENACAO
+    PENDENTE_AJUSTE
+    APROVADO
+    REPROVADO
+    CONCLUIDO
+    CANCELADO
+}
 
-class Secretaria extends Usuario {
-    
+enum Unidade {
+    BARRA
+    CENTRO
+    BH
+    BRASILIA
+}
+
+enum Periodo {
+    P1, P2, P3, P4, P5, P6, P7, P8, P9, P10
+}
+
+' --- Classes Principais ---
+
+abstract class Usuario {
+    # matricula : int
+    # nome : string
+    # email : string
+    # senha : string
+    # unidade : Unidade
+    + login() : bool
 }
 
 class Aluno extends Usuario {
-    
+    - curso : Curso
+    - periodo : Periodo
+    - processoAtual : Processo
+    + iniciarProcesso() : Processo
+    + anexarContrato(doc : Contrato)
+    + anexarRelatorio(doc : Relatorio)
+}
+
+class Secretaria extends Usuario {
+    + validarContrato(processo : Processo, aprovado : bool, justificativa : string)
+    + validarRelatorio(processo : Processo, aprovado : bool, justificativa : string)
+    + pesquisarAlunos(matricula : int) : Aluno[]
+    + listarProcessosPendentes() : Processo[]
 }
 
 class Coordenacao extends Usuario {
-    
-}
-
-class Agente {
-    
-}
-
-class Documento {
-    
+    - area : Area
+    + validarEstagio(processo : Processo, aprovado : bool, justificativa : string)
 }
 
 class Processo {
-   
+   - processoId : int
+   - dataCriacao : DateTime
+   - status : StatusProcesso
+   - aluno : Aluno
+   - coordenacao : Coordenacao
+   - secretaria : Secretaria
+   + atualizarStatus(novoStatus : StatusProcesso)
+   + validarContrato(aprovado : bool, justificativa : string)
+   + validarRelatorio(aprovado : bool, justificativa : string)
 }
 
-
-class Relatório {
-    
+class Contrato {
+    - processo : Processo
+    - contratoId : int
+    - nomeArquivo : string
+    - dataUpload : DateTime
+    - cnpjEmpresa : string
+    - nomeEmpresa : string
+    - dataInicio : Date
+    - dataTermino : Date
+    - apoliceSeguro : string
+    - planoAtividade : bool
+    - assinaturaAluno : bool
+    - assinaturaEmpresa : bool
+    - assinaturaFaculdade : bool
 }
 
+class Relatorio {
+    - processo : Processo
+    - relatorioId : int
+    - nomeArquivo : string
+    - dataUpload : DateTime
+    - horasTrabalhadas : int
+    - periodoReferencia : string
+    - aprovadoPelaEmpresa : bool
+}
 
+class Curso {
+    - cursoId : int
+    - nome : string
+}
 
+class Area {
+    - areaId : int
+    - nome : string
+}
 
+' --- Relacionamentos ---
 
+' Um aluno pertence a um curso e período
+Aluno "0..*" -- "1" Curso
+Aluno "0..*" -- "1" Periodo
 
+' Hierarquia de Curso e Área
+Area "1" -- "0..*" Curso
+Coordenacao "1" -- "1" Area
 
+' Relacionamento de Processo
+Aluno "1" -- "0..1" Processo : possui >
+Secretaria "1" -- "0..*" Processo : audita >
+Coordenacao "1" -- "0..*" Processo : valida >
 
-
-
-
+Processo "1" *-- "1..*" Contrato : contém >
+Processo "1" *-- "0..*" Relatorio : contém >
+Processo "0..*" -- "1" StatusProcesso : possui >
 
 @enduml

@@ -9,14 +9,14 @@ rectangle "Plataforma de Estágios" {
 
         package "Módulo do Aluno" {
             usecase "Fazer Login" as login
-            usecase "Anexar Documento" as enviar
+            usecase "Anexar Contrato" as enviar
             
             usecase "Iniciar Processo" as iniciar
             usecase "Enviar Relatório de Horas" as enviarHoras
             usecase "Acompanhar Status do Processo" as acompanhar
             
-            usecase "Fazer Download do Documento" as download
-            usecase "Visualizar Documento" as visualizarDoc
+            usecase "Fazer Download do Contrato" as download
+            usecase "Visualizar Contrato" as visualizarDoc
             usecase "Reportar Erro" as reportarErro
         }
 
