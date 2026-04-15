@@ -112,7 +112,7 @@ Integração LLaMA & Gemini.
 <div class="lp-team" markdown>
 
 <div class="lp-avatar" markdown>
-<span class="lp-avatar-photo"></span>
+<span class="lp-avatar-photo">:fontawesome-solid-user:</span>
 [Bernardo](https://github.com/bernardomiller)
 </div>
 
@@ -122,7 +122,7 @@ Integração LLaMA & Gemini.
 </div>
 
 <div class="lp-avatar" markdown>
-<span class="lp-avatar-photo"></span>
+<span class="lp-avatar-photo">:fontawesome-solid-user:</span>
 [Daniel](https://github.com/DaniReaper17)
 </div>
 
@@ -132,7 +132,7 @@ Integração LLaMA & Gemini.
 </div>
 
 <div class="lp-avatar" markdown>
-<span class="lp-avatar-photo"></span>
+<span class="lp-avatar-photo">:fontawesome-solid-user:</span>
 [Otto](https://github.com/Otto-Goldner)
 </div>
 
