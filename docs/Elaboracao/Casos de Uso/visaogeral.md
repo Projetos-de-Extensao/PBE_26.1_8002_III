@@ -18,3 +18,4 @@ Diagrama de Casos de Uso é uma representação gráfica de todas as interaçõe
 
 ![Diagrama de Casos de Uso](assets/Diagramas/out/casos_de_uso.svg)
 
+![Diagramas]

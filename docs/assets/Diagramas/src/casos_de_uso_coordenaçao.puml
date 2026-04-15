@@ -1,0 +1,20 @@
+@startuml
+title Casos de Uso - Pacote Coordenação
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Coordenação" as coord
+
+rectangle "Plataforma de Estágios" {
+
+        package "Coordenação" {
+            usecase "Validar Horas" as validarHoras
+            usecase "Fazer Login" as login
+        }
+}
+
+coord --> validarHoras
+coord --> login
+
+
+@enduml

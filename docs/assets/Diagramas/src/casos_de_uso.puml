@@ -1,0 +1,70 @@
+@startuml
+title Sistema de Gestão de Estágios Obrigatórios
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Aluno" as aluno
+actor "Secretaria" as sec
+actor "Coordenação" as coord
+
+' actor "Carreiras" as carreiras
+actor "Inteligência Artificial" as ia <<Sistema>>
+
+rectangle "Plataforma de Estágios" {
+        
+        package "Comum" {
+            usecase "Acompanhar Status do Processo" as acompanhar
+            usecase "Anexar Documento" as enviar
+            usecase "Fazer Download do Documento" as download
+            usecase "Iniciar Processo" as iniciar
+            usecase "Enviar Relatório" as enviarHoras
+            usecase "Fazer Login" as login
+            usecase "Analisar Documento" as analisarDoc
+            
+        }
+        package "Aluno" {
+            usecase "Reportar Erro" as reportarErro
+        }
+
+        package "Secretaria" {
+        usecase "Validar Documento" as validarDoc
+        usecase "Reprovar Documento com Justificativa" as reprovarJustificativa
+        usecase "Pesquisar alunos" as pesquisarAlunos
+        usecase "Cadastrar aluno" as cadastrarAluno
+        usecase "Encerrar processo" as encerrar
+        usecase "Cadastrar aluno" as cadastrarAluno
+        usecase "Pesquisar Status da empresa" as pesquisarStatus
+        }
+        package "Coordenação" {
+            usecase "Validar Horas" as validarHoras
+            
+        }       
+ 
+}
+
+aluno --> iniciar
+aluno --> enviar
+aluno --> acompanhar
+aluno --> reportarErro
+aluno --> download
+aluno --> enviarHoras
+aluno --> login
+
+sec --> validarDoc
+sec --> pesquisarAlunos
+sec --> encerrar
+sec --> cadastrarAluno
+sec --> login
+sec --> iniciar
+sec --> enviar
+sec --> acompanhar
+sec --> download
+sec --> enviarHoras
+sec --> login
+
+analisarDoc <-- ia
+pesquisarStatus <-- ia
+
+coord --> validarHoras
+
+@enduml  
