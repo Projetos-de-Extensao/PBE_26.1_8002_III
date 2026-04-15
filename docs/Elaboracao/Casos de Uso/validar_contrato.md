@@ -1,9 +1,9 @@
 ---
-id: validar_documento
-title: Validar Documento
+id: validar_contrato
+title: Validar Contrato
 ---
 
-### Validar Documento
+### Validar Contrato
 
 - **Atores:**
     - Secretaria
@@ -14,10 +14,10 @@ title: Validar Documento
     - Deve existir pelo menos um processo com status "Pendente de Análise".
 
 - **Fluxo Básico:**
-    1. Secretaria acessa a fila de documentos pendentes.
+    1. Secretaria acessa a fila de contrato pendentes.
     2. Sistema lista os processos aguardando avaliação.
     3. Secretaria seleciona um processo específico.
-    4. Sistema exibe os detalhes do aluno, da empresa e o PDF do contrato (Ação: Analisar Documento).
+    4. Sistema exibe os detalhes do aluno, da empresa e o PDF do contrato (Ação: Analisar Contrato).
     5. Secretaria verifica as assinaturas, datas e apólices.
     6. Secretaria clica no botão "Aprovar".
     7. Sistema atualiza o status para "Aprovado" e notifica o Aluno.
@@ -30,9 +30,9 @@ title: Validar Documento
         - 5a4. Sistema atualiza o status para "Reprovado" e notifica o Aluno com a justificativa.
 
 - **Pós-condições:**
-    - O status do documento é alterado para "Aprovado" ou "Reprovado".
+    - O status do contrato é alterado para "Aprovado" ou "Reprovado".
     - O registro da avaliação (quem avaliou e quando) é salvo no histórico do processo.
 
 - **Regras de Negócio:**
-    - Apenas usuários com perfil "Secretaria" ou superior podem alterar o status de validação de um documento.
-    - A justificativa é de preenchimento obrigatório sempre que um documento for reprovado.
+    - Apenas usuários com perfil "Secretaria" ou superior podem alterar o status de validação de um contrato.
+    - A justificativa é de preenchimento obrigatório sempre que um contrato for reprovado.
