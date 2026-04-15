@@ -54,6 +54,25 @@ Referência rápida dos comandos e sintaxes mais utilizados no PlantUML, organiz
 
 ---
 
+### 🔑 Tags de Inicialização e Finalização por Tipo de Diagrama
+
+O PlantUML exige tags específicas de abertura e fechamento dependendo do tipo de diagrama ou estrutura visual sendo criada.
+
+| Tipo de Diagrama / Estrutura | Tag de Início | Tag de Fim |
+|---|---|---|
+| **UML Padrão** (Sequência, Classes, Casos de Uso, Atividades, Estados, Componentes, Implantação) | `@startuml` | `@enduml` |
+| **Mapa Mental** (Mindmap) | `@startmindmap` | `@endmindmap` |
+| **Estrutura Analítica do Projeto** (WBS) | `@startwbs` | `@endwbs` |
+| **Gráfico de Gantt** | `@startgantt` | `@endgantt` |
+| **Interfaces e Wireframes** (Salt) | `@startsalt` | `@endsalt` |
+| **Visualização de JSON** | `@startjson` | `@endjson` |
+| **Visualização de YAML** | `@startyaml` | `@endyaml` |
+| **Topologia de Rede** (nwdiag) | `@startnwdiag` | `@endnwdiag` |
+| **Matemática** (JLaTeXMath / AsciiMath) | `@startmath` | `@endmath` |
+| **Quadro / Board** | `@startboard` | `@endboard` |
+
+---
+
 ### 🔧 Estrutura Básica
 
 | Sintaxe | Função | Resultado |
@@ -75,6 +94,7 @@ Referência rápida dos comandos e sintaxes mais utilizados no PlantUML, organiz
 
 | Sintaxe | Função | Resultado |
 |---|---|---|
+| `@startuml` / `@enduml` | Inicia/finaliza o diagrama de sequência | Delimitadores do bloco UML |
 | `actor Nome` | Cria um ator (boneco palito) | Ícone de pessoa com o nome abaixo |
 | `participant Nome` | Cria um participante genérico | Caixa retangular com o nome |
 | `participant "Nome Longo" as N` | Cria participante com alias | Caixa com nome longo, referenciado como `N` |
@@ -161,6 +181,7 @@ Referência rápida dos comandos e sintaxes mais utilizados no PlantUML, organiz
 
 | Sintaxe | Função | Resultado |
 |---|---|---|
+| `@startuml` / `@enduml` | Inicia/finaliza o diagrama de classes | Delimitadores do bloco UML |
 | `class NomeClasse` | Declara uma classe | Caixa com o nome da classe |
 | `class NomeClasse { }` | Classe com corpo | Caixa com seções de atributos/métodos |
 | `+ atributo : Tipo` | Atributo público | Campo com ícone de visibilidade pública |
@@ -188,6 +209,7 @@ Referência rápida dos comandos e sintaxes mais utilizados no PlantUML, organiz
 
 | Sintaxe | Função | Resultado |
 |---|---|---|
+| `@startuml` / `@enduml` | Inicia/finaliza o diagrama de usos de caso | Delimitadores do bloco UML |
 | `usecase "Nome" as UC1` | Cria um caso de uso | Elipse com o nome |
 | `actor "Nome" as A1` | Cria um ator | Boneco palito com o nome |
 | `A1 --> UC1` | Associação ator → caso de uso | Linha conectando ator ao caso |
@@ -202,6 +224,7 @@ Referência rápida dos comandos e sintaxes mais utilizados no PlantUML, organiz
 
 | Sintaxe | Função | Resultado |
 |---|---|---|
+| `@startuml` / `@enduml` | Inicia/finaliza o diagrama de atividades | Delimitadores do bloco UML |
 | `start` | Início do fluxo | Círculo preto preenchido |
 | `stop` | Fim do fluxo | Círculo preto preenchido com borda |
 | `end` | Fim alternativo | Símbolo de finalização |
@@ -230,6 +253,7 @@ Referência rápida dos comandos e sintaxes mais utilizados no PlantUML, organiz
 
 | Sintaxe | Função | Resultado |
 |---|---|---|
+| `@startuml` / `@enduml` | Inicia/finaliza o diagrama de estados | Delimitadores do bloco UML |
 | `[*] --> Estado1` | Transição do estado inicial | Ponto preto → primeiro estado |
 | `Estado1 --> Estado2 : Evento` | Transição entre estados | Seta com rótulo do evento |
 | `Estado2 --> [*]` | Transição para o estado final | Estado → ponto preto com borda |
@@ -250,6 +274,7 @@ Referência rápida dos comandos e sintaxes mais utilizados no PlantUML, organiz
 
 | Sintaxe | Função | Resultado |
 |---|---|---|
+| `@startuml` / `@enduml` | Inicia/finaliza o diagrama de componentes | Delimitadores do bloco UML |
 | `[Componente]` | Cria um componente | Caixa com ícone de componente |
 | `component "Nome" as C1` | Componente com alias | Componente nomeado e referenciável |
 | `interface "Nome" as I1` | Cria uma interface | Círculo pequeno (lollipop) |
@@ -323,6 +348,45 @@ Salt é o módulo do PlantUML para criar wireframes e mockups de interfaces grá
 | `+++ Nó neto` | Nó de terceiro nível | Sub-sub-item indentado |
 | `{M` / `}` | Menu (barra de menu) | Barra de menus no topo |
 | `{T!` / `}` | Árvore sem borda | Árvore sem moldura visível |
+
+---
+
+### 🧠 Mapa Mental (Mindmap)
+
+| Sintaxe | Função | Resultado |
+|---|---|---|
+| `@startmindmap` / `@endmindmap` | Inicia/finaliza o mapa mental | Bloco de mapa mental |
+| `+ Nó` | Nó principal | Centro do mapa |
+| `++ Nó Filho` | Nó de segundo nível | Ramificação |
+| `-- Nó à Esquerda` | Ramificação para o lado oposto | Muda a direção do crescimento |
+
+---
+
+### 📉 Gráfico de Gantt e WBS
+
+| Sintaxe | Função | Resultado |
+|---|---|---|
+| `@startgantt` / `@endgantt` | Inicia/finaliza o gráfico de Gantt | Cronograma de projeto |
+| `@startwbs` / `@endwbs` | Inicia/finaliza a Estrutura Analítica (WBS) | Diagrama de decomposição |
+
+---
+
+### 📄 Dados (JSON / YAML)
+
+| Sintaxe | Função | Resultado |
+|---|---|---|
+| `@startjson` / `@endjson` | Inicia/finaliza visualização de JSON | Árvore de dados JSON |
+| `@startyaml` / `@endyaml` | Inicia/finaliza visualização de YAML | Árvore de dados YAML |
+
+---
+
+### 🌐 Outros Tipos
+
+| Sintaxe | Função | Resultado |
+|---|---|---|
+| `@startnwdiag` / `@endnwdiag` | Inicia/finaliza diagrama de rede | Topologia de rede |
+| `@startmath` / `@endmath` | Inicia/finaliza fórmulas matemáticas | Renderização de JLaTeXMath |
+| `@startboard` / `@endboard` | Inicia/finaliza quadro/board | Visualização de board |
 
 #### Exemplo Completo de Wireframe
 
