@@ -1,5 +1,4 @@
 ---
-repo_url: https://github.com/jonh-carvalho/PBE_25.2_8003
 site_author: Jonh Carvalho
 site_name: PBE_25.2_8003
 copyright: Copyright ©️ 2025, Jonh Carvalho
@@ -17,7 +16,7 @@ nav:
       - Index: Elaboracao/index.md
       - Requisitos: Elaboracao/das.md
       - Casos de Uso: 
-          - Visão Geral: Elaboracao/Casos de Uso/visaogeral.md
+          - Visão Geral: Elaboracao/Casos de Uso/visao_geral.md
           - Criação de uma conta: Elaboracao/Casos de Uso/criacao_de_conta.md
           - Entrada do usuário: Elaboracao/Casos de Uso/entrada_do_usuario.md
       - Diagrama de Classes: Elaboracao/diagrama_de_classes.md

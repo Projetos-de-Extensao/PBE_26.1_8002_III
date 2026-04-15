@@ -7,27 +7,34 @@ actor "Aluno" as aluno
 
 rectangle "Plataforma de Estágios" {
 
-        package "Aluno" {
-            usecase "Reportar Erro" as reportarErro
-            usecase "Acompanhar Status do Processo" as acompanhar
-            usecase "Anexar Documento" as enviar
-            usecase "Fazer Download do Documento" as download
-            usecase "Iniciar Processo" as iniciar
-            usecase "Enviar Relatório" as enviarHoras
+        package "Módulo do Aluno" {
             usecase "Fazer Login" as login
-            usecase "Analisar Documento" as analisarDoc
+            usecase "Anexar Documento" as enviar
             
+            usecase "Iniciar Processo" as iniciar
+            usecase "Enviar Relatório de Horas" as enviarHoras
+            usecase "Acompanhar Status do Processo" as acompanhar
+            
+            usecase "Fazer Download do Documento" as download
+            usecase "Visualizar Documento" as visualizarDoc
+            usecase "Reportar Erro" as reportarErro
         }
 
 }
 
-aluno --> reportarErro
-aluno --> acompanhar
-aluno --> enviar
-aluno --> download
 aluno --> iniciar
 aluno --> enviarHoras
-aluno --> login
-aluno --> analisarDoc
+aluno --> acompanhar
+
+iniciar ..> login : <<include>>
+enviarHoras ..> login : <<include>>
+acompanhar ..> login : <<include>>
+
+iniciar ..> enviar : <<include>>
+enviarHoras ..> enviar : <<include>>
+
+acompanhar <.. download : <<extend>>
+acompanhar <.. visualizarDoc : <<extend>>
+acompanhar <.. reportarErro : <<extend>>
 
 @enduml

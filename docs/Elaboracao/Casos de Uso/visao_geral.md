@@ -18,4 +18,9 @@ Diagrama de Casos de Uso é uma representação gráfica de todas as interaçõe
 
 ![Diagrama de Casos de Uso](assets/Diagramas/out/casos_de_uso.svg)
 
-![Diagramas]
+![Diagramas de Caso de Uso Aluno](assets/Diagramas/out/casos_de_uso_aluno.svg)
+
+![Diagramas de Caso de Uso Secretaria](assets/Diagramas/out/casos_de_uso_secretaria.svg)
+
+![Diagramas de Caso de Uso Coordenaçao](assets/Diagramas/out/casos_de_uso_coordenaçao.svg)
+
