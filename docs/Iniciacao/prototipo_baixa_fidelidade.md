@@ -22,13 +22,13 @@ Iniciamos a concepção do protótipo através de levantamentos,discussões e ma
 
 Prioridade: D - Desejável, O - Opcional
 
-* [Modal de anexar documentos]()
+* [Modal de anexar contrato]()
 * [Tela de login](#login)
 
   - Login com matricula e senha.
   - Esqueci minha senha. - D
   - OAuth Microsoft. - O
-* [Tela de documentos]()
+* [Tela de contrato]()
 
   - Documentos com nome e status. Status do processo de estágio (Parecido com mercado livre no envio de encomenda).
   - Filtragem de Documentos. - D
@@ -38,13 +38,13 @@ Prioridade: D - Desejável, O - Opcional
 * [Tela de detalhes do documento]()
 
   - Documento expandido, Informações da validação, status, Justificativa do status (caso erro), Botão de download, Botão de reenvio, Botão de report - D.
-* [Tela de avaliação de documentos]()
+* [Tela de avaliação de contrato]()
 
   - Tela de detalhes do documento + opções de : validar, reprovar, mensagem de aviso (opcional).
   - Tela de Historico de empresas - O
 * [Tela Secretaria -&gt; Empresa de Estágio]()
 
-  - Receber documentos das empresas Estagiarias do aluno para validação
+  - Receber contrato das empresas Estagiarias do aluno para validação
 * [Tela de busca de alunos (Secretaria)]()
 
   - Nome
@@ -58,9 +58,15 @@ Tela de login que permitirá entrar com matrícula e senha já utilizadas pelo a
 
 ### tela contratos
 
-Tela de contrato para secretaria e aluno, permite acompanhar os contratos pendentes
+Tela de contrato para secretaria e aluno, permite acompanhar os contratos pendentes.
 
 ![tela_contratos](../assets/Diagramas/out/acompanhar_contrato.svg)
+
+### Tela perfil (aluno)
+
+Informações do perfil do aluno.
+
+![tela_perfil](../assets/Diagramas/out/tela_perfil.svg)
 
 
 
