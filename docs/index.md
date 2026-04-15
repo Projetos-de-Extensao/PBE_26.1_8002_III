@@ -112,28 +112,28 @@ Integração LLaMA & Gemini.
 <div class="lp-team" markdown>
 
 <div class="lp-avatar" markdown>
-:fontawesome-solid-user:{ .lp-avatar-icon }
-**Bernardo**
+<span class="lp-avatar-photo"></span>
+[Bernardo](https://github.com/bernardomiller)
 </div>
 
 <div class="lp-avatar" markdown>
-:fontawesome-solid-user:{ .lp-avatar-icon }
-**Caio**
+<span class="lp-avatar-photo" style="background-image: url('assets/Images/Profile/caio.jpeg');"></span>
+[Caio](https://github.com/caio-ximenes)
 </div>
 
 <div class="lp-avatar" markdown>
-:fontawesome-solid-user:{ .lp-avatar-icon }
-**Daniel**
+<span class="lp-avatar-photo"></span>
+[Daniel](https://github.com/DaniReaper17)
 </div>
 
 <div class="lp-avatar" markdown>
-:fontawesome-solid-user:{ .lp-avatar-icon }
-**Lucas**
+<span class="lp-avatar-photo" style="background-image: url('assets/Images/Profile/lucas.jpg');"></span>
+[Lucas](https://github.com/LucasJesusMarques)
 </div>
 
 <div class="lp-avatar" markdown>
-:fontawesome-solid-user:{ .lp-avatar-icon }
-**Otto**
+<span class="lp-avatar-photo"></span>
+[Otto](https://github.com/Otto-Goldner)
 </div>
 
 </div>

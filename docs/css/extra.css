@@ -194,7 +194,7 @@
     gap: 1rem;
 }
 .lp-avatar-icon {
-    font-size: 1.4rem;
+    font-size: 1.6rem;
     color: #64748b;
     background: #f1f5f9;
     border-radius: 4px;
@@ -203,11 +203,27 @@
     line-height: 40px;
     text-align: center;
 }
+.lp-avatar-photo {
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+    border-radius: 4px;
+    background-color: #f1f5f9;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+}
 .lp-avatar p {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap:0.7rem;
     font-size: 0.95rem;
     font-weight: 500;
     color: #1e293b;
     margin: 0;
+    text-wrap: nowrap;
 }
 
 /* ---------- Dark mode overrides ---------- */
@@ -271,6 +287,9 @@
 [data-md-color-scheme="slate"] .lp-avatar-icon {
     background: rgba(255, 255, 255, 0.05);
     color: #94a3b8;
+}
+[data-md-color-scheme="slate"] .lp-avatar-photo {
+    background-color: rgba(255, 255, 255, 0.05);
 }
 [data-md-color-scheme="slate"] .lp-avatar p {
     color: #e2e8f0;
