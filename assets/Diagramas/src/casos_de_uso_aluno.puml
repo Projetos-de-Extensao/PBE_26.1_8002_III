@@ -1,0 +1,40 @@
+@startuml
+title Casos de Uso - Pacote Aluno
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Aluno" as aluno
+
+rectangle "Plataforma de Estágios" {
+
+        package "Módulo do Aluno" {
+            usecase "Fazer Login" as login
+            usecase "Anexar Documento" as enviar
+            
+            usecase "Iniciar Processo" as iniciar
+            usecase "Enviar Relatório de Horas" as enviarHoras
+            usecase "Acompanhar Status do Processo" as acompanhar
+            
+            usecase "Fazer Download do Documento" as download
+            usecase "Visualizar Documento" as visualizarDoc
+            usecase "Reportar Erro" as reportarErro
+        }
+
+}
+
+aluno --> iniciar
+aluno --> enviarHoras
+aluno --> acompanhar
+
+iniciar ..> login : <<include>>
+enviarHoras ..> login : <<include>>
+acompanhar ..> login : <<include>>
+
+iniciar ..> enviar : <<include>>
+enviarHoras ..> enviar : <<include>>
+
+acompanhar <.. download : <<extend>>
+acompanhar <.. visualizarDoc : <<extend>>
+acompanhar <.. reportarErro : <<extend>>
+
+@enduml

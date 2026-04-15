@@ -1,0 +1,53 @@
+@startuml
+
+' abstract class Usuario {
+'     # matricula : int
+'     # nome : string
+'     # email : string
+'     # senha : string
+
+'     + Usuario(matricula : int, nome : string, email : string)
+'     # redefinirSenha(novaSenha : string)
+' }
+
+class Secretaria extends Usuario {
+    
+}
+
+class Aluno extends Usuario {
+    
+}
+
+class Coordenacao extends Usuario {
+    
+}
+
+class Agente {
+    
+}
+
+class Documento {
+    
+}
+
+class Processo {
+   
+}
+
+
+class Relatório {
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+@enduml

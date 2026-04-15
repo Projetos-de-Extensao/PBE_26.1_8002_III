@@ -20,23 +20,25 @@ rectangle "Plataforma de Estágios" {
             usecase "Enviar Relatório" as enviarHoras
             usecase "Fazer Login" as login
             usecase "Analisar Documento" as analisarDoc
-            usecase "Cadastrar aluno" as cadastrarAluno
             
         }
         package "Aluno" {
             usecase "Reportar Erro" as reportarErro
         }
 
-        package "Operação" {
+        package "Secretaria" {
         usecase "Validar Documento" as validarDoc
         usecase "Reprovar Documento com Justificativa" as reprovarJustificativa
         usecase "Pesquisar alunos" as pesquisarAlunos
+        usecase "Cadastrar aluno" as cadastrarAluno
         usecase "Encerrar processo" as encerrar
         usecase "Cadastrar aluno" as cadastrarAluno
         usecase "Pesquisar Status da empresa" as pesquisarStatus
-        usecase "Validar Horas" as validarHoras
         }
-
+        package "Coordenação" {
+            usecase "Validar Horas" as validarHoras
+            
+        }       
  
 }
 
@@ -49,7 +51,6 @@ aluno --> enviarHoras
 aluno --> login
 
 sec --> validarDoc
-
 sec --> pesquisarAlunos
 sec --> encerrar
 sec --> cadastrarAluno
