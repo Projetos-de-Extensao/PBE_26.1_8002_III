@@ -1,87 +1,34 @@
 ---
-id: diagrama_de_casos de uso
-title: Diagrama de Casos de Uso
+id: diagrama_de_classes
+title: Diagrama de Classes
 ---
 
-## Casos de Uso
+## Diagrama de Classes
 
-### Descrição:
+O Diagrama de Classes descreve a estrutura estática do sistema, mostrando suas classes, atributos, métodos e os relacionamentos entre os objetos. No contexto do Sistema de Gestão de Estágios, ele detalha como as entidades como Aluno, Contrato, Relatório e Processo interagem.
 
-- Contas
-	- Criação
-	- Entrada
-	- Alteração
-	- Recuperar Senha
-	- Exclusão Lógica
-	- Visualização
+![Diagrama de Classes](../assets/Diagramas/out/diagrama_de_classes.svg)
 
-- Perfis
-	- Edição
-	- Pesquisar
-	- Visualização
-	- Seguir/Deixar de Seguir
+## Descrição das Classes Principais
 
-- Postagens (Público) 	 	
-	- Criação
-	- Exclusão
-	- Interação
-	- Visualização
+### Usuários e Perfis
+O sistema utiliza uma estrutura de herança a partir da classe abstrata `Usuario`:
+- **Aluno**: Entidade principal que inicia o processo de estágio. Cada aluno pode ter no máximo **um processo ativo** por vez.
+- **Secretaria**: Responsável pela validação documental e gestão de múltiplos processos de alunos.
+- **Coordenacao**: Responsável pela validação pedagógica do estágio, vinculada a uma **Area** acadêmica específica.
 
-- Mensagens (Privado)
-	- Criação
-	- Exclusão
-	- Visualização
+### Processo e Documentação
+- **Processo**: Centraliza o ciclo de vida de um estágio, vinculando um aluno a seus documentos e status atual.
+- **Contrato**: Armazena os dados do termo de compromisso, incluindo informações da empresa, vigência e status de assinaturas.
+- **Relatorio**: Utilizado para o acompanhamento periódico das horas e atividades.
 
-- Galerias
-	- Albuns
-- Blogs
-- Grupos
+### Estrutura Acadêmica
+- **Curso**: Define a qual curso o aluno pertence.
+- **Area**: Agrupa cursos e define a responsabilidade da Coordenação.
 
-### Criação de uma conta no sistema
+## Considerações de Design
 
-* Atores:
-
-	- Usuário
-	- Sistema
-
-- Pré-Condições:
-	- Nenhuma
-
-* Fluxo Básico:
-    1. Usuário fornece e-mail, senha e confirmações
-    2. Dados do Usuário são validados pelo Sistema
-    3. Dados do Usuário são encriptados pelo Sistema
-    4. Dados do Usuário são persistidos pelo Sistema
-    5. Sistema gera um link com prazo de expiração
-    6. Sistema envia e-mail de verificação, com o link, para o Usuário
-    7. Usuário confirma o e-mail antes do link expirar
-    8. Sistema confirma que o Cadastro do Usuário foi realizado com sucesso
-    9. Sistema redireciona o Usuário para a página de Entrada
-
-- Fluxos Alternativos:
-	- 2a. E-mail do Usuário é inválido
-		2a1. Sistema exibe mensagem de erro
-	- 2b. Senha do Usuário não respeita regras de segurança
-		- 2b1. Sistema exibe mensagem de erro
-	- 3a. Usuário tenta confirmar o e-mail depois de o link expirar
-		- 3a1. Sistema sugere que o Usuário realize um novo Cadastro
-
-### Entrada do usuário no sistema
-
-- Atores:
-	- Usuário
-	- Sistema
-
-- Pré-Condições:
-	Usuário deve estar cadastrado
-
-- Fluxo Básico:
-    - 1. Usuário fornece e-mail e senha
-	- 2. Sistema autentica o Usuário
-	- 3. Sistema redireciona o Usuário para a página inicial
-
-- Fluxos Alternativos:
-	- 2a. Dados do Usuário Inválidos
-		- 2a1. Sistema exibe mensagem de erro
-	- 3a. Primeio acesso do Usuário
-		- 3a1. Sistema redireciona o Usuário para a página de edição de perfil
+1.  **Auditoria Externa**: O sistema não armazena o histórico de ações internamente. Todas as operações de mudança de status e logs de auditoria são enviadas para um **servidor de logs próprio**, garantindo a separação de preocupações e performance.
+2.  **Limitação de Processo**: Foi implementada a regra de que um aluno possui apenas um `processoAtual` (relação 1:0..1), evitando conflitos burocráticos.
+3.  **Independência Documental**: `Contrato` e `Relatorio` são tratados como entidades distintas para facilitar a gestão de seus atributos específicos.
+4.  **Uso de Enums**: `StatusProcesso`, `Unidade` e `Periodo` garantem a integridade dos dados e facilitam futuras manutenções.
