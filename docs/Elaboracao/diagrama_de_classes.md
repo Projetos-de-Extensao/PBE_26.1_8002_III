@@ -1,87 +1,81 @@
 ---
-id: diagrama_de_casos de uso
-title: Diagrama de Casos de Uso
+id: diagrama_de_classes
+title: Diagrama de Classes
 ---
 
-## Casos de Uso
+## Diagrama de Classes
 
-### Descrição:
+O Diagrama de Classes descreve a estrutura estática do sistema, mostrando suas classes, atributos, métodos e os relacionamentos entre os objetos. No contexto do Sistema de Gestão de Estágios, ele detalha como as entidades como Aluno, Contrato, Relatório e Processo interagem.
 
-- Contas
-	- Criação
-	- Entrada
-	- Alteração
-	- Recuperar Senha
-	- Exclusão Lógica
-	- Visualização
+![Diagrama de Classes](../assets/Diagramas/out/diagrama_de_classes.svg)
 
-- Perfis
-	- Edição
-	- Pesquisar
-	- Visualização
-	- Seguir/Deixar de Seguir
+## 🏷️ Enumerações (Enums)
 
-- Postagens (Público) 	 	
-	- Criação
-	- Exclusão
-	- Interação
-	- Visualização
+Os Enums garantem a integridade dos atributos de controle no sistema, evitando erros de preenchimento.
 
-- Mensagens (Privado)
-	- Criação
-	- Exclusão
-	- Visualização
+| Enum | Propósito | Valores Aceitos |
+| :--- | :--- | :--- |
+| **`StatusProcesso`** | Regula o ciclo de vida do estágio. | `ABERTO`, `EM_ANALISE_SECRETARIA`, `EM_ANALISE_COORDENACAO`, `PENDENTE_AJUSTE`, `APROVADO`, `REPROVADO`, `CONCLUIDO`, `CANCELADO` |
+| **`Unidade`** | Define o campus do usuário. | `BARRA`, `CENTRO`, `BH`, `BRASILIA` |
+| **`Periodo`** | Representa o semestre atual do aluno. | `P1` ao `P10` |
 
-- Galerias
-	- Albuns
-- Blogs
-- Grupos
+---
 
-### Criação de uma conta no sistema
+## 👥 Usuários e Perfis
 
-* Atores:
+> [!NOTE]
+> Todos os perfis do sistema herdam da classe abstrata **`Usuario`**, compartilhando credenciais essenciais como `matricula`, `nome`, `email`, `senha`, `unidade` e centralizando o método `login()`.
 
-	- Usuário
-	- Sistema
+### 👨‍🎓 Aluno
+O ator principal. Inicia o processo de estágio e reporta o progresso.
+- **Relacionamentos:** Pertence a 1 `Curso` e 1 `Periodo`. Possui *apenas um* `processoAtual`.
+- **Ações Principais:** `iniciarProcesso()`, `anexarContrato()`, `anexarRelatorio()`.
 
-- Pré-Condições:
-	- Nenhuma
+### 👩‍💼 Secretaria
+Responsável pelo fluxo administrativo e validação inicial de documentos.
+- **Ações Principais:** `validarContrato()`, `validarRelatorio()`, `pesquisarAlunos()`, `listarProcessosPendentes()`.
 
-* Fluxo Básico:
-    1. Usuário fornece e-mail, senha e confirmações
-    2. Dados do Usuário são validados pelo Sistema
-    3. Dados do Usuário são encriptados pelo Sistema
-    4. Dados do Usuário são persistidos pelo Sistema
-    5. Sistema gera um link com prazo de expiração
-    6. Sistema envia e-mail de verificação, com o link, para o Usuário
-    7. Usuário confirma o e-mail antes do link expirar
-    8. Sistema confirma que o Cadastro do Usuário foi realizado com sucesso
-    9. Sistema redireciona o Usuário para a página de Entrada
+### 👨‍🏫 Coordenação
+Decisor acadêmico. Avalia se o estágio está alinhado às diretrizes do curso.
+- **Relacionamentos:** Supervisiona toda a sua `Area` específica.
+- **Ações Principais:** `validarEstagio()`.
 
-- Fluxos Alternativos:
-	- 2a. E-mail do Usuário é inválido
-		2a1. Sistema exibe mensagem de erro
-	- 2b. Senha do Usuário não respeita regras de segurança
-		- 2b1. Sistema exibe mensagem de erro
-	- 3a. Usuário tenta confirmar o e-mail depois de o link expirar
-		- 3a1. Sistema sugere que o Usuário realize um novo Cadastro
+---
 
-### Entrada do usuário no sistema
+## 📑 Processo e Documentação
 
-- Atores:
-	- Usuário
-	- Sistema
+### 🔄 Processo
+O coração do sistema. Ele encapsula o ciclo do estágio conectando `Aluno`, `Secretaria` e `Coordenacao`.
+- **Atributos:** `processoId`, `dataCriacao`, `status`.
+- **Composições:** Contém instâncias de `Contrato` (1..*) e `Relatorio` (0..*). Se o processo é extinto, os documentos associados também perdem o vínculo estrutural.
+- **Transições:** Gerenciado internamente pelos métodos de validação e por `atualizarStatus()`.
 
-- Pré-Condições:
-	Usuário deve estar cadastrado
+### 📝 Contrato
+O termo de compromisso formal de início.
+- **Dados Relevantes:** Vigência (`dataInicio`, `dataTermino`), dados do prestador (`cnpjEmpresa`, `nomeEmpresa`).
+- **Validações:** Requer `apoliceSeguro`, `planoAtividade` válidos e verificação boolean de todas as assinaturas (`assinaturaAluno`, `assinaturaEmpresa`, `assinaturaFaculdade`).
 
-- Fluxo Básico:
-    - 1. Usuário fornece e-mail e senha
-	- 2. Sistema autentica o Usuário
-	- 3. Sistema redireciona o Usuário para a página inicial
+### 📊 Relatório
+Submissão periódica para contabilização de atividades e horas.
+- **Dados Relevantes:** `horasTrabalhadas`, `periodoReferencia`.
+- **Validação:** Necessita do marcador de triagem externa `aprovadoPelaEmpresa`.
 
-- Fluxos Alternativos:
-	- 2a. Dados do Usuário Inválidos
-		- 2a1. Sistema exibe mensagem de erro
-	- 3a. Primeio acesso do Usuário
-		- 3a1. Sistema redireciona o Usuário para a página de edição de perfil
+---
+
+## 🏫 Estrutura Acadêmica
+
+| Classe | Descrição | Relacionamentos |
+| :--- | :--- | :--- |
+| **`Curso`** | Identificação do programa de graduação do aluno. | Um aluno possui **1** Curso. Múltiplos cursos compõem **1** Área. |
+| **`Area`** | Agrupamento taxonômico de cursos correlatos. | Possui de **0 a Muitos** Cursos, provendo os alunos daquela gestão para referenciar **1** Coordenação. |
+
+---
+
+## 💡 Considerações de Arquitetura e Design
+
+> [!TIP]
+> **Boas Práticas Adotadas:** Empregar tipos fortes (via Enums) em toda comunicação crítica minimiza a fragilidade das *magic strings* e garante estabilidade ao longo do crescimento do workflow.
+
+1. **Auditoria Externa (Logs)**: O histórico meticuloso de ações e trâmites processuais deverá ser implementado fora do objeto relacional primário (em um sistema de *eventos/logs* à parte), assegurando leveza de payload e performance nas APIs do sistema nativo.
+2. **Restrição por Modelagem (1:1)**: Um `Aluno` está inflexivelmente mapeado para a restrição de possuir um `processoAtual` por vez `(0..1)`. Isso inibe concorrências sistêmicas desleais com os tramites na central de estágios.
+3. **Independência Documental Estratégica**: O `Contrato` atua formalmente na admissão enquanto o `Relatorio` age como controle sequencial; ao tratar-los como entidades apartadas — unificadas puramente pela amarração do Processo —  evita-se a sobreposição de complexidade na manutenção.
