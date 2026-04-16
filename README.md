@@ -9,7 +9,6 @@
   <img src="https://img.shields.io/badge/Django-5.x-092E20?logo=django&logoColor=white" alt="Django">
   <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white" alt="MySQL">
   <img src="https://img.shields.io/badge/Gemini_API-AI-8E75B2?logo=google&logoColor=white" alt="Gemini">
-  <img src="https://img.shields.io/badge/LLaMA-AI-0467DF?logo=meta&logoColor=white" alt="LLaMA">
 </p>
 
 ---
@@ -43,8 +42,7 @@ Atualmente, o processo de estágio envolve diversas tarefas manuais, burocrátic
 | **Python** | Linguagem principal |
 | **Django + DRF** | Framework web e API RESTful |
 | **MySQL** | Banco de dados relacional |
-| **LLaMA** | Modelo de IA para processamento de documentos |
-| **Gemini API** | Modelo de IA complementar |
+| **Gemini API** | Modelo de IA |
 ---
 
 ## 🚀 Como Executar

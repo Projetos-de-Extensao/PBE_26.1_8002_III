@@ -9,7 +9,8 @@ Casos de uso são uma forma de representar e detalhar funcionalidades existentes
 
 ### Índice:
 - [Criação de uma conta](#criacao_de_conta)
-- [Entrada do usuário](#entrada_do_usuario)
+- []
+- 
 
 
 ## Diagrama de Casos de Uso
@@ -23,4 +24,6 @@ Diagrama de Casos de Uso é uma representação gráfica de todas as interaçõe
 ![Diagramas de Caso de Uso Secretaria](assets/Diagramas/out/casos_de_uso_secretaria.svg)
 
 ![Diagramas de Caso de Uso Coordenaçao](assets/Diagramas/out/casos_de_uso_coordenaçao.svg)
+
+
 

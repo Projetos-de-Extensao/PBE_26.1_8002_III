@@ -17,8 +17,17 @@ nav:
       - Requisitos: Elaboracao/das.md
       - Casos de Uso: 
           - Visão Geral: Elaboracao/Casos de Uso/visao_geral.md
-          - Criação de uma conta: Elaboracao/Casos de Uso/criacao_de_conta.md
-          - Entrada do usuário: Elaboracao/Casos de Uso/entrada_do_usuario.md
+          - Fazer Login: Elaboracao/Casos de Uso/fazer_login.md
+          - Iniciar Processo: Elaboracao/Casos de Uso/iniciar_processo.md
+          - Validar Contrato: Elaboracao/Casos de Uso/validar_contrato.md
+          - Acompanhar Status: Elaboracao/Casos de Uso/acompanhar_status.md
+          - Pesquisar Alunos: Elaboracao/Casos de Uso/pesquisar_alunos.md
+          - Cadastrar Aluno: Elaboracao/Casos de Uso/cadastrar_aluno.md
+          - Enviar Relatório: Elaboracao/Casos de Uso/enviar_relatorio.md
+          - Reprovar Contrato: Elaboracao/Casos de Uso/reprovar_contrato.md
+          - Fazer Download: Elaboracao/Casos de Uso/fazer_download.md
+          - Analisar Contrato: Elaboracao/Casos de Uso/analisar_contrato.md
+          - Anexar Contrato: Elaboracao/Casos de Uso/anexar_contrato.md
       - Diagrama de Classes: Elaboracao/diagrama_de_classes.md
       - Diagrama de Sequência: Elaboracao/diagrama_de_sequencia.md
       - Protótipo de Alta Fidelidade: Elaboracao/prototipo_alta_fidelidade.md
