@@ -1,0 +1,50 @@
+@startuml
+
+' --- Estilos ---
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+}
+
+' --- Classes Relevantes ---
+abstract class Usuario {
+    ' # matricula : int
+    ' # nome : string
+    ' # email : string
+    ' # senha : string
+    ' + login() : bool
+}
+
+class Aluno extends Usuario {
+    ' - curso : Curso
+    ' - periodo : Periodo
+    ' - processoAtual : Processo
+    ' + iniciarProcesso() : Processo
+    ' + anexarContrato(doc : Contrato)
+    ' + anexarRelatorio(doc : Relatorio)
+}
+
+class Curso {
+}
+
+class Periodo {
+}
+
+class Processo {
+}
+
+class Contrato {
+}
+
+class Relatorio {
+}
+
+' --- Relacionamentos ---
+Aluno "0..*" -- "1" Curso
+Aluno "0..*" -- "1" Periodo
+Aluno "1" -- "0..1" Processo : possui >
+Processo "1" *-- "1..*" Contrato : contém >
+Processo "1" *-- "0..*" Relatorio : contém >
+
+@enduml
