@@ -86,9 +86,47 @@ Para combater a validação manual e repetitiva (maior dor relatada pela Secreta
 
 ---
 
-## 🔍 Benchmarking (Pesquisa de Aplicativos)
-Análise de soluções existentes no mercado que serviram de referência para o projeto:
+## 🔍 Benchmarking (Análise de Mercado)
 
-* **Zuna:** Foco em desburocratização e conexão direta entre talentos e empresas.
-* **Facilcon:** Especializada em gestão de documentos e conformidade legal de estágios.
-* **Rade Estágio:** Plataforma focada no controle de relatórios e integração entre faculdade e empresa.
+Para fundamentar o desenvolvimento da Plataforma de Estágios, foi realizada uma análise competitiva das principais soluções utilizadas atualmente por instituições de ensino e empresas. O objetivo foi identificar boas práticas de mercado e, principalmente, mapear as lacunas tecnológicas que o nosso sistema se propõe a preencher.
+
+Abaixo, detalhamos a análise das três plataformas de referência:
+
+---
+
+### 1. Zuna
+Plataforma com forte apelo visual, focada na desburocratização e na conexão rápida e direta entre jovens talentos e empresas contratantes.
+
+* **Pontos Fortes:**
+    * Interface amigável e intuitiva para o estudante, reduzindo a curva de aprendizado.
+    * Foco na experiência do usuário (UX) durante as etapas de cadastro e busca de vagas.
+* **Pontos Fracos (Gaps):**
+    * Foco excessivo no recrutamento, deixando a desejar nas ferramentas de gestão interna e aprovação de documentos por parte das instituições de ensino.
+* **💡 Oportunidade para o nosso Sistema:**
+    * Adotar a mesma fluidez de navegação no nosso **Módulo do Aluno**, garantindo que o processo de "Iniciar Processo" e "Acompanhar Status" seja o mais claro e livre de atritos possível, sem perder o rigor na validação institucional.
+
+---
+
+### 2. Facilcon
+Solução tradicional e robusta, altamente especializada na gestão de documentos e na garantia da conformidade legal dos contratos de estágio.
+
+* **Pontos Fortes:**
+    * Excelente aderência à legislação de estágios, garantindo que termos e apólices estejam dentro das normas.
+    * Histórico confiável de versionamento de contratos.
+* **Pontos Fracos (Gaps):**
+    * Processo de validação altamente engessado e manual. O funcionário precisa abrir documento por documento para procurar erros, gerando gargalos operacionais em períodos de alta demanda.
+* **💡 Oportunidade para o nosso Sistema:**
+    * É exatamente neste ponto que a nossa arquitetura se destaca. Enquanto o Facilcon exige validação 100% humana, nosso sistema introduz o caso de uso de **Pré-análise com Inteligência Artificial**, automatizando a triagem de regras burocráticas e aliviando a carga de trabalho manual da Secretaria.
+
+---
+
+### 3. Rade Estágio
+Plataforma voltada para a gestão do ciclo de vida do estágio, com foco no controle de relatórios de atividades e na integração de dados entre a faculdade, o aluno e a empresa.
+
+* **Pontos Fortes:**
+    * Boa estruturação no recebimento de relatórios de horas e avaliações de desempenho periódicas.
+    * Centralização da comunicação entre as três partes envolvidas (Instituição, Aluno, Concedente).
+* **Pontos Fracos (Gaps):**
+    * Visualização fragmentada para a equipe de back-office (Secretaria/Coordenação), dificultando a busca rápida pelo status global de um aluno ou empresa.
+* **💡 Oportunidade para o nosso Sistema:**
+    * Implementar um painel centralizado no **Módulo da Secretaria**, otimizando os casos de uso de "Pesquisar Alunos" e "Consultar Histórico". A ideia é que a Coordenação consiga realizar a "Validação de Requisitos Pedagógicos" com poucos cliques, tendo a carga horária e o histórico consolidados em uma única tela.
