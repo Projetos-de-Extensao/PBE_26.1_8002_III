@@ -16,7 +16,6 @@ nav:
       - Index: Elaboracao/index.md
       - Requisitos: Elaboracao/das.md
       - Casos de Uso: 
-          - Visão Geral: Elaboracao/Casos de Uso/visao_geral.md
           - Fazer Login: Elaboracao/Casos de Uso/fazer_login.md
           - Iniciar Processo: Elaboracao/Casos de Uso/iniciar_processo.md
           - Validar Contrato: Elaboracao/Casos de Uso/validar_contrato.md
