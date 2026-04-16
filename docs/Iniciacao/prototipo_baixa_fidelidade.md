@@ -70,27 +70,25 @@ Informações do perfil do aluno.
 
 ### Tela de detalhes do documento
 
-- Documento expandido, Informações da validação, status, Justificativa do status (caso erro), Botão de download, Botão de reenvio, Botão de report - D.
+Tela com os detalhes do documento, mostrando o status da validação e opções para baixar ou reenviar o arquivo.
 
 ![Tela de detalhes do documento](../assets/Diagramas/out/detalhes_documento.svg)
 
 ### Tela de avaliação de contrato
 
-- Tela de detalhes do documento + opções de : validar, reprovar, mensagem de aviso (opcional).
-- Tela de Historico de empresas - O
+Tela para a secretaria avaliar o contrato do aluno, com opções rápidas para validar, reprovar ou enviar avisos.
 
 ![Tela de avaliação de contrato](../assets/Diagramas/out/avaliacao_secretaria.svg)
 
 ### Tela Secretaria -> Empresa de Estágio
 
-- Receber contrato das empresas Estagiarias do aluno para validação
+Tela para a secretaria receber e gerenciar os contratos enviados diretamente pelas empresas de estágio.
 
 ![Tela Secretaria Empresa](../assets/Diagramas/out/tela_secretaria_empresa.svg)
 
 ### Tela de busca de alunos (Secretaria)
 
-- Nome
-- Matricula - D
+Tela para a secretaria buscar alunos cadastrados no sistema através do nome ou matrícula.
 
 ![Tela de busca de alunos](../assets/Diagramas/out/busca_alunos.svg)
 
