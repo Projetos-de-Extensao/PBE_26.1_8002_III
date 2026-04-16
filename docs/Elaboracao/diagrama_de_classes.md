@@ -29,7 +29,7 @@ Os Enums garantem a integridade dos atributos de controle no sistema, evitando e
 > Todos os perfis do sistema herdam da classe abstrata **`Usuario`**, compartilhando credenciais essenciais como `matricula`, `nome`, `email`, `senha`, `unidade` e centralizando o método `login()`.
 
 ### 👨‍🎓 Aluno
-O ator principal. Inicia o processo de estágio e reporta o progresso.
+O ator principal. Inicia o processo de estágio e faz o intermédio entre empresa e secretaria.
 
 ![Diagrama de Classes - Aluno](../assets/Diagramas/out/diagrama_classes_aluno.svg)
 
@@ -37,14 +37,14 @@ O ator principal. Inicia o processo de estágio e reporta o progresso.
 - **Ações Principais:** `iniciarProcesso()`, `anexarContrato()`, `anexarRelatorio()`.
 
 ### 👩‍💼 Secretaria
-Responsável pelo fluxo administrativo e validação inicial de documentos.
+Responsável pelo fluxo administrativo e validação do contrato.
 
 ![Diagrama de Classes - Secretaria](../assets/Diagramas/out/diagrama_classes_secretaria.svg)
 
-- **Ações Principais:** `validarContrato()`, `validarRelatorio()`, `pesquisarAlunos()`, `listarProcessosPendentes()`.
+- **Ações Principais:** `validarContrato()`, `pesquisarAlunos()`, `listarProcessosPendentes()`.
 
 ### 👨‍🏫 Coordenação
-Decisor acadêmico. Avalia se o estágio está alinhado às diretrizes do curso.
+Decisor acadêmico. Avalia se o estágio está alinhado às diretrizes do curso e valida as horas feitas.
 
 ![Diagrama de Classes - Coordenação](../assets/Diagramas/out/diagrama_classes_coordenacao.svg)
 
@@ -69,7 +69,7 @@ O termo de compromisso formal de início.
 - **Validações:** Requer `apoliceSeguro`, `planoAtividade` válidos e verificação boolean de todas as assinaturas (`assinaturaAluno`, `assinaturaEmpresa`, `assinaturaFaculdade`).
 
 ### 📊 Relatório
-Submissão periódica para contabilização de atividades e horas.
+Submissão periódica para contabilização de atividades e horasDocumento produzido pela empresa ao final do período de estágio para informar o que foi feito pelo estudante.
 - **Dados Relevantes:** `horasTrabalhadas`, `periodoReferencia`.
 - **Validação:** Necessita do marcador de triagem externa `aprovadoPelaEmpresa`.
 
