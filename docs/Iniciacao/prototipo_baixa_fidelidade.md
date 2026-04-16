@@ -22,30 +22,30 @@ Iniciamos a concepção do protótipo através de levantamentos,discussões e ma
 
 Prioridade: D - Desejável, O - Opcional
 
-* [Modal de anexar contrato]()
+* [Modal de anexar contrato](#anexar-documentos)
 * [Tela de login](#login)
 
   - Login com matricula e senha.
   - Esqueci minha senha. - D
   - OAuth Microsoft. - O
-* [Tela de contrato]()
+* [Tela de contrato](#tela-contratos)
 
   - Documentos com nome e status. Status do processo de estágio (Parecido com mercado livre no envio de encomenda).
   - Filtragem de Documentos. - D
-* [Tela de perfil]()
+* [Tela de perfil](#tela-perfil-aluno)
 
   - Informações do usuário.
-* [Tela de detalhes do documento]()
+* [Tela de detalhes do documento](#tela-de-detalhes-do-documento)
 
   - Documento expandido, Informações da validação, status, Justificativa do status (caso erro), Botão de download, Botão de reenvio, Botão de report - D.
-* [Tela de avaliação de contrato]()
+* [Tela de avaliação de contrato](#tela-de-avaliacao-de-contrato)
 
   - Tela de detalhes do documento + opções de : validar, reprovar, mensagem de aviso (opcional).
   - Tela de Historico de empresas - O
-* [Tela Secretaria -&gt; Empresa de Estágio]()
+* [Tela Secretaria -> Empresa de Estágio](#tela-secretaria---empresa-de-estagio)
 
   - Receber contrato das empresas Estagiarias do aluno para validação
-* [Tela de busca de alunos (Secretaria)]()
+* [Tela de busca de alunos (Secretaria)](#tela-de-busca-de-alunos-secretaria)
 
   - Nome
   - Matricula - D
@@ -56,11 +56,16 @@ Tela de login que permitirá entrar com matrícula e senha já utilizadas pelo a
 
 ![Login](../assets/Diagramas/out/login.svg)
 
-### tela contratos
+### Tela contratos
 
 Tela de contrato para secretaria e aluno, permite acompanhar os contratos pendentes.
 
-![tela_contratos](../assets/Diagramas/out/acompanhar_contrato.svg)
+#### Secretaria
+![tela_contratos](../assets/Diagramas/out/acompanhar_contrato_secretaria.svg)
+
+
+#### Aluno
+![tela_contratos](../assets/Diagramas/out/acompanhar_contrato_aluno.svg)
 
 ### Tela perfil (aluno)
 
