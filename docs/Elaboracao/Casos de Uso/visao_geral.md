@@ -17,13 +17,13 @@ Casos de uso são uma forma de representar e detalhar funcionalidades existentes
 
 Diagrama de Casos de Uso é uma representação gráfica de todas as interações que um ou mais atores podem ter com o sistema e como esses casos de uso se relacionam entre si. 
 
-![Diagrama de Casos de Uso](assets/Diagramas/out/casos_de_uso.svg)
+![Diagrama Geral](../../assets/Diagramas/out/casos_de_uso.svg)
 
-![Diagramas de Caso de Uso Aluno](assets/Diagramas/out/casos_de_uso_aluno.svg)
+![Diagrama do Aluno](../../assets/Diagramas/out/casos_de_uso_aluno.svg)
 
-![Diagramas de Caso de Uso Secretaria](assets/Diagramas/out/casos_de_uso_secretaria.svg)
+![Diagrama da Secretaria](../../assets/Diagramas/out/casos_de_uso_secretaria.svg)
 
-![Diagramas de Caso de Uso Coordenaçao](assets/Diagramas/out/casos_de_uso_coordenaçao.svg)
+![Diagrama da Coordenação](../../assets/Diagramas/out/casos_de_uso_coordenacao.svg)
 
 
 
