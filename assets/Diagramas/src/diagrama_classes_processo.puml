@@ -29,7 +29,6 @@ class Processo {
    ' - secretaria : Secretaria
    ' + atualizarStatus(novoStatus : StatusProcesso)
    ' + validarContrato(aprovado : bool, justificativa : string)
-   ' + validarRelatorio(aprovado : bool, justificativa : string)
 }
 
 class Contrato {

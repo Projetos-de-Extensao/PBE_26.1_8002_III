@@ -36,7 +36,6 @@ class Aluno extends Usuario {
 
 class Secretaria extends Usuario {
     ' + validarContrato(processo : Processo, aprovado : bool, justificativa : string)
-    ' + validarRelatorio(processo : Processo, aprovado : bool, justificativa : string)
     ' + pesquisarAlunos(matricula : int) : Aluno[]
     ' + listarProcessosPendentes() : Processo[]
 }
