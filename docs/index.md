@@ -132,7 +132,7 @@ Integração LLaMA & Gemini.
 </div>
 
 <div class="lp-avatar" markdown>
-<span class="lp-avatar-photo">:fontawesome-solid-user:</span>
+<span class="lp-avatar-photo" style="background-image: url('assets/Images/Profile/otto.jpeg');"></span>
 [Otto](https://github.com/Otto-Goldner)
 </div>
 
