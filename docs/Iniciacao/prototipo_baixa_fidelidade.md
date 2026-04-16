@@ -85,9 +85,9 @@ Tela para a secretaria avaliar o contrato do aluno, com opções rápidas para v
 
 ![Tela de avaliação de contrato](../assets/Diagramas/out/avaliacao_secretaria.svg)
 
-### Tela Secretaria -> Empresa de Estágio
+### Tela Secretaria
 
-Tela para a secretaria receber e gerenciar os contratos enviados diretamente pelas empresas de estágio.
+Tela para a secretaria receber e gerenciar os contratos enviados diretamente pelo aluno.
 
 ![Tela Secretaria Empresa](../assets/Diagramas/out/tela_secretaria_empresa.svg)
 
