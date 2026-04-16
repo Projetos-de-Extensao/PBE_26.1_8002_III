@@ -1,0 +1,19 @@
+@startsalt
+{+
+    **Acompanhar contratos (Aluno)**
+    --
+    {#
+       Contrato | Status | Ação
+       Estágio - Tech Corp | **Em análise** | [Detalhes]
+    }
+    --
+    {
+      **Histórico de Movimentações (Selecionado):**
+      - 10/04: Recebido pela Secretaria
+      { [Baixar documento] | [Reenviar documento] } 
+    }
+  }
+}
+
+
+@endsalt
