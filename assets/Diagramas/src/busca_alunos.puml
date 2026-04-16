@@ -1,0 +1,16 @@
+@startsalt
+{+
+  Nome:
+  "Digite o nome do aluno"
+  Matrícula:
+  "Digite a matrícula"
+  --
+  [ Buscar ]
+  --
+  {#
+    Nome | Matrícula | Ação
+    Binas Miller | 202405052362| [ Detalhes ]
+    Caio Ximenes | 202562359232| [ Detalhes ]
+  }
+}
+@endsalt
