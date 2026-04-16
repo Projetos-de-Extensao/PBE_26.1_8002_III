@@ -1,0 +1,66 @@
+@startuml
+
+' --- Estilos ---
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+}
+
+' --- Enums ---
+enum StatusProcesso {
+    ' ABERTO
+    ' EM_ANALISE_SECRETARIA
+    ' EM_ANALISE_COORDENACAO
+    ' PENDENTE_AJUSTE
+    ' APROVADO
+    ' REPROVADO
+    ' CONCLUIDO
+    ' CANCELADO
+}
+
+' --- Classes de Processo e Documentação ---
+class Processo {
+   ' - processoId : int
+   ' - dataCriacao : DateTime
+   ' - status : StatusProcesso
+   ' - aluno : Aluno
+   ' - coordenacao : Coordenacao
+   ' - secretaria : Secretaria
+   ' + atualizarStatus(novoStatus : StatusProcesso)
+   ' + validarContrato(aprovado : bool, justificativa : string)
+   ' + validarRelatorio(aprovado : bool, justificativa : string)
+}
+
+class Contrato {
+    ' - processo : Processo
+    ' - contratoId : int
+    ' - nomeArquivo : string
+    ' - dataUpload : DateTime
+    ' - cnpjEmpresa : string
+    ' - nomeEmpresa : string
+    ' - dataInicio : Date
+    ' - dataTermino : Date
+    ' - apoliceSeguro : string
+    ' - planoAtividade : bool
+    ' - assinaturaAluno : bool
+    ' - assinaturaEmpresa : bool
+    ' - assinaturaFaculdade : bool
+}
+
+class Relatorio {
+    ' - processo : Processo
+    ' - relatorioId : int
+    ' - nomeArquivo : string
+    ' - dataUpload : DateTime
+    ' - horasTrabalhadas : int
+    ' - periodoReferencia : string
+    ' - aprovadoPelaEmpresa : bool
+}
+
+' --- Relacionamentos de Processo ---
+Processo "1" *-- "1..*" Contrato : contém >
+Processo "1" *-- "0..*" Relatorio : contém >
+Processo "0..*" -- "1" StatusProcesso : possui >
+
+@enduml

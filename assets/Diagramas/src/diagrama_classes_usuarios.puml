@@ -1,0 +1,49 @@
+@startuml
+
+' --- Estilos ---
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+}
+
+' --- Enums ---
+enum Unidade {
+    ' BARRA
+    ' CENTRO
+    ' BH
+    ' BRASILIA
+}
+
+' --- Classes de Usuários ---
+abstract class Usuario {
+    ' # matricula : int
+    ' # nome : string
+    ' # email : string
+    ' # senha : string
+    ' # unidade : Unidade
+    ' + login() : bool
+}
+
+class Aluno extends Usuario {
+    ' - curso : Curso
+    ' - periodo : Periodo
+    ' - processoAtual : Processo
+    ' + iniciarProcesso() : Processo
+    ' + anexarContrato(doc : Contrato)
+    ' + anexarRelatorio(doc : Relatorio)
+}
+
+class Secretaria extends Usuario {
+    ' + validarContrato(processo : Processo, aprovado : bool, justificativa : string)
+    ' + validarRelatorio(processo : Processo, aprovado : bool, justificativa : string)
+    ' + pesquisarAlunos(matricula : int) : Aluno[]
+    ' + listarProcessosPendentes() : Processo[]
+}
+
+class Coordenacao extends Usuario {
+    ' - area : Area
+    ' + validarEstagio(processo : Processo, aprovado : bool, justificativa : string)
+}
+
+@enduml
