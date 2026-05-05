@@ -38,8 +38,7 @@ A API gerencia toda a burocracia na relação **IES ↔ Aluno** para validação
 | 2.3 | **Validação de unicidade** | CPF e Matrícula únicos no banco. |
 | 2.4 | **Validação de CPF** | Algoritmo padrão da Receita Federal. |
 | 2.5 | **Validação de e-mail** | Formato válido (contém `@` e domínio). |
-| 2.6 | **Endpoint `GET /alunos`** | Listar todos os alunos (paginado). |
-| 2.7 | **Endpoint `GET /alunos/:id`** | Detalhes de um aluno específico + histórico de estágios. |
+| 2.6 | **Endpoint `GET /alunos/:id`** | Detalhes de um aluno específico + histórico de estágios. |
 
 ---
 
@@ -52,7 +51,7 @@ A API gerencia toda a burocracia na relação **IES ↔ Aluno** para validação
 | 3.2 | **Criar Enum `StatusProcesso`** | Valores: `ABERTO`, `EM_ANALISE_SECRETARIA`, `EM_ANALISE_COORDENACAO`, `PENDENTE_AJUSTE`, `APROVADO`, `REPROVADO`, `CONCLUIDO`, `CANCELADO`. |
 | 3.3 | **Endpoint `POST /processos`** | Cria novo processo. Recebe CNPJ da empresa, datas, carga horária e arquivo TCE. |
 | 3.4 | **Validar conflito de processos** | Aluno não pode ter dois processos "Em Andamento" conflitantes (restrição 0..1). |
-| 3.5 | **Validar formato de arquivo** | Somente `.pdf`, máximo 5MB. |
+| 3.5 | **Validar formato de arquivo** | Somente `.pdf`, deve ter limitação de tamanho. |
 | 3.6 | **Validar campos obrigatórios** | Destacar campos faltantes no retorno de erro. |
 | 3.7 | **Status inicial = `PENDENTE DE ANÁLISE`** | Setar automaticamente ao criar. |
 | 3.8 | **Endpoint para Secretaria criar processo em nome do aluno** | Se ator = Secretaria, exigir seleção de matrícula do aluno. |
@@ -66,7 +65,7 @@ A API gerencia toda a burocracia na relação **IES ↔ Aluno** para validação
 | # | Task | Detalhes |
 |---|------|----------|
 | 4.1 | **Criar modelo `Contrato`** | Campos: `dataInicio`, `dataTermino`, `cnpjEmpresa`, `nomeEmpresa`, `apoliceSeguro`, `planoAtividade`, `assinaturaAluno`, `assinaturaEmpresa`, `assinaturaFaculdade`, `arquivoUrl`, `versao`. |
-| 4.2 | **Serviço de upload de PDF** | Validar MIME type (`application/pdf`) e tamanho (≤5MB). |
+| 4.2 | **Serviço de upload de PDF** | Validar MIME type (`application/pdf`) e tamanho (≤Limite). |
 | 4.3 | **Integrar storage (ex: AWS S3)** | Armazenar PDFs com URLs protegidas. |
 | 4.4 | **Controle de versionamento de documentos** | Ao receber novo upload no mesmo processo: arquivar anterior (`status = obsoleto`) e incrementar `versão_atual`. |
 | 4.5 | **Buffer temporário pré-submissão** | Arquivo em memória até submissão final do formulário. |
