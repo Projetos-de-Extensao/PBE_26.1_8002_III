@@ -12,6 +12,7 @@ dependencies = [
     "colorama==0.4.6",
     "csscompressor==0.9.5",
     "django>=6.0.4",
+    "djangorestframework>=3.17.1",
     "ghp-import==2.1.0",
     "htmlmin2==0.1.13",
     "idna==3.11",
