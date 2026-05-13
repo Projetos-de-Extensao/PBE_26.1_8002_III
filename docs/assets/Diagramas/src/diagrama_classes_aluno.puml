@@ -9,20 +9,20 @@ skinparam class {
 
 ' --- Classes Relevantes ---
 abstract class Usuario {
-    ' # matricula : int
-    ' # nome : string
-    ' # email : string
-    ' # senha : string
-    ' + login() : bool
+    # matricula : int
+    # nome : string
+    # email : string
+    # senha : string
+    + login() : bool
 }
 
 class Aluno extends Usuario {
-    ' - curso : Curso
-    ' - periodo : Periodo
-    ' - processoAtual : Processo
-    ' + iniciarProcesso() : Processo
-    ' + anexarContrato(doc : Contrato)
-    ' + anexarRelatorio(doc : Relatorio)
+    - cursoId : int
+    - periodo : Periodo
+    - processoAtualId : int
+    + iniciarProcesso() : Processo
+    + anexarContrato(doc : Contrato)
+    + anexarRelatorio(doc : Relatorio)
 }
 
 class Curso {
