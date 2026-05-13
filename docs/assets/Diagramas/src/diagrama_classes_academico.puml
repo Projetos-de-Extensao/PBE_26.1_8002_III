@@ -1,0 +1,49 @@
+@startuml
+
+' --- Estilos ---
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+}
+
+' --- Enums ---
+enum Periodo {
+    ' P1, P2, P3, P4, P5, P6, P7, P8, P9, P10
+}
+
+' --- Classes da Estrutura Acadêmica ---
+class Aluno {
+    ' - curso : Curso
+    ' - periodo : Periodo
+    ' - processoAtual : Processo
+    ' + iniciarProcesso() : Processo
+    ' + anexarContrato(doc : Contrato)
+    ' + anexarRelatorio(doc : Relatorio)
+}
+
+class Curso {
+    ' - cursoId : int
+    ' - nome : string
+}
+
+class Area {
+    ' - areaId : int
+    ' - nome : string
+}
+
+class Coordenacao {
+    ' - area : Area
+    ' + validarEstagio(processo : Processo, aprovado : bool, justificativa : string)
+}
+
+' --- Relacionamentos ---
+' Um aluno pertence a um curso e período
+Aluno "0..*" -- "1" Curso
+Aluno "0..*" -- "1" Periodo
+
+' Hierarquia de Curso e Área
+Area "1" -- "0..*" Curso
+Coordenacao "1" -- "1" Area
+
+@enduml

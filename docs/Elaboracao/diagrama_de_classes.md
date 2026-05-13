@@ -23,26 +23,39 @@ Os Enums garantem a integridade dos atributos de controle no sistema, evitando e
 
 ## 👥 Usuários e Perfis
 
+![Diagrama de Usuários](../assets/Diagramas/out/diagrama_classes_usuarios.svg)
+
 > [!NOTE]
 > Todos os perfis do sistema herdam da classe abstrata **`Usuario`**, compartilhando credenciais essenciais como `matricula`, `nome`, `email`, `senha`, `unidade` e centralizando o método `login()`.
 
 ### 👨‍🎓 Aluno
-O ator principal. Inicia o processo de estágio e reporta o progresso.
+O ator principal. Inicia o processo de estágio e faz o intermédio entre empresa e secretaria.
+
+![Diagrama de Classes - Aluno](../assets/Diagramas/out/diagrama_classes_aluno.svg)
+
 - **Relacionamentos:** Pertence a 1 `Curso` e 1 `Periodo`. Possui *apenas um* `processoAtual`.
 - **Ações Principais:** `iniciarProcesso()`, `anexarContrato()`, `anexarRelatorio()`.
 
 ### 👩‍💼 Secretaria
-Responsável pelo fluxo administrativo e validação inicial de documentos.
-- **Ações Principais:** `validarContrato()`, `validarRelatorio()`, `pesquisarAlunos()`, `listarProcessosPendentes()`.
+Responsável pelo fluxo administrativo e validação do contrato.
+
+![Diagrama de Classes - Secretaria](../assets/Diagramas/out/diagrama_classes_secretaria.svg)
+
+- **Ações Principais:** `validarContrato()`, `pesquisarAlunos()`, `listarProcessosPendentes()`.
 
 ### 👨‍🏫 Coordenação
-Decisor acadêmico. Avalia se o estágio está alinhado às diretrizes do curso.
+Decisor acadêmico. Avalia se o estágio está alinhado às diretrizes do curso e valida as horas feitas.
+
+![Diagrama de Classes - Coordenação](../assets/Diagramas/out/diagrama_classes_coordenacao.svg)
+
 - **Relacionamentos:** Supervisiona toda a sua `Area` específica.
 - **Ações Principais:** `validarEstagio()`.
 
 ---
 
 ## 📑 Processo e Documentação
+
+![Diagrama de Processo e Documentação](../assets/Diagramas/out/diagrama_classes_processo.svg)
 
 ### 🔄 Processo
 O coração do sistema. Ele encapsula o ciclo do estágio conectando `Aluno`, `Secretaria` e `Coordenacao`.
@@ -56,13 +69,15 @@ O termo de compromisso formal de início.
 - **Validações:** Requer `apoliceSeguro`, `planoAtividade` válidos e verificação boolean de todas as assinaturas (`assinaturaAluno`, `assinaturaEmpresa`, `assinaturaFaculdade`).
 
 ### 📊 Relatório
-Submissão periódica para contabilização de atividades e horas.
+Submissão periódica para contabilização de atividades e horasDocumento produzido pela empresa ao final do período de estágio para informar o que foi feito pelo estudante.
 - **Dados Relevantes:** `horasTrabalhadas`, `periodoReferencia`.
 - **Validação:** Necessita do marcador de triagem externa `aprovadoPelaEmpresa`.
 
 ---
 
 ## 🏫 Estrutura Acadêmica
+
+![Diagrama de Estrutura Acadêmica](../assets/Diagramas/out/diagrama_classes_academico.svg)
 
 | Classe | Descrição | Relacionamentos |
 | :--- | :--- | :--- |

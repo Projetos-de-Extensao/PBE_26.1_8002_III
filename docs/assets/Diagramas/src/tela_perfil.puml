@@ -1,0 +1,17 @@
+@startsalt tela_perfil_aluno
+{
+  {+
+    **Perfil do Aluno**
+    --
+    {
+      Nome:      | "Tixa da Silva                       "
+      Matrícula: | "202410567872                        "
+      Curso:     | "Engenharia de Software              "
+      Email:     | "tixa.silva@alunos.ibmec.edu.br.com  "
+    }
+    --
+    {[Contratos anteriores] | [Acompanhar Contrato]}
+    
+  }
+}
+@endsalt
