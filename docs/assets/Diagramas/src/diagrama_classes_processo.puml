@@ -21,30 +21,28 @@ enum StatusProcesso {
 
 ' --- Classes de Processo e Documentação ---
 class Processo {
-   - processoId : int
-   - dataCriacao : DateTime
+   - id : int
+   - data_criacao : Date
    - status : StatusProcesso
-   - matriculaAluno : int
-   - matriculaCoordenacao : int
-   - matriculaSecretaria : int
+   - matricula_aluno : int
    + atualizarStatus(novoStatus : StatusProcesso)
    + validarContrato(aprovado : bool, justificativa : string)
 }
 
 class Contrato {
+    - id : int
+    - arquivo : string
+    - data_upload : Date
+    - cnpj_empresa : string
+    - nome_empresa : string
+    - data_inicio : Date
+    - data_termino : Date
+    - apolice_seguro : string
+    - plano_atividade : bool
+    - assinatura_aluno : bool
+    - assinatura_empresa : bool
+    - assinatura_faculdade : bool
     - processoId : int
-    - contratoId : int
-    - nomeArquivo : string
-    - dataUpload : DateTime
-    - cnpjEmpresa : string
-    - nomeEmpresa : string
-    - dataInicio : Date
-    - dataTermino : Date
-    - apoliceSeguro : string
-    - planoAtividade : bool
-    - assinaturaAluno : bool
-    - assinaturaEmpresa : bool
-    - assinaturaFaculdade : bool
 }
 
 class Relatorio {
