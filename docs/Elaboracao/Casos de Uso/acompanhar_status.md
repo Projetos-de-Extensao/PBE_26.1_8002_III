@@ -8,7 +8,7 @@ title: Acompanhar Status do Processo
 - **Atores:**
     - Aluno / Secretaria
     - Sistema
-
+dw
 - **Pré-Condições:**
     - O Usuário deve estar logado no sistema.
 
