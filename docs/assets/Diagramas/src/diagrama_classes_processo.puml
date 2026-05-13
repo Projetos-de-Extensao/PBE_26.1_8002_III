@@ -9,52 +9,52 @@ skinparam class {
 
 ' --- Enums ---
 enum StatusProcesso {
-    ' ABERTO
-    ' EM_ANALISE_SECRETARIA
-    ' EM_ANALISE_COORDENACAO
-    ' PENDENTE_AJUSTE
-    ' APROVADO
-    ' REPROVADO
-    ' CONCLUIDO
-    ' CANCELADO
+    ABERTO
+    EM_ANALISE_SECRETARIA
+    EM_ANALISE_COORDENACAO
+    PENDENTE_AJUSTE
+    APROVADO
+    REPROVADO
+    CONCLUIDO
+    CANCELADO
 }
 
 ' --- Classes de Processo e Documentação ---
 class Processo {
-   ' - processoId : int
-   ' - dataCriacao : DateTime
-   ' - status : StatusProcesso
-   ' - aluno : Aluno
-   ' - coordenacao : Coordenacao
-   ' - secretaria : Secretaria
-   ' + atualizarStatus(novoStatus : StatusProcesso)
-   ' + validarContrato(aprovado : bool, justificativa : string)
+   - processoId : int
+   - dataCriacao : DateTime
+   - status : StatusProcesso
+   - matriculaAluno : int
+   - matriculaCoordenacao : int
+   - matriculaSecretaria : int
+   + atualizarStatus(novoStatus : StatusProcesso)
+   + validarContrato(aprovado : bool, justificativa : string)
 }
 
 class Contrato {
-    ' - processo : Processo
-    ' - contratoId : int
-    ' - nomeArquivo : string
-    ' - dataUpload : DateTime
-    ' - cnpjEmpresa : string
-    ' - nomeEmpresa : string
-    ' - dataInicio : Date
-    ' - dataTermino : Date
-    ' - apoliceSeguro : string
-    ' - planoAtividade : bool
-    ' - assinaturaAluno : bool
-    ' - assinaturaEmpresa : bool
-    ' - assinaturaFaculdade : bool
+    - processoId : int
+    - contratoId : int
+    - nomeArquivo : string
+    - dataUpload : DateTime
+    - cnpjEmpresa : string
+    - nomeEmpresa : string
+    - dataInicio : Date
+    - dataTermino : Date
+    - apoliceSeguro : string
+    - planoAtividade : bool
+    - assinaturaAluno : bool
+    - assinaturaEmpresa : bool
+    - assinaturaFaculdade : bool
 }
 
 class Relatorio {
-    ' - processo : Processo
-    ' - relatorioId : int
-    ' - nomeArquivo : string
-    ' - dataUpload : DateTime
-    ' - horasTrabalhadas : int
-    ' - periodoReferencia : string
-    ' - aprovadoPelaEmpresa : bool
+    - processoId : int
+    - relatorioId : int
+    - nomeArquivo : string
+    - dataUpload : DateTime
+    - horasTrabalhadas : int
+    - periodoReferencia : string
+    - aprovadoPelaEmpresa : bool
 }
 
 ' --- Relacionamentos de Processo ---

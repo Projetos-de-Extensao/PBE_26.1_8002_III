@@ -9,16 +9,16 @@ skinparam class {
 
 ' --- Classes Relevantes ---
 abstract class Usuario {
-    ' # matricula : int
-    ' # nome : string
-    ' # email : string
-    ' # senha : string
-    ' + login() : bool
+    # matricula : int
+    # nome : string
+    # email : string
+    # senha : string
+    + login() : bool
 }
 
 class Coordenacao extends Usuario {
-    ' - area : Area
-    ' + validarEstagio(processo : Processo, aprovado : bool, justificativa : string)
+    - areaId : int
+    + validarEstagio(processo : Processo, aprovado : bool, justificativa : string)
 }
 
 class Area {
