@@ -69,7 +69,7 @@ class Contrato(models.Model):
     data_upload = models.DateField(verbose_name="Data de Upload")
     cnpj_empresa = models.CharField(max_length=14, verbose_name="CNPJ da empresa")
     nome_empresa = models.CharField(max_length=255, verbose_name="Nome da empresa")
-    data_inicio = models.DateField(verbose_name="Data de Início")
+    data_inicio = models.DateField(verbose_name="Data de Início")   
     data_termino = models.DateField(verbose_name="Data de Término")
     apolice_seguro = models.CharField(max_length=100, verbose_name="Apólice de Seguro")
     plano_atividade = models.BooleanField(default=False, verbose_name="Plano de Atividade")
