@@ -59,14 +59,14 @@ Decisor acadêmico. Avalia se o estágio está alinhado às diretrizes do curso 
 
 ### 🔄 Processo
 O coração do sistema. Ele encapsula o ciclo do estágio conectando `Aluno`, `Secretaria` e `Coordenacao`.
-- **Atributos:** `processoId`, `dataCriacao`, `status`.
+- **Atributos:** `id`, `data_criacao`, `status`.
 - **Composições:** Contém instâncias de `Contrato` (1..*) e `Relatorio` (0..*). Se o processo é extinto, os documentos associados também perdem o vínculo estrutural.
 - **Transições:** Gerenciado internamente pelos métodos de validação e por `atualizarStatus()`.
 
 ### 📝 Contrato
 O termo de compromisso formal de início.
-- **Dados Relevantes:** Vigência (`dataInicio`, `dataTermino`), dados do prestador (`cnpjEmpresa`, `nomeEmpresa`).
-- **Validações:** Requer `apoliceSeguro`, `planoAtividade` válidos e verificação boolean de todas as assinaturas (`assinaturaAluno`, `assinaturaEmpresa`, `assinaturaFaculdade`).
+- **Dados Relevantes:** Vigência (`data_inicio`, `data_termino`), dados do prestador (`cnpj_empresa`, `nome_empresa`).
+- **Validações:** Requer `apolice_seguro`, `plano_atividade` válidos e verificação boolean de todas as assinaturas (`assinatura_aluno`, `assinatura_empresa`, `assinatura_faculdade`).
 
 ### 📊 Relatório
 Submissão periódica para contabilização de atividades e horasDocumento produzido pela empresa ao final do período de estágio para informar o que foi feito pelo estudante.

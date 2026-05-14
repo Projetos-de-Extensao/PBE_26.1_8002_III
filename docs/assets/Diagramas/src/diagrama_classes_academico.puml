@@ -23,13 +23,13 @@ class Aluno {
 }
 
 class Curso {
-    - cursoId : int
+    - id : int
     - nome : string
     - areaId : int
 }
 
 class Area {
-    - areaId : int
+    - id : int
     - nome : string
 }
 

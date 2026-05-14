@@ -21,3 +21,14 @@ class TipoUsuario(models.TextChoices):
     SECRETARIA = 'secretaria', 'Secretaria'
     COORDENACAO = 'coordenacao', 'Coordenação'
     CARREIRAS = 'carreiras', 'Carreiras'
+
+
+class StatusProcesso(models.TextChoices):
+    ABERTO = 'aberto', 'Aberto'
+    EM_ANALISE_SECRETARIA = 'analise_sec', 'Análise Secretaria'
+    EM_ANALISE_COORDENACAO = '',''
+    PENDENTE = 'pendente', 'Pendente'
+    APROVADO = 'aprovado','Aprovado'
+    REPROVADO ='reprovado','Reprovado'
+    CONCLUIDO = 'concluido','Concluido'
+    CANCELADO ='cancelado','Cancelado'
