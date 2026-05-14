@@ -8,7 +8,6 @@ class CursoSerializer(serializers.ModelSerializer):
         fields = ["nome","areaId"]
 
 class AlunoSerializer(serializers.ModelSerializer):
-    nome = serializers.CharField(max_length=100)
-    matricula = serializers.CharField(max_length=20)
-    cpf = serializers.CharField(max_length=14)
-    is_ativo = serializers.BooleanField()
+    class Meta:
+        model = Aluno
+        fields = ['nome', 'matricula', 'cpf', 'is_ativo']
