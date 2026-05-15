@@ -26,8 +26,8 @@ A API gerencia toda a burocracia na relação **IES ↔ Aluno** para validação
 | 1.4 | **Bloqueio após 5 tentativas** | Implementar rate-limiting ou lockout temporário após 5 falhas consecutivas. |
 | 1.5 | **Criptografia de senhas** | Hash com bcrypt/argon2 no armazenamento e tráfego via HTTPS. |
 | 1.6 | **Fluxo de primeiro acesso** | Redirecionar para redefinição de senha obrigatória no primeiro login. |
-| 1.7 | **Middleware de autenticação** | Validar JWT em todas as rotas protegidas. |
-| 1.8 | **Middleware de autorização por perfil** | Separar permissões: Aluno, Secretaria, Coordenação. |
+| 1.7 | 📌 **Middleware de autenticação** | Validar JWT em todas as rotas protegidas. |
+| 1.8 | 📌 **Middleware de autorização por perfil** | Separar permissões: Aluno, Secretaria, Coordenação. |
 
 ---
 
@@ -52,7 +52,7 @@ A API gerencia toda a burocracia na relação **IES ↔ Aluno** para validação
 |---|------|----------|
 | 3.1 | 📌 **Criar modelo `Processo`** | Campos: `processoId`, `dataCriacao`, `status` (Enum StatusProcesso), FK para `Aluno`. |
 | 3.2 | **Criar Enum `StatusProcesso`** | Valores: `ABERTO`, `EM_ANALISE_SECRETARIA`, `EM_ANALISE_COORDENACAO`, `PENDENTE_AJUSTE`, `APROVADO`, `REPROVADO`, `CONCLUIDO`, `CANCELADO`. |
-| 3.3 | **Endpoint `POST /processos`** | Cria novo processo. Recebe CNPJ da empresa, datas, carga horária e arquivo TCE. |
+| 3.3 | 📌 **Endpoint `POST /processos`** | Cria novo processo. Recebe CNPJ da empresa, datas, carga horária e arquivo TCE. |
 | 3.4 | **Validar conflito de processos** | Aluno não pode ter dois processos "Em Andamento" conflitantes (restrição 0..1). |
 | 3.5 | **Validar formato de arquivo** | Somente `.pdf`, deve ter limitação de tamanho. |
 | 3.6 | **Validar campos obrigatórios** | Destacar campos faltantes no retorno de erro. |
@@ -68,7 +68,7 @@ A API gerencia toda a burocracia na relação **IES ↔ Aluno** para validação
 | # | Task | Detalhes |
 |---|------|----------|
 | 4.1 | 📌 **Criar modelo `Contrato`** | Campos: `dataInicio`, `dataTermino`, `cnpjEmpresa`, `nomeEmpresa`, `apoliceSeguro`, `planoAtividade`, `assinaturaAluno`, `assinaturaEmpresa`, `assinaturaFaculdade`, `arquivoUrl`, `versao`. |
-| 4.2 | **Serviço de upload de PDF** | Validar MIME type (`application/pdf`) e tamanho (≤Limite). |
+| 4.2 | 📌 **Serviço de upload de PDF** | Validar MIME type (`application/pdf`) e tamanho (≤Limite). |
 | 4.3 | **Integrar storage (ex: AWS S3)** | Armazenar PDFs com URLs protegidas. |
 | 4.4 | **Controle de versionamento de documentos** | Ao receber novo upload no mesmo processo: arquivar anterior (`status = obsoleto`) e incrementar `versão_atual`. |
 | 4.5 | **Buffer temporário pré-submissão** | Arquivo em memória até submissão final do formulário. |
@@ -80,7 +80,7 @@ A API gerencia toda a burocracia na relação **IES ↔ Aluno** para validação
 
 | # | Task | Detalhes |
 |---|------|----------|
-| 5.1 | **Endpoint `GET /processos` (Aluno)** | Listar processos do aluno autenticado com status atualizado. |
+| 5.1 | 📌 **Endpoint `GET /processos` (Aluno)** | Listar processos do aluno autenticado com status atualizado. |
 | 5.2 | **Endpoint `GET /processos` (Secretaria)** | Listar processos de todos os alunos (filtros por status, matrícula, etc). |
 | 5.3 | **Endpoint `GET /processos/:id`** | Detalhes completos + histórico de movimentações do processo. |
 | 5.4 | **Filtro de permissão** | Aluno vê apenas seus processos; Secretaria vê todos. |
