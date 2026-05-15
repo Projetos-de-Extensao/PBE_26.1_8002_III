@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import *
 
+
 class CursoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Curso
@@ -31,3 +32,8 @@ class ContratoSerializer(serializers.ModelSerializer):
             "processoId"
         ]
         read_only_fields = ["id", "arquivo", "data_upload"]
+
+class AlunoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Aluno
+        fields = ['nome', 'matricula', 'cpf', 'is_ativo']
