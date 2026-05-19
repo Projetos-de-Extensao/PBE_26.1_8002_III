@@ -1,5 +1,6 @@
+
 from core.services import upload_contrato_path
-from django.utils import choices
+from django.utils import choices,timezone
 from core.enums import StatusProcesso
 from django.db.models import CASCADE
 from django.db.models import ForeignKey
@@ -49,7 +50,7 @@ class Curso(models.Model):
         return self.nome
 
 class Processo(models.Model):
-    data_criacao = models.DateField(verbose_name="Data de Criação")
+    data_criacao = models.DateField(verbose_name="Data de Criação",default=timezone.now)
     status = models.CharField(max_length = 15, choices=StatusProcesso, default = StatusProcesso.ABERTO )
     matricula_aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE)
     # matricula_coordenacao = models.ForeignKey(Coordenacao, on_delete=models.SET_NULL)

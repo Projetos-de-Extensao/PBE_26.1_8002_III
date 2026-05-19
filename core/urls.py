@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('singleobj/', views.singleobj),
-    path('multipleobj/', views.multipleobj)
+    path('multipleobj/', views.multipleobj),
+    path('processo/', views.processo)
 ]
 
