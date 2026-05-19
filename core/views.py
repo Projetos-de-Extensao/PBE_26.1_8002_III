@@ -8,15 +8,18 @@ from rest_framework.parsers import JSONParser
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 
-
+@csrf_exempt
 def singleobj(request):
     if request.method == 'POST':
         json = request.body 
         stream = io.BytesIO(json)
         parsed_data = JSONParser().parse(stream)
+        print(parsed_data)
+        print(type(parsed_data))
         serializer = AlunoSerializer(data=parsed_data)
         if serializer.is_valid(data):
-            pass
+            serializer.save()
+            return JsonResponse({"message":"Aluno criado com sucesso!"},status=status.HTTP_201_CREATED)
         else:
             return JsonResponse(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
