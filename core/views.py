@@ -14,10 +14,8 @@ def singleobj(request):
         json = request.body 
         stream = io.BytesIO(json)
         parsed_data = JSONParser().parse(stream)
-        print(parsed_data)
-        print(type(parsed_data))
         serializer = AlunoSerializer(data=parsed_data)
-        if serializer.is_valid(data):
+        if serializer.is_valid():
             serializer.save()
             return JsonResponse({"message":"Aluno criado com sucesso!"},status=status.HTTP_201_CREATED)
         else:
