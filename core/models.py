@@ -50,6 +50,7 @@ class Curso(models.Model):
         return self.nome
 
 class Processo(models.Model):
+    nome_empresa = models.CharField(max_length=255, verbose_name="Nome da empresa")
     data_criacao = models.DateField(verbose_name="Data de Criação",default=timezone.now)
     status = models.CharField(max_length = 15, choices=StatusProcesso, default = StatusProcesso.ABERTO )
     matricula_aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE)
@@ -59,9 +60,14 @@ class Processo(models.Model):
     class Meta:
         verbose_name = "Processo"
         verbose_name_plural = "Processos"
+
+    @property
+    def nome_processo(self):
+        """Cria nome automatico para o processo"""
+        return self.nome_empresa + " - " + self.data_criacao.strftime("%d/%m/%Y")
     
     def __str__(self):
-        return self.matricula_aluno
+        return self.nome_processo
 
 
 
