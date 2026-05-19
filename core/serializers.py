@@ -37,3 +37,5 @@ class AlunoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Aluno
         fields = ['nome', 'matricula', 'cpf', 'is_ativo']
+    def create(self, validated_data):
+        return Aluno.objects.create(**validated_data)
