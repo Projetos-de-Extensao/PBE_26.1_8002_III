@@ -19,7 +19,8 @@ class AreaSerializer(serializers.ModelSerializer):
 class ProcessoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Processo
-        fields = ["status","matricula_aluno","matricula_coordenacao","matricula_secretaria"]
+        fields = ["status","matricula_aluno"]
+        # "matricula_coordenacao","matricula_secretaria"]
         read_only_fields = ["id","data_criacao"]
 
 class ContratoSerializer(serializers.ModelSerializer):
@@ -37,3 +38,5 @@ class AlunoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Aluno
         fields = ['nome', 'matricula', 'cpf', 'is_ativo']
+    def create(self, validated_data):
+        return Aluno.objects.create(**validated_data)
