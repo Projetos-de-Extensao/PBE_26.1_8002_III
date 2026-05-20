@@ -49,6 +49,9 @@ def processo(request):
 
     if request.method == 'GET':
         data = Processo.objects.all()
+        params = request.GET.get('matricula_aluno',None)
+        if params is not None:
+            data = Processo.objects.select_related('matricula_aluno')
         serializer = ProcessoSerializer(data,many=True)
         return JsonResponse(serializer.data,safe=False)
     
