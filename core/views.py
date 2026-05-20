@@ -16,7 +16,18 @@ from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveMode
 from rest_framework.authentication import TokenAuthentication 
 
 @csrf_exempt
-def aluno(request):
+def aluno(request,id):
+    data = Aluno.objects.get(id=id)
+
+    if request.method== 'PUT':
+        stream = io.BytesIO(request.body)
+        parsed_data = JSONParser().parse(stream)
+        serializer = AlunoSerializer(data,data = parsed_data)
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse({"message":"Aluno atualizado com sucesso!"},status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
     if request.method == 'POST':
         json = request.body 
         stream = io.BytesIO(json)
