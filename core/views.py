@@ -84,6 +84,7 @@ class MultipleObjectAPIView(ListAPIView):
     authentication_classes = [TokenAuthentication]
     queryset = Aluno.objects.all()
     serializer_class = AlunoSerializer
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         print(request.user)
