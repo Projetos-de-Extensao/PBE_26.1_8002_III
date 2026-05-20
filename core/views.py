@@ -58,7 +58,11 @@ def processo(request):
         data = Processo.objects.all()
         serializer = ProcessoSerializer(data,many=True)
         return JsonResponse(serializer.data,safe=False)
-    
+
+class MultipleObjectAPIView(ListAPIView):       
+    authentication_classes = [TokenAuthentication]
+    queryset = Aluno.objects.all()
+    serializer_class = AlunoSerializer
 
         
 
