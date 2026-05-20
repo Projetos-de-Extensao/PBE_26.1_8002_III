@@ -12,6 +12,8 @@ from rest_framework.response import Response
 from .permissions import IsSecretaria, IsAluno
 
 @csrf_exempt
+@api_view(['GET','POST'])
+@permission_classes([IsSecretaria])
 def aluno(request):
     if request.method == 'POST':
         json = request.body 
@@ -37,6 +39,8 @@ def aluno(request):
    
 
 @csrf_exempt
+@api_view(['GET','POST'])
+@permission_classes([IsAluno | IsSecretaria])
 def processo(request):
     if request.method == 'POST':
         json = request.body
