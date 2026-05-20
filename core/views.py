@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 
 @csrf_exempt
-def singleobj(request):
+def aluno(request):
     if request.method == 'POST':
         json = request.body 
         stream = io.BytesIO(json)
@@ -22,17 +22,16 @@ def singleobj(request):
             return JsonResponse(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
+    if request.method == 'GET':
+        data = Aluno.objects.all()
+        params = request.GET.get('matricula',None)
+        if params is not None:
+            data = data.filter(matricula=params)    
+        serializer = AlunoSerializer(data, many=True)
+        json_data = JSONRenderer().render(serializer.data)
+        return HttpResponse(json_data, content_type='application/json')
 
-    data = Aluno.objects.get(id=1)
-    serializer = AlunoSerializer(data)
-    json_data = JSONRenderer().render(serializer.data)
-    return HttpResponse(json_data, content_type='application/json')
-
-def multipleobj(request):
-    data = Aluno.objects.all()
-    serializer = AlunoSerializer(data, many=True)
-    json_data = JSONRenderer().render(serializer.data)
-    return HttpResponse(json_data, content_type='application/json')
+   
 
 @csrf_exempt
 def processo(request):
