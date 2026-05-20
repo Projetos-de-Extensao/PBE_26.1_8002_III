@@ -13,7 +13,7 @@ from .services import *
 
 
 class Usuario(models.Model):
-    matricula = models.CharField(max_length=30,unique=True, verbose_name="Matrícula")    
+    matricula = models.CharField(max_length=30,unique=True,editable = False,db_index = True, verbose_name="Matrícula")    
     nome = models.CharField(max_length=255, verbose_name="Nome")
     email = models.EmailField(verbose_name="E-mail")
     senha = models.CharField(max_length=255, verbose_name="Senha")
@@ -34,7 +34,20 @@ class Aluno(Usuario):
         # Isso define como o aluno vai aparecer no painel da Secretaria (ex: "dr. bazinga - 20236769420")
         return f"{self.nome} - {self.matricula}"
 
+class Coordenador(Usuario):
+    areaId = models.ForeignKey(Area, on_delete=models.PROTECT)
 
+    class Meta:
+        verbose_name = "Coordenador"
+        verbose_name_plural = "Coordenadores"
+
+    def __str__(self):
+        return self.nome
+
+class Secretaria(Usuario):
+    class Meta:
+        verbose_name = "Secretária"
+        verbose_name_plural = "Secretárias"
 
 class Area(models.Model):
     nome = models.CharField(max_length=20, verbose_name="Nome")
