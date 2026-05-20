@@ -64,6 +64,9 @@ class MultipleObjectAPIView(ListAPIView):
     queryset = Aluno.objects.all()
     serializer_class = AlunoSerializer
 
+class SingleObjectAPIView(RetrieveAPIView):
+    queryset = Aluno.objects.all()
+    serializer_class = AlunoSerializer
         
 
 
