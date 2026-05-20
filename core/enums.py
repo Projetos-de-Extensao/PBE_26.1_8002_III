@@ -32,3 +32,7 @@ class StatusProcesso(models.TextChoices):
     REPROVADO ='reprovado','Reprovado'
     CONCLUIDO = 'concluido','Concluido'
     CANCELADO ='cancelado','Cancelado'
+
+class Unidade(models.TextChoices):
+    BARRA = 'barra', 'Barra'
+    BOTAFOGO = 'botafogo', 'Botafogo'   
