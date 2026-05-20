@@ -7,6 +7,13 @@ import io
 from rest_framework.parsers import JSONParser
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
+from dnjango.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.generics import ListCreateAP1View, RetrieveUpdateDestroyAPIView
+from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
+from rest_framework.authentication import TokenAuthentication 
 
 @csrf_exempt
 def aluno(request):
@@ -52,10 +59,6 @@ def processo(request):
         serializer = ProcessoSerializer(data,many=True)
         return JsonResponse(serializer.data,safe=False)
     
-    
-        
-
-
 
         
 
