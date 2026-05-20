@@ -14,8 +14,9 @@ from rest_framework.views import APIView
 from rest_framework.generics import ListCreateAP1View, RetrieveUpdateDestroyAPIView
 from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
 from rest_framework.authentication import TokenAuthentication 
+from rest_framework.permissions import IsAuthenticated
 
-@csrf_exempt
+@api_view(['GET','POST','PUT','PATCH'])
 def aluno(request,id):
     data = get_object_or_404(Aluno,id=id)
 
