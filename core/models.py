@@ -1,4 +1,5 @@
 
+import email
 from core.services import upload_contrato_path
 from django.utils import choices,timezone
 from core.enums import StatusProcesso
@@ -11,10 +12,18 @@ from .enums import *
 from .services import *
 
 
-class Aluno(models.Model):
-    nome = models.CharField(max_length=255, verbose_name="Nome Completo")
-    matricula = models.CharField(max_length=30, unique=True, verbose_name="Matrícula")
-    cpf = models.CharField(max_length=14, unique=True, verbose_name="CPF")
+class Usuario(models.Model):
+    matricula = models.CharField(max_length=30,unique=True, verbose_name="Matrícula")    
+    nome = models.CharField(max_length=255, verbose_name="Nome")
+    email = models.EmailField(verbose_name="E-mail")
+    senha = models.CharField(max_length=255, verbose_name="Senha")
+    unidade = models.CharField(max_length=15, choices=Unidade)
+
+    class Meta:
+        abstract = True 
+
+class Aluno(Usuario):
+    cpf = models.CharField(max_length=14, verbose_name="CPF",default="")
     is_ativo = models.BooleanField(default=True, verbose_name="Status Ativo")
 
     class Meta:
@@ -96,3 +105,5 @@ class Contrato(models.Model):
     
     def __str__(self):
         return self.nome_contrato
+
+
