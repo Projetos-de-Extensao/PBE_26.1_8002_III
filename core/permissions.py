@@ -12,4 +12,10 @@ class IsCoordenador(BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
         return Coordenador.objects.filter(email=request.user.email).exists()
+    
+class IsSecretaria(BasePermission):
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+        return Secretaria.objects.filter(email=request.user.email).exists()
 
