@@ -93,7 +93,7 @@ A API gerencia toda a burocracia na relação **IES ↔ Aluno** para validação
 
 | # | Task | Detalhes |
 |---|------|----------|
-| 6.1 | **Criar modelo `Relatorio`** | Campos: `horasTrabalhadas`, `periodoReferencia`, `aprovadoPelaEmpresa` (boolean), `arquivoUrl`, FK para `Processo`. |
+| 6.1 | **Criar modelo `Relatorio`** | Campos: `horasTrabalhadas`, `periodoReferencia`, `status` (string), `arquivoUrl`, FK para `Processo`. |
 | 6.2 | **Endpoint `POST /processos/:id/relatorios`** | Aluno envia relatório com período, horas e PDF assinado. |
 | 6.3 | **Pré-condição: processo "Em Andamento"** | Validar que o processo está ativo antes de permitir envio. |
 | 6.4 | **Validar horas vs. TCE** | Total de horas reportadas não pode exceder o estipulado no contrato. |

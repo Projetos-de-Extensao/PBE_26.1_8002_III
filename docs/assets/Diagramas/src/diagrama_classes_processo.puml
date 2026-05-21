@@ -52,7 +52,7 @@ class Relatorio {
     - dataUpload : DateTime
     - horasTrabalhadas : int
     - periodoReferencia : string
-    - aprovadoPelaEmpresa : bool
+    - status : string
 }
 
 ' --- Relacionamentos de Processo ---

@@ -93,7 +93,7 @@ class Relatorio {
     - dataUpload : DateTime
     - horasTrabalhadas : int
     - periodoReferencia : string
-    - aprovadoPelaEmpresa : bool
+    - status : string
 }
 
 class Curso {

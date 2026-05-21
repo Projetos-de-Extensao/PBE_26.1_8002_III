@@ -71,7 +71,7 @@ O termo de compromisso formal de início.
 ### 📊 Relatório
 Submissão periódica para contabilização de atividades e horasDocumento produzido pela empresa ao final do período de estágio para informar o que foi feito pelo estudante.
 - **Dados Relevantes:** `horasTrabalhadas`, `periodoReferencia`.
-- **Validação:** Necessita do marcador de triagem externa `aprovadoPelaEmpresa`.
+- **Validação:** Necessita do marcador de triagem externa `status`.
 
 ---
 
