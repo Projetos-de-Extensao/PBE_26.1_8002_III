@@ -40,6 +40,6 @@ class ContratoSerializer(serializers.ModelSerializer):
 class AlunoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Aluno
-        fields = ['nome', 'email', 'matricula', 'senha', 'cpf', 'is_ativo', 'unidade']
+        fields = ['nome', 'email', 'matricula', 'senha', 'cpf', 'is_ativo', 'unidade', 'periodo', 'curso']
     def create(self, validated_data):
         return Aluno.objects.create(**validated_data)

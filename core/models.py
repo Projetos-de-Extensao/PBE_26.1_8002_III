@@ -27,7 +27,7 @@ class Aluno(Usuario):
     cpf = models.CharField(max_length=14, verbose_name="CPF",default="")
     is_ativo = models.BooleanField(default=True, verbose_name="Status Ativo")
     periodo = models.IntegerField(choices=Periodo, default = Periodo.PRIMEIRO )
-    curso = models.ForeignKey(Curso, on_delete=models.CASCADE)
+    curso = models.ForeignKey("Curso", on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = "Aluno"
@@ -48,7 +48,7 @@ class Area(models.Model):
         return self.nome
 
 class Coordenador(Usuario):
-    areaId = models.ForeignKey(Area, on_delete=models.PROTECT)
+    areaId = models.ForeignKey("Area", on_delete=models.PROTECT)
 
     class Meta:
         verbose_name = "Coordenador"
