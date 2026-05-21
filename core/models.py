@@ -12,6 +12,7 @@ from .enums import *
 from .services import *
 
 
+
 class Usuario(models.Model):
     matricula = models.CharField(max_length=30,unique=True,editable = False,db_index = True, verbose_name="Matrícula")    
     nome = models.CharField(max_length=255, verbose_name="Nome")
@@ -36,6 +37,16 @@ class Aluno(Usuario):
         # Isso define como o aluno vai aparecer no painel da Secretaria (ex: "dr. bazinga - 20236769420")
         return f"{self.nome} - {self.matricula}"
 
+class Area(models.Model):
+    nome = models.CharField(max_length=20, verbose_name="Nome")
+
+    class Meta:
+        verbose_name = "Area"
+        verbose_name_plural = "Areas"
+
+    def __str__(self):
+        return self.nome
+
 class Coordenador(Usuario):
     areaId = models.ForeignKey(Area, on_delete=models.PROTECT)
 
@@ -46,20 +57,17 @@ class Coordenador(Usuario):
     def __str__(self):
         return self.nome
 
+
+
 class Secretaria(Usuario):
     class Meta:
         verbose_name = "Secretária"
         verbose_name_plural = "Secretárias"
 
-class Area(models.Model):
-    nome = models.CharField(max_length=20, verbose_name="Nome")
-
-    class Meta:
-        verbose_name = "Area"
-        verbose_name_plural = "Areas"
-
     def __str__(self):
         return self.nome
+
+
 
 
 class Curso(models.Model):
@@ -77,12 +85,9 @@ class Processo(models.Model):
     nome_empresa = models.CharField(max_length=255, verbose_name="Nome da empresa")
     data_criacao = models.DateField(verbose_name="Data de Criação",default=timezone.now)
     status = models.CharField(max_length = 15, choices=StatusProcesso, default = StatusProcesso.ABERTO )
-    matricula_aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE)
-    # matricula_coordenacao = models.ForeignKey(Coordenacao, on_delete=models.SET_NULL)
-    # matricula_secretaria = models.ForeignKey(Secretaria, on_delete=models.SET_NULL)
-    
-    
-
+    matricula_aluno = models.ForeignKey(Aluno, to_field='matricula', related_name="matricula_aluno", on_delete=models.CASCADE, max_length = 30)
+    # matricula_coordenacao = models.ForeignKey(Coordenador,to_field='matricula', related_name="matricula_coordenacao", on_delete=models.PROTECT)
+    # matricula_secretaria = models.ForeignKey(Secretaria,to_field='matricula', related_name="matricula_secretaria", on_delete=models.PROTECT)
 
     class Meta:
         verbose_name = "Processo"

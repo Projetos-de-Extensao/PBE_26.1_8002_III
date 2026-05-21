@@ -22,6 +22,9 @@ class ProcessoSerializer(serializers.ModelSerializer):
         fields = ["status","matricula_aluno"]
         # "matricula_coordenacao","matricula_secretaria"]
         read_only_fields = ["id","data_criacao"]
+    def create(self, validated_data):
+        return Aluno.objects.create(**validated_data)
+    
 
 class ContratoSerializer(serializers.ModelSerializer):
     class Meta:
