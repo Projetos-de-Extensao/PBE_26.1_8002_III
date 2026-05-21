@@ -64,4 +64,4 @@ local_settings.py
 
 
 # Svgs PlantUml
-docs/assets/Diagrams/
+docs/assets/Diagramas/out/
