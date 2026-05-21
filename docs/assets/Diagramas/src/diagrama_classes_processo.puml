@@ -30,6 +30,11 @@ enum StatusRelatorio {
     REPROVADO
 }
 
+enum Veredito {
+    APROVADO
+    REPROVADO
+}
+
 ' --- Classes de Processo e Documentação ---
 class Processo {
     - id : int
@@ -69,9 +74,29 @@ class Relatorio {
     - status : StatusRelatorio
 }
 
+abstract class HistoricoAvaliacao {
+    - id : int
+    - observacoes : string
+    - data_avaliacao : Date
+    - veredito : Veredito
+}
+
+class HistoricoAvaliacaoRelatorio extends HistoricoAvaliacao {
+    - avaliador : int
+    - relatorio_id : int
+}
+
+class HistoricoAvaliacaoContrato extends HistoricoAvaliacao {
+    - avaliador : int
+    - contrato_id : int
+}
+
 ' --- Relacionamentos de Processo ---
 Processo "1" *-- "1..*" Contrato : contém >
 Processo "1" *-- "0..*" Relatorio : contém >
 Processo "0..*" -- "1" StatusProcesso : possui >
+
+Relatorio "1" -- "0..1" HistoricoAvaliacaoRelatorio : possui >
+Contrato "1" -- "0..1" HistoricoAvaliacaoContrato : possui >
 
 @enduml

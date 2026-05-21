@@ -59,3 +59,7 @@ class Periodo(models.IntegerChoices):
     OITAVO = 8, "Oitavo"
     NONO = 9, "Nono"
     DECIMO = 10, "Decimo"
+
+class Veredito(models.TextChoices):
+    APROVADO = 'aprovado', 'Aprovado'
+    REPROVADO = 'reprovado', 'Reprovado'

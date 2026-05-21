@@ -135,3 +135,20 @@ class Relatorio(models.Model):
     data_termino = models.DateField(verbose_name="Data de término do relatório")
     status = models.CharField(max_length = 15, choices=StatusRelatorio, default = StatusRelatorio.PENDENTE )
     
+
+class HistoricoAvaliacao(models.Model):
+    observacoes = models.TextField(verbose_name="Observações")
+    data_avaliacao = models.DateField(verbose_name="Data de avaliação",default=timezone.now())
+    veredito = models.CharField(max_length=20,choices=Veredito,verbose_name="Veredito")
+    
+    class Meta:
+        abstract = True
+        
+
+class HistoricoAvaliacaoRelatorio(HistoricoAvaliacao):
+    avaliador = models.ForeignKey(Coordenador, on_delete=models.PROTECT)
+    relatorio_id = models.OneToOneField(Relatorio, on_delete=models.CASCADE)
+
+class HistoricoAvaliacaoContrato(HistoricoAvaliacao):
+    avaliador = models.ForeignKey(Secretaria, on_delete=models.PROTECT)
+    contrato_id = models.OneToOneField(Contrato, on_delete=models.CASCADE)
