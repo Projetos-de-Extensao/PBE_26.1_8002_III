@@ -61,3 +61,7 @@ local_settings.py
 
 # Logs e arquivos temporários
 *.log
+
+
+# Svgs PlantUml
+docs/assets/Diagramas/out/
