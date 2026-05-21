@@ -10,6 +10,31 @@ from rest_framework import status
 
 @csrf_exempt
 def aluno(request):
+
+    if request.method == 'PUT':
+        json = request.body
+        stream = io.BytesIO(json)
+        parsed_data = JSONParser().parse(stream)
+        matricula = request.GET.get('matricula_aluno', None)
+        if matricula is not None:
+            try:
+                old_data = Aluno.objects.get(matricula=matricula)
+            except Aluno.DoesNotExist:
+                return JsonResponse({"error": "Aluno não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+            
+            serializer = AlunoSerializer(old_data, data=parsed_data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return JsonResponse({"message": "updated"}, status=status.HTTP_200_OK)
+            else:
+                return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return JsonResponse({"error": "Matrícula não informada"}, status=status.HTTP_400_BAD_REQUEST)
+                
+
+
+
+
     if request.method == 'POST':
         json = request.body 
         stream = io.BytesIO(json)
@@ -55,7 +80,46 @@ def processo(request):
         serializer = ProcessoSerializer(data,many=True)
         return JsonResponse(serializer.data,safe=False)
     
-    
+    if request.method == 'PATCH':
+        json = request.body
+        stream = io.BytesIO(json)
+        parsed_data = JSONParser().parse(stream)
+        id = request.GET.get('processo_id', None)
+        if id is not None:
+            try:
+                old_data = Processo.objects.get(id=id)
+            except Processo.DoesNotExist:
+                return JsonResponse({"error": "Processo não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+            
+            serializer = ProcessoSerializer(old_data, data=parsed_data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return JsonResponse({"message": "updated"}, status=status.HTTP_200_OK)
+            else:
+                return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return JsonResponse({"error": "Id não informado"}, status=status.HTTP_400_BAD_REQUEST)
+                
+    if request.method == 'PUT':
+        json = request.body
+        stream = io.BytesIO(json)
+        parsed_data = JSONParser().parse(stream)
+        id = request.GET.get('processo_id', None)
+        if id is not None:
+            try:
+                old_data = Processo.objects.get(id=id)
+            except Processo.DoesNotExist:
+                return JsonResponse({"error": "Processo não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+            
+            serializer = ProcessoSerializer(old_data, data=parsed_data)
+            if serializer.is_valid():
+                serializer.save()
+                return JsonResponse({"message": "updated"}, status=status.HTTP_200_OK)
+            else:
+                return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return JsonResponse({"error": "Id não informado"}, status=status.HTTP_400_BAD_REQUEST)
+
         
 
 
