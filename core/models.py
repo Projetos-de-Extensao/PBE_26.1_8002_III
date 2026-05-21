@@ -25,6 +25,8 @@ class Usuario(models.Model):
 class Aluno(Usuario):
     cpf = models.CharField(max_length=14, verbose_name="CPF",default="")
     is_ativo = models.BooleanField(default=True, verbose_name="Status Ativo")
+    periodo = models.IntegerField(choices=Periodo, default = Periodo.PRIMEIRO )
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = "Aluno"
@@ -78,6 +80,9 @@ class Processo(models.Model):
     matricula_aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE)
     # matricula_coordenacao = models.ForeignKey(Coordenacao, on_delete=models.SET_NULL)
     # matricula_secretaria = models.ForeignKey(Secretaria, on_delete=models.SET_NULL)
+    
+    
+
 
     class Meta:
         verbose_name = "Processo"
@@ -106,6 +111,7 @@ class Contrato(models.Model):
     assinatura_empresa = models.BooleanField(default=False, verbose_name="Assinatura da Empresa")
     assinatura_faculdade = models.BooleanField(default=False, verbose_name="Assinatura da Faculdade")
     processoId = models.ForeignKey(Processo, on_delete=models.CASCADE, verbose_name="Processo")
+    status = models.CharField(max_length = 15, choices=StatusContrato, default = StatusContrato.PENDENTE )
 
     @property
     def nome_contrato(self):
@@ -120,3 +126,12 @@ class Contrato(models.Model):
         return self.nome_contrato
 
 
+class Relatorio(models.Model):
+    processo_id = models.ForeignKey(Processo, on_delete= models.CASCADE)
+    arquivo = modedels.FileField(upload_to=upload_relatorio_path,verbose_name="url do arquivo")
+    data_upload = models.DateField(verbose_name="Data de upload",default=timezone.now())
+    horas_trabalhadas = models.IntegerField(verbose_name="Horas trabalhadas")
+    data_inicio = models.DateField(verbose_name="Data de início do relatório")
+    data_termino = models.DateField(verbose_name="Data de término do relatório")
+    status = models.CharField(max_length = 15, choices=StatusRelatorio, default = StatusRelatorio.PENDENTE )
+    
