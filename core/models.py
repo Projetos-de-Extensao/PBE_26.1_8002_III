@@ -128,7 +128,7 @@ class Contrato(models.Model):
 
 class Relatorio(models.Model):
     processo_id = models.ForeignKey(Processo, on_delete= models.CASCADE)
-    arquivo = modedels.FileField(upload_to=upload_relatorio_path,verbose_name="url do arquivo")
+    arquivo = models.FileField(upload_to=upload_relatorio_path,verbose_name="url do arquivo")
     data_upload = models.DateField(verbose_name="Data de upload",default=timezone.now())
     horas_trabalhadas = models.IntegerField(verbose_name="Horas trabalhadas")
     data_inicio = models.DateField(verbose_name="Data de início do relatório")
