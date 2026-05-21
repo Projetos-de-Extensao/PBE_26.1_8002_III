@@ -10,23 +10,34 @@ skinparam class {
 ' --- Enums ---
 enum StatusProcesso {
     ABERTO
-    EM_ANALISE_SECRETARIA
-    EM_ANALISE_COORDENACAO
-    PENDENTE_AJUSTE
-    APROVADO
+    PENDENTE
     REPROVADO
     CONCLUIDO
     CANCELADO
 }
 
+enum StatusContrato {
+    PENDENTE
+    EM_ANALISE_SECRETARIA
+    APROVADO
+    REPROVADO
+}
+
+enum StatusRelatorio {
+    PENDENTE
+    EM_ANALISE_COORDENACAO
+    APROVADO
+    REPROVADO
+}
+
 ' --- Classes de Processo e Documentação ---
 class Processo {
-   - id : int
-   - data_criacao : Date
-   - status : StatusProcesso
-   - matricula_aluno : int
-   + atualizarStatus(novoStatus : StatusProcesso)
-   + validarContrato(aprovado : bool, justificativa : string)
+    - id : int
+    - nome_empresa : string
+    - data_criacao : Date
+    - status : StatusProcesso
+    - matricula_aluno : int
+    + nome_processo() : string
 }
 
 class Contrato {
@@ -43,16 +54,19 @@ class Contrato {
     - assinatura_empresa : bool
     - assinatura_faculdade : bool
     - processoId : int
+    - status : StatusContrato
+    + nome_contrato() : string
 }
 
 class Relatorio {
-    - processoId : int
-    - relatorioId : int
-    - nomeArquivo : string
-    - dataUpload : DateTime
-    - horasTrabalhadas : int
-    - periodoReferencia : string
-    - status : string
+    - id : int
+    - processo_id : int
+    - arquivo : string
+    - data_upload : Date
+    - horas_trabalhadas : int
+    - data_inicio : Date
+    - data_termino : Date
+    - status : StatusRelatorio
 }
 
 ' --- Relacionamentos de Processo ---

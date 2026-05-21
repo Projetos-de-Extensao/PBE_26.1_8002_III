@@ -9,17 +9,20 @@ skinparam class {
 
 ' --- Enums ---
 enum Periodo {
-    P1, P2, P3, P4, P5, P6, P7, P8, P9, P10
+    PRIMEIRO, SEGUNDO, TERCEIRO, QUARTO, QUINTO, SEXTO, SETIMO, OITAVO, NONO, DECIMO
 }
 
 ' --- Classes da Estrutura Acadêmica ---
 class Aluno {
-    - cursoId : int
+    - matricula : string
+    - nome : string
+    - email : string
+    - senha : string
+    - unidade : Unidade
+    - cpf : string
+    - is_ativo : bool
     - periodo : Periodo
-    - processoAtualId : int
-    + iniciarProcesso() : Processo
-    + anexarContrato(doc : Contrato)
-    + anexarRelatorio(doc : Relatorio)
+    - cursoId : int
 }
 
 class Curso {
@@ -33,9 +36,13 @@ class Area {
     - nome : string
 }
 
-class Coordenacao {
+class Coordenador {
+    - matricula : string
+    - nome : string
+    - email : string
+    - senha : string
+    - unidade : Unidade
     - areaId : int
-    + validarEstagio(processo : Processo, aprovado : bool, justificativa : string)
 }
 
 ' --- Relacionamentos ---
@@ -45,6 +52,6 @@ Aluno "0..*" -- "1" Periodo
 
 ' Hierarquia de Curso e Área
 Area "1" -- "0..*" Curso
-Coordenacao "1" -- "1" Area
+Coordenador "1" -- "1" Area
 
 @enduml

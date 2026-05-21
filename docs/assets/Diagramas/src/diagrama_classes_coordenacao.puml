@@ -9,26 +9,33 @@ skinparam class {
 
 ' --- Classes Relevantes ---
 abstract class Usuario {
-    # matricula : int
+    # matricula : string
     # nome : string
     # email : string
     # senha : string
-    + login() : bool
+    # unidade : Unidade
 }
 
-class Coordenacao extends Usuario {
+class Coordenador extends Usuario {
     - areaId : int
-    + validarEstagio(processo : Processo, aprovado : bool, justificativa : string)
 }
 
 class Area {
+    - id : int
+    - nome : string
 }
 
 class Processo {
+    - id : int
+    - nome_empresa : string
+    - data_criacao : Date
+    - status : StatusProcesso
+    - matricula_aluno : int
+    + nome_processo() : string
 }
 
 ' --- Relacionamentos ---
-Coordenacao "1" -- "1" Area
-Coordenacao "1" -- "0..*" Processo : valida >
+Coordenador "1" -- "1" Area
+Coordenador "1" -- "0..*" Processo : valida >
 
 @enduml

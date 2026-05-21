@@ -15,8 +15,10 @@ Os Enums garantem a integridade dos atributos de controle no sistema, evitando e
 
 | Enum | Propósito | Valores Aceitos |
 | :--- | :--- | :--- |
-| **`StatusProcesso`** | Regula o ciclo de vida do estágio. | `ABERTO`, `EM_ANALISE_SECRETARIA`, `EM_ANALISE_COORDENACAO`, `PENDENTE_AJUSTE`, `APROVADO`, `REPROVADO`, `CONCLUIDO`, `CANCELADO` |
-| **`Unidade`** | Define o campus do usuário. | `BARRA`, `CENTRO`, `BH`, `BRASILIA` |
+| **`StatusProcesso`** | Regula o ciclo de vida do estágio. | `ABERTO`, `PENDENTE`, `REPROVADO`, `CONCLUIDO`, `CANCELADO` |
+| **`StatusContrato`** | Define a situação atual do contrato. | `PENDENTE`, `EM_ANALISE_SECRETARIA`, `APROVADO`, `REPROVADO` |
+| **`StatusRelatorio`** | Define a situação atual do relatório. | `PENDENTE`, `EM_ANALISE_COORDENACAO`, `APROVADO`, `REPROVADO` |
+| **`Unidade`** | Define o campus do usuário. | `BARRA`, `BOTAFOGO` |
 | **`Periodo`** | Representa o semestre atual do aluno. | `P1` ao `P10` |
 
 ---
@@ -67,11 +69,12 @@ O coração do sistema. Ele encapsula o ciclo do estágio conectando `Aluno`, `S
 O termo de compromisso formal de início.
 - **Dados Relevantes:** Vigência (`data_inicio`, `data_termino`), dados do prestador (`cnpj_empresa`, `nome_empresa`).
 - **Validações:** Requer `apolice_seguro`, `plano_atividade` válidos e verificação boolean de todas as assinaturas (`assinatura_aluno`, `assinatura_empresa`, `assinatura_faculdade`).
+- **Status:** Utiliza o enum `StatusContrato`.
 
 ### 📊 Relatório
 Submissão periódica para contabilização de atividades e horasDocumento produzido pela empresa ao final do período de estágio para informar o que foi feito pelo estudante.
 - **Dados Relevantes:** `horasTrabalhadas`, `periodoReferencia`.
-- **Validação:** Necessita do marcador de triagem externa `status`.
+- **Validação:** Necessita do marcador de triagem externa `status` que utiliza o enum `StatusRelatorio`.
 
 ---
 

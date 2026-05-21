@@ -9,35 +9,66 @@ skinparam class {
 
 ' --- Classes Relevantes ---
 abstract class Usuario {
-    # matricula : int
+    # matricula : string
     # nome : string
     # email : string
     # senha : string
-    + login() : bool
+    # unidade : Unidade
 }
 
 class Aluno extends Usuario {
-    - cursoId : int
+    - cpf : string
+    - is_ativo : bool
     - periodo : Periodo
-    - processoAtualId : int
-    + iniciarProcesso() : Processo
-    + anexarContrato(doc : Contrato)
-    + anexarRelatorio(doc : Relatorio)
+    - cursoId : int
 }
 
 class Curso {
+    - id : int
+    - nome : string
+    - areaId : int
 }
 
-class Periodo {
+enum Periodo {
+    PRIMEIRO, SEGUNDO, TERCEIRO, QUARTO, QUINTO, SEXTO, SETIMO, OITAVO, NONO, DECIMO
 }
 
 class Processo {
+    - id : int
+    - nome_empresa : string
+    - data_criacao : Date
+    - status : StatusProcesso
+    - matricula_aluno : int
+    + nome_processo() : string
 }
 
 class Contrato {
+    - id : int
+    - arquivo : string
+    - data_upload : Date
+    - cnpj_empresa : string
+    - nome_empresa : string
+    - data_inicio : Date
+    - data_termino : Date
+    - apolice_seguro : string
+    - plano_atividade : bool
+    - assinatura_aluno : bool
+    - assinatura_empresa : bool
+    - assinatura_faculdade : bool
+    - processoId : int
+    - status : StatusContrato
+    + nome_contrato() : string
 }
 
 class Relatorio {
+    - id : int
+    - processo_id : int
+    - arquivo : string
+    - data_upload : Date
+    - horas_trabalhadas : int
+    - data_inicio : Date
+    - data_termino : Date
+    - status : StatusRelatorio
 }
 
 ' --- Relacionamentos ---
