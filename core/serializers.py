@@ -43,3 +43,15 @@ class AlunoSerializer(serializers.ModelSerializer):
         fields = ['nome', 'email', 'matricula', 'senha', 'cpf', 'is_ativo', 'unidade', 'periodo', 'curso']
     def create(self, validated_data):
         return Aluno.objects.create(**validated_data)
+
+    def update(sekf,instance,validated_data):
+        instance.name = validated_data.get("name",instance.name)
+        instance.email = validated_data.get("email",instance.email)
+        instance.matricula = validated_data.get("matricula",instance.matricula)
+        instance.senha = validated_data.get("senha",instance.senha)
+        instance.cpf = validated_data.get("cpf",instance.cpf)
+        instance.is_ativo = validated_data.get("is_ativo",instance.is_ativo)
+        instance.unidade = validated_data.get("unidade",instance.unidade)
+        instance.save()
+        return instance
+
