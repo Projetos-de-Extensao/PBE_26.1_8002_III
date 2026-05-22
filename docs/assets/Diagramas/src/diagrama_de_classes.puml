@@ -46,6 +46,11 @@ enum TipoUsuario {
     CARREIRAS
 }
 
+enum Veredito {
+    APROVADO
+    REPROVADO
+}
+
 ' --- Classes Principais ---
 
 abstract class Usuario {
@@ -108,6 +113,23 @@ class Relatorio {
     - status : StatusRelatorio
 }
 
+abstract class HistoricoAvaliacao {
+    - id : int
+    - observacoes : string
+    - data_avaliacao : Date
+    - veredito : Veredito
+}
+
+class HistoricoAvaliacaoRelatorio extends HistoricoAvaliacao {
+    - avaliador : int
+    - relatorio_id : int
+}
+
+class HistoricoAvaliacaoContrato extends HistoricoAvaliacao {
+    - avaliador : int
+    - contrato_id : int
+}
+
 class Curso {
     - id : int
     - nome : string
@@ -137,5 +159,11 @@ Coordenador "1" -- "0..*" Processo : valida >
 Processo "1" *-- "1..*" Contrato : contém >
 Processo "1" *-- "0..*" Relatorio : contém >
 Processo "0..*" -- "1" StatusProcesso : possui >
+
+Coordenador "1" -- "0..*" HistoricoAvaliacaoRelatorio : avalia >
+Relatorio "1" -- "0..1" HistoricoAvaliacaoRelatorio : possui >
+
+Secretaria "1" -- "0..*" HistoricoAvaliacaoContrato : avalia >
+Contrato "1" -- "0..1" HistoricoAvaliacaoContrato : possui >
 
 @enduml

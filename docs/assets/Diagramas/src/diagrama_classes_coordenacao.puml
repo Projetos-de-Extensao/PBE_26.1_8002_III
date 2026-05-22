@@ -7,6 +7,12 @@ skinparam class {
     BorderColor Black
 }
 
+' --- Enums ---
+enum Veredito {
+    APROVADO
+    REPROVADO
+}
+
 ' --- Classes Relevantes ---
 abstract class Usuario {
     # matricula : string
@@ -34,8 +40,25 @@ class Processo {
     + nome_processo() : string
 }
 
+class Relatorio {
+}
+
+abstract class HistoricoAvaliacao {
+    - id : int
+    - observacoes : string
+    - data_avaliacao : Date
+    - veredito : Veredito
+}
+
+class HistoricoAvaliacaoRelatorio extends HistoricoAvaliacao {
+    - avaliador : int
+    - relatorio_id : int
+}
+
 ' --- Relacionamentos ---
 Coordenador "1" -- "1" Area
 Coordenador "1" -- "0..*" Processo : valida >
+Coordenador "1" -- "0..*" HistoricoAvaliacaoRelatorio : avalia >
+Relatorio "1" -- "0..1" HistoricoAvaliacaoRelatorio : possui >
 
 @enduml
