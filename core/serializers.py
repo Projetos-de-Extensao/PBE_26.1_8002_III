@@ -55,3 +55,40 @@ class AlunoSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
+class CoordenadorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Coordenador
+        fields = ['nome', 'email', 'matricula', 'senha', 'unidade', 'areaId']
+        read_only_fields = ['id']
+
+
+class SecretariaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Secretaria
+        fields = ['nome', 'email', 'matricula', 'senha', 'unidade']
+        read_only_fields = ['id']
+
+
+class RelatorioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Relatorio
+        fields = [
+            'processo_id', 'arquivo', 'data_upload',
+            'horas_trabalhadas', 'data_inicio', 'data_termino', 'status'
+        ]
+        read_only_fields = ['id', 'data_upload']
+
+
+class HistoricoAvaliacaoRelatorioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HistoricoAvaliacaoRelatorio
+        fields = ['observacoes', 'data_avaliacao', 'veredito', 'avaliador', 'relatorio_id']
+        read_only_fields = ['id', 'data_avaliacao']
+
+
+class HistoricoAvaliacaoContratoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HistoricoAvaliacaoContrato
+        fields = ['observacoes', 'data_avaliacao', 'veredito', 'avaliador', 'contrato_id']
+        read_only_fields = ['id', 'data_avaliacao']
