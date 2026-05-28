@@ -80,7 +80,7 @@ class Processo {
     - nome_empresa : string
     - data_criacao : Date
     - status : StatusProcesso
-    - matricula_aluno : int
+    - matricula_aluno : FK<Aluno>
     + nome_processo() : string
 }
 
