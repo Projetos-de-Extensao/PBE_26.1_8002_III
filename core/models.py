@@ -15,7 +15,7 @@ from .validators import validar_email_institucional
 
 
 class Usuario(models.Model):
-    matricula = models.CharField(max_length=30,unique=True,editable = False,db_index = True, verbose_name="Matrícula")    
+    matricula = models.CharField(max_length=30, unique=True, db_index=True, verbose_name="Matrícula")    
     nome = models.CharField(max_length=255, verbose_name="Nome")
     email = models.EmailField(verbose_name="E-mail", validators=[validar_email_institucional])
     senha = models.CharField(max_length=255, verbose_name="Senha")
@@ -25,7 +25,7 @@ class Usuario(models.Model):
         abstract = True 
 
 class Aluno(Usuario):
-    cpf = models.CharField(max_length=14, verbose_name="CPF",default="")
+    cpf = models.CharField(max_length=14, unique=True, verbose_name="CPF")
     is_ativo = models.BooleanField(default=True, verbose_name="Status Ativo")
     periodo = models.IntegerField(choices=Periodo, default = Periodo.PRIMEIRO )
     curso = models.ForeignKey("Curso", on_delete=models.CASCADE)
