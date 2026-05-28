@@ -10,13 +10,14 @@ from django.db.models import functions
 from django.db import models
 from .enums import *
 from .services import *
+from .validators import validar_email_institucional
 
 
 
 class Usuario(models.Model):
     matricula = models.CharField(max_length=30,unique=True,editable = False,db_index = True, verbose_name="Matrícula")    
     nome = models.CharField(max_length=255, verbose_name="Nome")
-    email = models.EmailField(verbose_name="E-mail")
+    email = models.EmailField(verbose_name="E-mail", validators=[validar_email_institucional])
     senha = models.CharField(max_length=255, verbose_name="Senha")
     unidade = models.CharField(max_length=15, choices=Unidade)
 

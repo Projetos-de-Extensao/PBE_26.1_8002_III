@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import *
+from .validators import validar_email_institucional
 
 
 class CursoSerializer(serializers.ModelSerializer):
@@ -38,6 +39,11 @@ class ContratoSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "arquivo", "data_upload"]
 
 class AlunoSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(
+        validators=[validar_email_institucional],
+        help_text="E-mail institucional do aluno (ex: nome@ibmec.edu.br)"
+    )
+
     class Meta:
         model = Aluno
         fields = ['nome', 'email', 'matricula', 'senha', 'cpf', 'is_ativo', 'unidade', 'periodo', 'curso']
