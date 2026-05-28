@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
+import re
 
 
 # Domínios institucionais aceitos pelo sistema
@@ -34,3 +35,33 @@ def validar_email_institucional(value):
             f"Apenas e-mails institucionais são aceitos ({dominios_formatados}).",
             code="dominio_nao_permitido",
         )
+
+def validar_cpf(value):
+    """
+    Valida um CPF utilizando o algoritmo da Receita Federal.
+    """
+    # Remove qualquer caractere que não seja número (pontos, traços)
+    cpf = re.sub(r'[^0-9]', '', str(value))
+    
+    if len(cpf) != 11:
+        raise ValidationError("O CPF deve conter exatamente 11 dígitos numéricos.", code='cpf_invalido_tamanho')
+        
+    # Rejeita CPFs com todos os números iguais (ex: 111.111.111-11)
+    if cpf == cpf[0] * 11:
+        raise ValidationError("CPF inválido.", code='cpf_invalido_sequencia')
+        
+    # Cálculo do primeiro dígito verificador
+    soma = sum(int(cpf[i]) * (10 - i) for i in range(9))
+    resto = (soma * 10) % 11
+    if resto == 10:
+        resto = 0
+    if resto != int(cpf[9]):
+        raise ValidationError("CPF inválido.", code='cpf_invalido_digito')
+        
+    # Cálculo do segundo dígito verificador
+    soma = sum(int(cpf[i]) * (11 - i) for i in range(10))
+    resto = (soma * 10) % 11
+    if resto == 10:
+        resto = 0
+    if resto != int(cpf[10]):
+        raise ValidationError("CPF inválido.", code='cpf_invalido_digito')
