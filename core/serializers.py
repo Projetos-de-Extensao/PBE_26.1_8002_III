@@ -21,6 +21,22 @@ class ProcessoSerializer(serializers.ModelSerializer):
         model = Processo
         fields = ["status", "matricula_aluno", "nome_empresa"]
         read_only_fields = ["id", "data_criacao", "status"]
+        extra_kwargs = {
+            'nome_empresa': {
+                'error_messages': {
+                    'required': 'O campo Nome da Empresa é obrigatório.',
+                    'blank': 'O campo Nome da Empresa não pode ser vazio.',
+                }
+            },
+            'matricula_aluno': {
+                'error_messages': {
+                    'required': 'O campo Matrícula do Aluno é obrigatório.',
+                    'does_not_exist': 'Aluno com esta matrícula não foi encontrado.',
+                    'null': 'O campo Matrícula do Aluno não pode ser nulo.',
+                }
+            },
+        }
+
     def create(self, validated_data):
         return Processo.objects.create(**validated_data)
     

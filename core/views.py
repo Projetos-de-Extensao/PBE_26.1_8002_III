@@ -58,9 +58,16 @@ def processo(request):
     if request.method == 'POST':
         parsed_data = request.data
         serializer = ProcessoSerializer(data=parsed_data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            erros = {
+                "erro": "Falha na validação dos dados.",
+                "campos_com_erro": {
+                    campo: mensagens for campo, mensagens in serializer.errors.items()
+                }
+            }
+            return Response(erros, status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
-        return Response({"created":"successfull"},status=status.HTTP_201_CREATED)
+        return Response({"message": "Processo criado com sucesso!"}, status=status.HTTP_201_CREATED)
        
 
     if request.method == 'GET':
