@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import *
+from .enums import StatusProcesso
 
 
 class CursoSerializer(serializers.ModelSerializer):
@@ -36,6 +37,28 @@ class ProcessoSerializer(serializers.ModelSerializer):
                 }
             },
         }
+
+    def validate(self, attrs):
+        aluno = attrs.get('matricula_aluno')
+        if aluno:
+            STATUS_TERMINAL = [
+                StatusProcesso.REPROVADO,
+                StatusProcesso.CONCLUIDO,
+                StatusProcesso.CANCELADO,
+            ]
+            processo_ativo = Processo.objects.filter(
+                matricula_aluno=aluno
+            ).exclude(status__in=STATUS_TERMINAL).first()
+
+            if processo_ativo:
+                raise serializers.ValidationError({
+                    "matricula_aluno": (
+                        f"Este aluno já possui um processo ativo "
+                        f"(ID: {processo_ativo.id}, Status: {processo_ativo.get_status_display()}). "
+                        f"Não é possível criar outro processo enquanto houver um em andamento."
+                    )
+                })
+        return attrs
 
     def create(self, validated_data):
         return Processo.objects.create(**validated_data)
