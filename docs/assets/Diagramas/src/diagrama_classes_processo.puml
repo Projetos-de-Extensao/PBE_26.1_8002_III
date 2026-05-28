@@ -10,23 +10,39 @@ skinparam class {
 ' --- Enums ---
 enum StatusProcesso {
     ABERTO
-    EM_ANALISE_SECRETARIA
-    EM_ANALISE_COORDENACAO
-    PENDENTE_AJUSTE
-    APROVADO
+    PENDENTE
     REPROVADO
     CONCLUIDO
     CANCELADO
 }
 
+enum StatusContrato {
+    PENDENTE
+    EM_ANALISE_SECRETARIA
+    APROVADO
+    REPROVADO
+}
+
+enum StatusRelatorio {
+    PENDENTE
+    EM_ANALISE_COORDENACAO
+    APROVADO
+    REPROVADO
+}
+
+enum Veredito {
+    APROVADO
+    REPROVADO
+}
+
 ' --- Classes de Processo e Documentação ---
 class Processo {
-   - id : int
-   - data_criacao : Date
-   - status : StatusProcesso
-   - matricula_aluno : int
-   + atualizarStatus(novoStatus : StatusProcesso)
-   + validarContrato(aprovado : bool, justificativa : string)
+    - id : int
+    - nome_empresa : string
+    - data_criacao : Date
+    - status : StatusProcesso
+    - matricula_aluno : FK<Aluno>
+    + nome_processo() : string
 }
 
 class Contrato {
@@ -43,21 +59,44 @@ class Contrato {
     - assinatura_empresa : bool
     - assinatura_faculdade : bool
     - processoId : int
+    - status : StatusContrato
+    + nome_contrato() : string
 }
 
 class Relatorio {
-    - processoId : int
-    - relatorioId : int
-    - nomeArquivo : string
-    - dataUpload : DateTime
-    - horasTrabalhadas : int
-    - periodoReferencia : string
-    - aprovadoPelaEmpresa : bool
+    - id : int
+    - processo_id : int
+    - arquivo : string
+    - data_upload : Date
+    - horas_trabalhadas : int
+    - data_inicio : Date
+    - data_termino : Date
+    - status : StatusRelatorio
+}
+
+abstract class HistoricoAvaliacao {
+    - id : int
+    - observacoes : string
+    - data_avaliacao : Date
+    - veredito : Veredito
+}
+
+class HistoricoAvaliacaoRelatorio extends HistoricoAvaliacao {
+    - avaliador : int
+    - relatorio_id : int
+}
+
+class HistoricoAvaliacaoContrato extends HistoricoAvaliacao {
+    - avaliador : int
+    - contrato_id : int
 }
 
 ' --- Relacionamentos de Processo ---
 Processo "1" *-- "1..*" Contrato : contém >
 Processo "1" *-- "0..*" Relatorio : contém >
 Processo "0..*" -- "1" StatusProcesso : possui >
+
+Relatorio "1" -- "0..1" HistoricoAvaliacaoRelatorio : possui >
+Contrato "1" -- "0..1" HistoricoAvaliacaoContrato : possui >
 
 @enduml

@@ -12,6 +12,7 @@ from .enums import *
 from .services import *
 
 
+
 class Usuario(models.Model):
     matricula = models.CharField(max_length=30,unique=True,editable = False,db_index = True, verbose_name="Matrícula")    
     nome = models.CharField(max_length=255, verbose_name="Nome")
@@ -25,6 +26,8 @@ class Usuario(models.Model):
 class Aluno(Usuario):
     cpf = models.CharField(max_length=14, verbose_name="CPF",default="")
     is_ativo = models.BooleanField(default=True, verbose_name="Status Ativo")
+    periodo = models.IntegerField(choices=Periodo, default = Periodo.PRIMEIRO )
+    curso = models.ForeignKey("Curso", on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = "Aluno"
@@ -33,21 +36,6 @@ class Aluno(Usuario):
     def __str__(self): ##
         # Isso define como o aluno vai aparecer no painel da Secretaria (ex: "dr. bazinga - 20236769420")
         return f"{self.nome} - {self.matricula}"
-
-class Coordenador(Usuario):
-    areaId = models.ForeignKey(Area, on_delete=models.PROTECT)
-
-    class Meta:
-        verbose_name = "Coordenador"
-        verbose_name_plural = "Coordenadores"
-
-    def __str__(self):
-        return self.nome
-
-class Secretaria(Usuario):
-    class Meta:
-        verbose_name = "Secretária"
-        verbose_name_plural = "Secretárias"
 
 class Area(models.Model):
     nome = models.CharField(max_length=20, verbose_name="Nome")
@@ -58,6 +46,28 @@ class Area(models.Model):
 
     def __str__(self):
         return self.nome
+
+class Coordenador(Usuario):
+    areaId = models.ForeignKey("Area", on_delete=models.PROTECT)
+
+    class Meta:
+        verbose_name = "Coordenador"
+        verbose_name_plural = "Coordenadores"
+
+    def __str__(self):
+        return self.nome
+
+
+
+class Secretaria(Usuario):
+    class Meta:
+        verbose_name = "Secretária"
+        verbose_name_plural = "Secretárias"
+
+    def __str__(self):
+        return self.nome
+
+
 
 
 class Curso(models.Model):
@@ -75,9 +85,9 @@ class Processo(models.Model):
     nome_empresa = models.CharField(max_length=255, verbose_name="Nome da empresa")
     data_criacao = models.DateField(verbose_name="Data de Criação",default=timezone.now)
     status = models.CharField(max_length = 15, choices=StatusProcesso, default = StatusProcesso.ABERTO )
-    matricula_aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE)
-    # matricula_coordenacao = models.ForeignKey(Coordenacao, on_delete=models.SET_NULL)
-    # matricula_secretaria = models.ForeignKey(Secretaria, on_delete=models.SET_NULL)
+    matricula_aluno = models.ForeignKey(Aluno, to_field='matricula', related_name="matricula_aluno", on_delete=models.CASCADE, max_length = 30)
+    # matricula_coordenacao = models.ForeignKey(Coordenador,to_field='matricula', related_name="matricula_coordenacao", on_delete=models.PROTECT)
+    # matricula_secretaria = models.ForeignKey(Secretaria,to_field='matricula', related_name="matricula_secretaria", on_delete=models.PROTECT)
 
     class Meta:
         verbose_name = "Processo"
@@ -106,6 +116,7 @@ class Contrato(models.Model):
     assinatura_empresa = models.BooleanField(default=False, verbose_name="Assinatura da Empresa")
     assinatura_faculdade = models.BooleanField(default=False, verbose_name="Assinatura da Faculdade")
     processoId = models.ForeignKey(Processo, on_delete=models.CASCADE, verbose_name="Processo")
+    status = models.CharField(max_length = 15, choices=StatusContrato, default = StatusContrato.PENDENTE )
 
     @property
     def nome_contrato(self):
@@ -120,3 +131,29 @@ class Contrato(models.Model):
         return self.nome_contrato
 
 
+class Relatorio(models.Model):
+    processo_id = models.ForeignKey(Processo, on_delete= models.CASCADE)
+    arquivo = models.FileField(upload_to=upload_relatorio_path,verbose_name="url do arquivo")
+    data_upload = models.DateField(verbose_name="Data de upload",default=timezone.now())
+    horas_trabalhadas = models.IntegerField(verbose_name="Horas trabalhadas")
+    data_inicio = models.DateField(verbose_name="Data de início do relatório")
+    data_termino = models.DateField(verbose_name="Data de término do relatório")
+    status = models.CharField(max_length = 15, choices=StatusRelatorio, default = StatusRelatorio.PENDENTE )
+    
+
+class HistoricoAvaliacao(models.Model):
+    observacoes = models.TextField(verbose_name="Observações")
+    data_avaliacao = models.DateField(verbose_name="Data de avaliação",default=timezone.now())
+    veredito = models.CharField(max_length=20,choices=Veredito,verbose_name="Veredito")
+    
+    class Meta:
+        abstract = True
+        
+
+class HistoricoAvaliacaoRelatorio(HistoricoAvaliacao):
+    avaliador = models.ForeignKey(Coordenador, on_delete=models.PROTECT)
+    relatorio_id = models.OneToOneField(Relatorio, on_delete=models.CASCADE)
+
+class HistoricoAvaliacaoContrato(HistoricoAvaliacao):
+    avaliador = models.ForeignKey(Secretaria, on_delete=models.PROTECT)
+    contrato_id = models.OneToOneField(Contrato, on_delete=models.CASCADE)

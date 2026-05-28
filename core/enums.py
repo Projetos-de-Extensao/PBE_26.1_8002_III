@@ -25,14 +25,41 @@ class TipoUsuario(models.TextChoices):
 
 class StatusProcesso(models.TextChoices):
     ABERTO = 'aberto', 'Aberto'
-    EM_ANALISE_SECRETARIA = 'analise_sec', 'Análise Secretaria'
-    EM_ANALISE_COORDENACAO = '',''
     PENDENTE = 'pendente', 'Pendente'
-    APROVADO = 'aprovado','Aprovado'
     REPROVADO ='reprovado','Reprovado'
     CONCLUIDO = 'concluido','Concluido'
     CANCELADO ='cancelado','Cancelado'
 
+
+class StatusContrato(models.TextChoices):
+    PENDENTE = 'pendente', 'Pendente'
+    EM_ANALISE_SECRETARIA = 'analise_sec', 'Análise Secretaria'
+    APROVADO = 'aprovado', 'Aprovado'
+    REPROVADO = 'reprovado', 'Reprovado'
+
+class StatusRelatorio(models.TextChoices):
+    PENDENTE = 'pendente', 'Pendente'
+    EM_ANALISE_COORDENACAO = 'analise_coord', 'Análise Coordenação'
+    APROVADO = 'aprovado', 'Aprovado'
+    REPROVADO = 'reprovado', 'Reprovado'
+    
+
 class Unidade(models.TextChoices):
     BARRA = 'barra', 'Barra'
     BOTAFOGO = 'botafogo', 'Botafogo'   
+
+class Periodo(models.IntegerChoices):
+    PRIMEIRO = 1, "Primeiro"
+    SEGUNDO = 2, "Segundo"
+    TERCEIRO = 3, "Terceiro"
+    QUARTO = 4, "Quarto"
+    QUINTO = 5, "Quinto"
+    SEXTO = 6, "Sexto"
+    SETIMO = 7, "Setimo"
+    OITAVO = 8, "Oitavo"
+    NONO = 9, "Nono"
+    DECIMO = 10, "Decimo"
+
+class Veredito(models.TextChoices):
+    APROVADO = 'aprovado', 'Aprovado'
+    REPROVADO = 'reprovado', 'Reprovado'
