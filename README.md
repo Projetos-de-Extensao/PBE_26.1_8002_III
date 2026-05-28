@@ -47,19 +47,62 @@ Atualmente, o processo de estágio envolve diversas tarefas manuais, burocrátic
 
 ## 🚀 Como Executar
 
+### 1. Instalar o `uv`
+
+O projeto utiliza o [**uv**](https://docs.astral.sh/uv/) como gerenciador de pacotes e ambientes virtuais.
+
+**Windows (PowerShell):**
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+**Linux / macOS (wget):**
+
 ```bash
-# Clone o repositório
+wget -qO- https://astral.sh/uv/install.sh | sh
+```
+
+**Linux / macOS (curl):**
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+> Após a instalação, reinicie o terminal para que o comando `uv` fique disponível no PATH.
+
+### 2. Clonar o repositório
+
+```bash
 git clone https://github.com/Projetos-de-Extensao/PBE_26.1_8002_III.git
+cd PBE_26.1_8002_III
+```
 
-# Crie e ative o ambiente virtual
-python -m venv .venv
-source .venv/bin/activate
+### 3. Instalar dependências
 
-# Instale as dependências
-pip install -r requirements.txt
+O `uv` cria o ambiente virtual automaticamente e instala tudo que está no `pyproject.toml`:
 
-# Rode a documentação localmente
-mkdocs serve
+```bash
+uv sync
+```
+
+### 4. Executar o servidor Django
+
+```bash
+uv run python manage.py migrate
+uv run python manage.py runserver
+```
+
+### 5. Rodar a documentação localmente
+
+```bash
+uv run mkdocs serve
+```
+
+### 6. Rodar os testes
+
+```bash
+uv run pytest
 ```
 
 ---

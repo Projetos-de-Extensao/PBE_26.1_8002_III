@@ -1,84 +1,87 @@
-from django.shortcuts import render
-from .models import *
-from .serializers import AlunoSerializer,ProcessoSerializer
-from rest_framework.renderers import JSONRenderer
-from django.http import HttpResponse,JsonResponse
-import io
-from rest_framework.parsers import JSONParser
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework import status
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.generics import ListCreateAP1View, RetrieveUpdateDestroyAPIView
-from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
-from rest_framework.authentication import TokenAuthentication 
+from rest_framework import status
+from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-@api_view(['GET','POST','PUT','PATCH'])
-def aluno(request,id):
-    data = get_object_or_404(Aluno,id=id)
+from .models import Aluno, Processo
+from .serializers import AlunoSerializer, ProcessoSerializer
+from .permissions import IsSecretaria, IsAluno
 
-    if request.method== 'PUT':
-        stream = io.BytesIO(request.body)
-        parsed_data = JSONParser().parse(stream)
-        serializer = AlunoSerializer(data,data = parsed_data)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse({"message":"Aluno atualizado com sucesso!"},status=status.HTTP_201_CREATED)
-        return JsonResponse(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-
+@api_view(['GET', 'POST', 'PATCH'])
+@permission_classes([IsSecretaria])
+def aluno(request):
     if request.method == 'PATCH':
-        stream = io.BytesIO(request.body)
-        parsed_data = JSONParser().parse(stream)
-        serializer = AlunoSerializer(data,data = parsed_data,partial=True)
-        if serializer.is_valid():
+        parsed_data = request.data
+        matricula = request.GET.get('matricula_aluno', None)
+        if matricula is not None:
+            try:
+                old_data = Aluno.objects.get(matricula=matricula)
+            except Aluno.DoesNotExist:
+                return Response({"error": "Aluno não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+            
+            serializer = AlunoSerializer(old_data, data=parsed_data, partial=True)
+            serializer.is_valid(raise_exception=True)
             serializer.save()
-            return JsonResponse({"message":"Aluno atualizado com sucesso!"},status=status.HTTP_201_CREATED)
-        return JsonResponse(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "updated"}, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "Matrícula não informada"}, status=status.HTTP_400_BAD_REQUEST)
 
     if request.method == 'POST':
-        json = request.body 
-        stream = io.BytesIO(json)
-        parsed_data = JSONParser().parse(stream)
+        parsed_data = request.data
         serializer = AlunoSerializer(data=parsed_data)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse({"message":"Aluno criado com sucesso!"},status=status.HTTP_201_CREATED)
-        else:
-            return JsonResponse(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"message":"Aluno criado com sucesso!"}, status=status.HTTP_201_CREATED)
 
     if request.method == 'GET':
         data = Aluno.objects.all()
-        params = request.GET.get('matricula',None)
+        params = request.GET.get('matricula', None)
         if params is not None:
             data = data.filter(matricula=params)    
+        
         serializer = AlunoSerializer(data, many=True)
-        json_data = JSONRenderer().render(serializer.data)
-        return HttpResponse(json_data, content_type='application/json')
+        # O DRF já renderiza a resposta automaticamente com o Response
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-   
 
-@csrf_exempt
+@api_view(['GET', 'POST', 'PATCH'])
+@permission_classes([IsAluno | IsSecretaria])
 def processo(request):
     if request.method == 'POST':
-        json = request.body
-        stream = io.BytesIO(json)
-        parsed_data = JSONParser().parse(stream)
+        parsed_data = request.data
         serializer = ProcessoSerializer(data=parsed_data)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse({"created":"successfull"},status=status.HTTP_201_CREATED)
-        else:
-            return JsonResponse(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-
-
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"created":"successfull"}, status=status.HTTP_201_CREATED)
+        
     if request.method == 'GET':
         data = Processo.objects.all()
-        serializer = ProcessoSerializer(data,many=True)
-        return JsonResponse(serializer.data,safe=False)
+        params = request.GET.get('matricula_aluno', None)
+        if params is not None:
+            data = Processo.objects.select_related('matricula_aluno')
+        serializer = ProcessoSerializer(data, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    if request.method == 'PATCH':
+        parsed_data = request.data
+        id = request.GET.get('processo_id', None)
+        if id is not None:
+            try:
+                old_data = Processo.objects.get(id=id)
+            except Processo.DoesNotExist:
+                return Response({"error": "Processo não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+            
+            serializer = ProcessoSerializer(old_data, data=parsed_data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response({"message": "updated"}, status=status.HTTP_200_OK)
+            
+        else:
+            return Response({"error": "Id não informado"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class MultipleObjectAPIView(ListAPIView):       
     authentication_classes = [TokenAuthentication]
@@ -94,6 +97,3 @@ class MultipleObjectAPIView(ListAPIView):
 class SingleObjectAPIView(RetrieveAPIView):
     queryset = Aluno.objects.all()
     serializer_class = AlunoSerializer
-        
-
-
