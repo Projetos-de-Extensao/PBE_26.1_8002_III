@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 from .permissions import IsSecretaria, IsAluno
 
 @csrf_exempt
@@ -42,12 +43,16 @@ def aluno(request):
 
     if request.method == 'GET':
         data = Aluno.objects.all()
-        params = request.GET.get('matricula',None)
-        if params is not None:
-            data = data.filter(matricula=params)    
-        serializer = AlunoSerializer(data, many=True)
-        json_data = JSONRenderer().render(serializer.data)
-        return Response(json_data, status=status.HTTP_200_OK)
+        matricula = request.GET.get('matricula', None)
+        nome = request.GET.get('nome', None)
+        if matricula is not None:
+            data = data.filter(matricula=matricula)
+        if nome is not None:
+            data = data.filter(nome__icontains=nome)
+        paginator = PageNumberPagination()
+        paginated_data = paginator.paginate_queryset(data, request)
+        serializer = AlunoSerializer(paginated_data, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
    
 
@@ -72,11 +77,19 @@ def processo(request):
 
     if request.method == 'GET':
         data = Processo.objects.all()
-        params = request.GET.get('matricula_aluno',None)
-        if params is not None:
-            data = Processo.objects.select_related('matricula_aluno')
-        serializer = ProcessoSerializer(data,many=True)
-        return Response(serializer.data,safe=False)
+        matricula_aluno = request.GET.get('matricula_aluno', None)
+        status_filtro = request.GET.get('status', None)
+        nome_empresa = request.GET.get('nome_empresa', None)
+        if matricula_aluno is not None:
+            data = data.filter(matricula_aluno__matricula=matricula_aluno)
+        if status_filtro is not None:
+            data = data.filter(status=status_filtro)
+        if nome_empresa is not None:
+            data = data.filter(nome_empresa__icontains=nome_empresa)
+        paginator = PageNumberPagination()
+        paginated_data = paginator.paginate_queryset(data, request)
+        serializer = ProcessoSerializer(paginated_data, many=True)
+        return paginator.get_paginated_response(serializer.data)
     
     if request.method == 'PATCH':
         parsed_data = request.data
