@@ -19,6 +19,8 @@ class Usuario(models.Model):
     senha = models.CharField(max_length=255, verbose_name="Senha")
     unidade = models.CharField(max_length=15, choices=Unidade)
 
+    precisa_redefinir_senha = models.BooleanField(default=True, verbose_name="Precisa redefinir senha?")
+
     class Meta:
         abstract = True 
 
