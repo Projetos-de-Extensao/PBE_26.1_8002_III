@@ -24,6 +24,7 @@ class Usuario(models.Model):
         abstract = True 
 
 class Aluno(Usuario):
+    matricula = models.CharField(max_length=12, unique=True)
     cpf = models.CharField(max_length=14, verbose_name="CPF",default="")
     is_ativo = models.BooleanField(default=True, verbose_name="Status Ativo")
     periodo = models.IntegerField(choices=Periodo, default = Periodo.PRIMEIRO )
