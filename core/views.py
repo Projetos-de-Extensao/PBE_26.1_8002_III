@@ -9,15 +9,38 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from .permissions import IsSecretaria, IsAluno
+from rest_framework.test import APIClient
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+
 
 @csrf_exempt
-@api_view(['GET','POST'])
-@permission_classes([IsSecretaria])
+@extend_schema(
+    methods=['GET'],
+    parameters=[
+        OpenApiParameter(name='matricula', description='Filtra por matrícula do aluno', required=False, type=str)
+    ],
+    responses={200: AlunoSerializer(many=True)}
+)
+@extend_schema(
+    methods=['POST'],
+    request=AlunoSerializer,
+    responses={201: AlunoSerializer}
+)
+@extend_schema(
+    methods=['PATCH'],
+    parameters=[
+        OpenApiParameter(name='matricula_aluno', description='Matrícula do aluno a ser atualizado', required=True, type=str)
+    ],
+    request=AlunoSerializer,
+    responses={200: AlunoSerializer}
+)
+@api_view(['GET','POST','PATCH'])
+# @permission_classes([IsSecretaria])
 def aluno(request):
 
     if request.method == 'PATCH':
         parsed_data = request.data
-        matricula = request.GET.get('matricula_aluno', None)
+        matricula = request.query_params.get('matricula_aluno', None)
         if matricula is not None:
             try:
                 old_data = Aluno.objects.get(matricula=matricula)
@@ -42,18 +65,40 @@ def aluno(request):
 
     if request.method == 'GET':
         data = Aluno.objects.all()
-        params = request.GET.get('matricula',None)
+        params = request.query_params.get('matricula')
         if params is not None:
-            data = data.filter(matricula=params)    
+            data = data.filter(matricula=params)
+            data_with_process = data.prefetch_related('processo')
+            serializer = AlunoSerializer(data, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         serializer = AlunoSerializer(data, many=True)
-        json_data = JSONRenderer().render(serializer.data)
-        return Response(json_data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
    
 
 @csrf_exempt
-@api_view(['GET','POST'])
-@permission_classes([IsAluno | IsSecretaria])
+@extend_schema(
+    methods=['GET'],
+    parameters=[
+        OpenApiParameter(name='matricula_aluno', description='Filtra processos por matrícula do aluno', required=False, type=str)
+    ],
+    responses={200: ProcessoSerializer(many=True)}
+)
+@extend_schema(
+    methods=['POST'],
+    request=ProcessoSerializer,
+    responses={201: ProcessoSerializer}
+)
+@extend_schema(
+    methods=['PATCH'],
+    parameters=[
+        OpenApiParameter(name='processo_id', description='ID do processo a ser atualizado', required=True, type=str)
+    ],
+    request=ProcessoSerializer,
+    responses={200: ProcessoSerializer}
+)
+@api_view(['GET','POST','PATCH'])
+# @permission_classes([IsAluno | IsSecretaria])
 def processo(request):
     if request.method == 'POST':
         parsed_data = request.data
@@ -65,7 +110,7 @@ def processo(request):
 
     if request.method == 'GET':
         data = Processo.objects.all()
-        params = request.GET.get('matricula_aluno',None)
+        params = request.query_params.get('matricula_aluno',None)
         if params is not None:
             data = Processo.objects.select_related('matricula_aluno')
         serializer = ProcessoSerializer(data,many=True)
@@ -73,7 +118,7 @@ def processo(request):
     
     if request.method == 'PATCH':
         parsed_data = request.data
-        id = request.GET.get('processo_id', None)
+        id = request.query_params.get('processo_id', None)
         if id is not None:
             try:
                 old_data = Processo.objects.get(id=id)
@@ -89,29 +134,7 @@ def processo(request):
             return Response({"error": "Id não informado"}, status=status.HTTP_400_BAD_REQUEST)
                 
 
-        json = request.body
-        stream = io.BytesIO(json)
-        parsed_data = JSONParser().parse(stream)
-        id = request.GET.get('processo_id', None)
-        if id is not None:
-            try:
-                old_data = Processo.objects.get(id=id)
-            except Processo.DoesNotExist:
-                return Response({"error": "Processo não encontrado"}, status=status.HTTP_404_NOT_FOUND)
-            
-            serializer = ProcessoSerializer(old_data, data=parsed_data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({"message": "updated"}, status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({"error": "Id não informado"}, status=status.HTTP_400_BAD_REQUEST)
-
-        
-
-
-
+     
         
 
 
