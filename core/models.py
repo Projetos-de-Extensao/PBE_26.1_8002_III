@@ -1,6 +1,6 @@
 
 import email
-from core.services import upload_contrato_path
+from core.services import upload_contrato_path, validar_pdf_e_tamanho_seguro
 from django.utils import choices,timezone
 from core.enums import StatusProcesso
 from django.db.models import CASCADE
@@ -104,7 +104,7 @@ class Processo(models.Model):
 
 
 class Contrato(models.Model):
-    arquivo = models.FileField(upload_to=upload_contrato_path,verbose_name="url do arquivo")
+    arquivo = models.FileField(upload_to=upload_contrato_path,verbose_name="url do arquivo", validators=[validar_pdf_e_tamanho_seguro])
     data_upload = models.DateField(verbose_name="Data de Upload")
     cnpj_empresa = models.CharField(max_length=14, verbose_name="CNPJ da empresa")
     nome_empresa = models.CharField(max_length=255, verbose_name="Nome da empresa")
