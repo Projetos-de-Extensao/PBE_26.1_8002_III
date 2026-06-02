@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import *
+from .enums import *
 
 class NestedProcessoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -13,7 +14,8 @@ class AlunoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Aluno
         fields = ['nome', 'email', 'matricula', 'senha', 'cpf', 'is_ativo', 'unidade', 'periodo', 'curso', 'processos']
-
+        read_only_fields = ['id']
+    
     def create(self, validated_data):
         return Aluno.objects.create(**validated_data)
 
@@ -49,7 +51,17 @@ class ProcessoSerializer(serializers.ModelSerializer):
         # "matricula_coordenacao","matricula_secretaria"]
         read_only_fields = ["id","data_criacao"]
     def create(self, validated_data):
-        return Aluno.objects.create(**validated_data)
+        return Processo.objects.create(**validated_data)
+
+    def validate(self,attrs):
+        matricula_aluno = attrs.get('matricula_aluno')
+        status = attrs.get('status')
+        if status == StatusProcesso.ABERTO:
+            existe_processo = Processo.objects.filter(matricula_aluno=matricula_aluno,status=StatusProcesso.ABERTO).exists()
+            if existe_processo:
+                raise serializers.ValidationError({"status":"O aluno já tem processos em aberto"})
+            else:
+                return attrs
 
 
 class ContratoSerializer(serializers.ModelSerializer):

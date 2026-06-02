@@ -104,9 +104,19 @@ def processo(request):
         parsed_data = request.data
         serializer = ProcessoSerializer(data=parsed_data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({"created":"successfull"},status=status.HTTP_201_CREATED)
-       
+
+        grupo = request.user.groups.first()
+        cargo = grupo.name if grupo else ""
+        nome_completo = f"{request.user.first_name} {request.user.last_name}"
+        username = request.user.username
+        criado_por_string = (cargo + nome_completo + username)[:100]
+
+
+        try:    
+            serializer.save(criado_por=criado_por_string)
+            return Response({"criado":"Processo criado com sucesso"},status=status.HTTP_201_CREATED)
+        except IntegrityError:
+            return Response({"falhou":"Esse processo já existe"},status=status.HTTP_409_CONFLICT)
 
     if request.method == 'GET':
         data = Processo.objects.all()
