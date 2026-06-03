@@ -7,28 +7,58 @@ skinparam class {
     BorderColor Black
 }
 
+' --- Enums ---
+enum Veredito {
+    APROVADO
+    REPROVADO
+}
+
 ' --- Classes Relevantes ---
 abstract class Usuario {
-    # matricula : int
+    # matricula : string
     # nome : string
     # email : string
     # senha : string
-    + login() : bool
+    # unidade : Unidade
 }
 
-class Coordenacao extends Usuario {
+class Coordenador extends Usuario {
     - areaId : int
-    + validarEstagio(processo : Processo, aprovado : bool, justificativa : string)
 }
 
 class Area {
+    - id : int
+    - nome : string
 }
 
 class Processo {
+    - id : int
+    - nome_empresa : string
+    - data_criacao : Date
+    - status : StatusProcesso
+    - matricula_aluno : FK<Aluno>
+    + nome_processo() : string
+}
+
+class Relatorio {
+}
+
+abstract class HistoricoAvaliacao {
+    - id : int
+    - observacoes : string
+    - data_avaliacao : Date
+    - veredito : Veredito
+}
+
+class HistoricoAvaliacaoRelatorio extends HistoricoAvaliacao {
+    - avaliador : int
+    - relatorio_id : int
 }
 
 ' --- Relacionamentos ---
-Coordenacao "1" -- "1" Area
-Coordenacao "1" -- "0..*" Processo : valida >
+Coordenador "1" -- "1" Area
+Coordenador "1" -- "0..*" Processo : valida >
+Coordenador "1" -- "0..*" HistoricoAvaliacaoRelatorio : avalia >
+Relatorio "1" -- "0..1" HistoricoAvaliacaoRelatorio : possui >
 
 @enduml

@@ -10,64 +10,78 @@ skinparam class {
 ' --- Enums ---
 enum StatusProcesso {
     ABERTO
-    EM_ANALISE_SECRETARIA
-    EM_ANALISE_COORDENACAO
-    PENDENTE_AJUSTE
-    APROVADO
+    PENDENTE
     REPROVADO
     CONCLUIDO
     CANCELADO
 }
 
+enum StatusContrato {
+    PENDENTE
+    EM_ANALISE_SECRETARIA
+    APROVADO
+    REPROVADO
+}
+
+enum StatusRelatorio {
+    PENDENTE
+    EM_ANALISE_COORDENACAO
+    APROVADO
+    REPROVADO
+}
+
 enum Unidade {
     BARRA
-    CENTRO
-    BH
-    BRASILIA
+    BOTAFOGO
 }
 
 enum Periodo {
-    P1, P2, P3, P4, P5, P6, P7, P8, P9, P10
+    PRIMEIRO, SEGUNDO, TERCEIRO, QUARTO, QUINTO, SEXTO, SETIMO, OITAVO, NONO, DECIMO
+}
+
+enum TipoUsuario {
+    ALUNO
+    SECRETARIA
+    COORDENACAO
+    CARREIRAS
+}
+
+enum Veredito {
+    APROVADO
+    REPROVADO
 }
 
 ' --- Classes Principais ---
 
 abstract class Usuario {
-    # matricula : int
+    # matricula : string
     # nome : string
     # email : string
     # senha : string
     # unidade : Unidade
-    + login() : bool
 }
 
 class Aluno extends Usuario {
-    - cursoId : int
+    - cpf : string
+    - is_ativo : bool
     - periodo : Periodo
-    - processoAtualId : int
-    + iniciarProcesso() : Processo
-    + anexarContrato(doc : Contrato)
-    + anexarRelatorio(doc : Relatorio)
+    - cursoId : int
 }
 
 class Secretaria extends Usuario {
-    + validarContrato(processo : Processo, aprovado : bool, justificativa : string)
-    + pesquisarAlunos(matricula : int) : Aluno[]
-    + listarProcessosPendentes() : Processo[]
 }
 
-class Coordenacao extends Usuario {
+class Coordenador extends Usuario {
     - areaId : int
-    + validarEstagio(processo : Processo, aprovado : bool, justificativa : string)
 }
 
 class Processo {
-   - id : int
-   - data_criacao : Date
-   - status : StatusProcesso
-   - matricula_aluno : int
-   + atualizarStatus(novoStatus : StatusProcesso)
-   + validarContrato(aprovado : bool, justificativa : string)
+    - id : int
+    - nome_empresa : string
+    - data_criacao : Date
+    - status : StatusProcesso
+    - matricula_aluno : FK<Aluno>
+    + nome_processo() : string
 }
 
 class Contrato {
@@ -84,16 +98,36 @@ class Contrato {
     - assinatura_empresa : bool
     - assinatura_faculdade : bool
     - processoId : int
+    - status : StatusContrato
+    + nome_contrato() : string
 }
 
 class Relatorio {
-    - processoId : int
-    - relatorioId : int
-    - nomeArquivo : string
-    - dataUpload : DateTime
-    - horasTrabalhadas : int
-    - periodoReferencia : string
-    - aprovadoPelaEmpresa : bool
+    - id : int
+    - processo_id : int
+    - arquivo : string
+    - data_upload : Date
+    - horas_trabalhadas : int
+    - data_inicio : Date
+    - data_termino : Date
+    - status : StatusRelatorio
+}
+
+abstract class HistoricoAvaliacao {
+    - id : int
+    - observacoes : string
+    - data_avaliacao : Date
+    - veredito : Veredito
+}
+
+class HistoricoAvaliacaoRelatorio extends HistoricoAvaliacao {
+    - avaliador : int
+    - relatorio_id : int
+}
+
+class HistoricoAvaliacaoContrato extends HistoricoAvaliacao {
+    - avaliador : int
+    - contrato_id : int
 }
 
 class Curso {
@@ -115,15 +149,21 @@ Aluno "0..*" -- "1" Periodo
 
 ' Hierarquia de Curso e Área
 Area "1" -- "0..*" Curso
-Coordenacao "1" -- "1" Area
+Coordenador "1" -- "1" Area
 
 ' Relacionamento de Processo
 Aluno "1" -- "0..1" Processo : possui >
 Secretaria "1" -- "0..*" Processo : audita >
-Coordenacao "1" -- "0..*" Processo : valida >
+Coordenador "1" -- "0..*" Processo : valida >
 
 Processo "1" *-- "1..*" Contrato : contém >
 Processo "1" *-- "0..*" Relatorio : contém >
 Processo "0..*" -- "1" StatusProcesso : possui >
+
+Coordenador "1" -- "0..*" HistoricoAvaliacaoRelatorio : avalia >
+Relatorio "1" -- "0..1" HistoricoAvaliacaoRelatorio : possui >
+
+Secretaria "1" -- "0..*" HistoricoAvaliacaoContrato : avalia >
+Contrato "1" -- "0..1" HistoricoAvaliacaoContrato : possui >
 
 @enduml

@@ -50,6 +50,8 @@ node_modules/
 # Banco de dados SQLite
 db.sqlite3
 db.sqlite3-journal
+migrations/*.py
+migrations/*.pyc
 
 # Mídia e Arquivos Estáticos (gerados/enviados)
 media/
@@ -61,3 +63,7 @@ local_settings.py
 
 # Logs e arquivos temporários
 *.log
+
+
+# Svgs PlantUml
+docs/assets/Diagramas/out/
