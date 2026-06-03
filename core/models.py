@@ -142,7 +142,7 @@ class Contrato(models.Model):
 class Relatorio(models.Model):
     processo_id = models.ForeignKey(Processo, on_delete= models.CASCADE)
     arquivo = models.FileField(upload_to=upload_relatorio_path,verbose_name="url do arquivo")
-    data_upload = models.DateField(verbose_name="Data de upload",default=timezone.now()())
+    data_upload = models.DateField(verbose_name="Data de upload",default=timezone.now())
     horas_trabalhadas = models.IntegerField(verbose_name="Horas trabalhadas")
     data_inicio = models.DateField(verbose_name="Data de início do relatório")
     data_termino = models.DateField(verbose_name="Data de término do relatório")
@@ -151,7 +151,7 @@ class Relatorio(models.Model):
 
 class HistoricoAvaliacao(models.Model):
     observacoes = models.TextField(verbose_name="Observações")
-    data_avaliacao = models.DateField(verbose_name="Data de avaliação",default=timezone.now()())
+    data_avaliacao = models.DateField(verbose_name="Data de avaliação",default=timezone.now())
     veredito = models.CharField(max_length=20,choices=Veredito,verbose_name="Veredito")
     
     class Meta:
