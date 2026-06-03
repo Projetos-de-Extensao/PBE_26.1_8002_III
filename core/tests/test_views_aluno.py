@@ -69,6 +69,56 @@ class TestGetAluno():
         assert len(nomes_empresas) == 2
         assert processo.nome_empresa in nomes_empresas
         assert processo_concluido.nome_empresa in nomes_empresas
+
+
+@pytest.mark.django_db
+class TestPostAluno:
+
+    def test_criar_aluno_sucesso(self, api_client, curso):
+        payload = {
+            "nome": "Pedro Santos",
+            "email": "pedro@ibmec.edu.br",
+            "matricula": "20260002",
+            "cpf": "123.456.789-09",
+            "is_ativo": True,
+            "unidade": Unidade.BARRA.value,
+            "periodo": Periodo.PRIMEIRO.value,
+            "curso": curso.id
+        }
+        response = api_client.post('/aluno/', payload)
+        assert response.status_code == 201
+        assert response.data["message"] == "Aluno criado com sucesso!"
+        assert Aluno.objects.filter(matricula="20260002").exists()
+
+
+@pytest.mark.django_db
+class TestPatchAluno:
+
+    def test_atualizar_aluno_sucesso(self, api_client, aluno):
+        payload = {
+            "nome": "João Santos Atualizado"
+        }
+        response = api_client.patch(f'/aluno/?matricula_aluno={aluno.matricula}', payload)
+        assert response.status_code == 200
+        assert response.data["message"] == "updated"
+        aluno.refresh_from_db()
+        assert aluno.nome == "João Santos Atualizado"
+
+    def test_atualizar_aluno_nao_encontrado(self, api_client):
+        payload = {
+            "nome": "Não Existe"
+        }
+        response = api_client.patch('/aluno/?matricula_aluno=inexistente', payload)
+        assert response.status_code == 404
+        assert response.data["error"] == "Aluno não encontrado"
+
+    def test_atualizar_aluno_sem_matricula(self, api_client):
+        payload = {
+            "nome": "Não Envia Matricula"
+        }
+        response = api_client.patch('/aluno/', payload)
+        assert response.status_code == 400
+        assert response.data["error"] == "Matrícula não informada"
       
          
         

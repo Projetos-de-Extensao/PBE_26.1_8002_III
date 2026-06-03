@@ -62,8 +62,7 @@ class ProcessoSerializer(serializers.ModelSerializer):
             existe_processo = Processo.objects.filter(matricula_aluno=matricula_aluno,status=StatusProcesso.ABERTO).exists()
             if existe_processo:
                 raise serializers.ValidationError({"status":"O aluno já tem processos em aberto"})
-            else:
-                return attrs
+        return attrs
 
     def create(self, validated_data):
         return Processo.objects.create(**validated_data)
