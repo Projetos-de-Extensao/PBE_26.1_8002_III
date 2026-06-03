@@ -1,6 +1,7 @@
 
 import email
-from core.services import upload_contrato_path, validar_pdf_e_tamanho_seguro
+from core.services.upload_contrato import upload_contrato_path
+from core.services.validacao_arquivos import validar_pdf_e_tamanho_seguro
 from django.utils import choices,timezone
 from core.enums import StatusProcesso
 from django.db.models import CASCADE
@@ -9,9 +10,8 @@ from enum import unique
 from django.db.models import functions
 from django.db import models
 from .enums import *
-from .services import *
+from core.services.upload_relatorio import upload_relatorio_path
 from .validators import validar_email_institucional, validar_cpf
-
 
 
 class Usuario(models.Model):
@@ -96,6 +96,7 @@ class Processo(models.Model):
     criado_por = models.CharField(max_length=100,verbose_name="Criado por",null=True)
 
 
+
     class Meta:
         verbose_name = "Processo"
         verbose_name_plural = "Processos"
@@ -112,7 +113,7 @@ class Processo(models.Model):
 
 
 class Contrato(models.Model):
-    arquivo = models.FileField(upload_to=upload_contrato_path,verbose_name="url do arquivo", validators=[validar_pdf_e_tamanho_seguro])
+    arquivo = models.FileField(upload_to=upload_contrato_path,verbose_name="Arquivo", validators=[validar_pdf_e_tamanho_seguro])
     data_upload = models.DateField(verbose_name="Data de Upload")
     cnpj_empresa = models.CharField(max_length=14, verbose_name="CNPJ da empresa")
     nome_empresa = models.CharField(max_length=255, verbose_name="Nome da empresa")

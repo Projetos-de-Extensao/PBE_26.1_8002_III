@@ -76,13 +76,8 @@ class ProcessoSerializer(serializers.ModelSerializer):
 class ContratoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contrato
-        fields = [
-            "cnpj_empresa", "nome_empresa",
-            "data_inicio", "data_termino", "apolice_seguro", "plano_atividade",
-            "assinatura_aluno", "assinatura_empresa", "assinatura_faculdade",
-            "processoId"
-        ]
-        read_only_fields = ["id", "arquivo", "data_upload"]
+        fields = ["arquivo","processoId"]
+        read_only_fields = ["id","data_upload"]
 
 
 class CoordenadorSerializer(serializers.ModelSerializer):
