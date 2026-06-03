@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import *
-
+from django.contrib.auth.hashers import make_password
 
 class CursoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -40,11 +40,17 @@ class ContratoSerializer(serializers.ModelSerializer):
 class AlunoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Aluno
-        fields = ['nome', 'email', 'matricula', 'senha', 'cpf', 'is_ativo', 'unidade', 'periodo', 'curso']
+        fields = ['nome', 'email', 'matricula', 'senha', 'cpf', 'is_ativo', 'unidade']
+        extra_kwargs = { 'senha': {'write_only': True} }
+        
     def create(self, validated_data):
+        validated_data['senha'] = make_password(validated_data['senha'])
         return Aluno.objects.create(**validated_data)
     
     def update(self, instance, validated_data):
+        if 'senha' in validated_data:
+            validated_data['senha'] = make_password(validated_data['senha'])
+
         instance.nome = validated_data.get('nome', instance.nome)
         instance.email = validated_data.get('email', instance.email)
         instance.matricula = validated_data.get('matricula', instance.matricula)
