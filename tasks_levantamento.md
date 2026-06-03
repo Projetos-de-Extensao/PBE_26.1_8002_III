@@ -12,6 +12,7 @@ A API gerencia toda a burocracia na relação **IES ↔ Aluno** para validação
 
 > **Legenda:**
 > 📌 - Task já adicionada como Issue no GitHub Project.
+> ✅ - Task já implementada.
 
 ---
 
@@ -20,13 +21,13 @@ A API gerencia toda a burocracia na relação **IES ↔ Aluno** para validação
 
 | # | Task | Detalhes |
 |---|------|----------|
-| 1.1 | 📌 **Criar modelo `Usuario` (abstrato)** | Campos: `matricula`, `nome`, `email`, `senha`, `unidade` (Enum). Classes filhas: `Aluno`, `Secretaria`, `Coordenacao`. |
-| 1.2 | 📌 **Endpoint `POST /auth/login`** | Autentica via e-mail institucional (ou matrícula) + senha. Retorna token JWT. |
+| 1.1 | ✅ **Criar modelo `Usuario` (abstrato)** | Campos: `matricula`, `nome`, `email`, `senha`, `unidade` (Enum). Classes filhas: `Aluno`, `Secretaria`, `Coordenacao`. |
+| 1.2 | ✅ **Endpoint `POST /auth/login`** | Autentica via e-mail institucional (ou matrícula) + senha. Retorna token JWT. |
 | 1.3 | 📌 **Validar credenciais no banco** | Verificar se o cadastro está ativo. |
 | 1.4 | 📌 **Bloqueio após 5 tentativas** | Implementar rate-limiting ou lockout temporário após 5 falhas consecutivas. |
 | 1.5 | 📌 **Criptografia de senhas** | Hash com bcrypt/argon2 no armazenamento e tráfego via HTTPS. |
 | 1.6 | 📌 **Fluxo de primeiro acesso** | Redirecionar para redefinição de senha obrigatória no primeiro login. |
-| 1.7 | 📌 **Middleware de autenticação** | Validar JWT em todas as rotas protegidas. |
+| 1.7 | ✅ **Middleware de autenticação** | Validar JWT em todas as rotas protegidas. |
 | 1.8 | 📌 **Middleware de autorização por perfil** | Separar permissões: Aluno, Secretaria, Coordenação. |
 
 ---
@@ -36,8 +37,8 @@ A API gerencia toda a burocracia na relação **IES ↔ Aluno** para validação
 
 | # | Task | Detalhes |
 |---|------|----------|
-| 2.1 | 📌 **Criar modelo `Aluno`** | Campos: `nome`, `matricula`, `cpf`, `curso`, `email`, `periodo`, `processoAtual` (0..1). Herda de `Usuario`. |
-| 2.2 | 📌 **Endpoint `POST /alunos`** | Cadastro de novo aluno (ator: Secretaria). |
+| 2.1 | ✅ **Criar modelo `Aluno`** | Campos: `nome`, `matricula`, `cpf`, `curso`, `email`, `periodo`, `processoAtual` (0..1). Herda de `Usuario`. |
+| 2.2 | ✅ **Endpoint `POST /alunos`** | Cadastro de novo aluno (ator: Secretaria). |
 | 2.3 | 📌 **Validação de unicidade** | CPF e Matrícula únicos no banco. |
 | 2.4 | 📌 **Validação de CPF** | Algoritmo padrão da Receita Federal. |
 | 2.5 | 📌 **Validação de e-mail** | Formato válido (contém `@` e domínio). |
@@ -50,9 +51,9 @@ A API gerencia toda a burocracia na relação **IES ↔ Aluno** para validação
 
 | # | Task | Detalhes |
 |---|------|----------|
-| 3.1 | 📌 **Criar modelo `Processo`** | Campos: `processoId`, `dataCriacao`, `status` (Enum StatusProcesso), FK para `Aluno`. |
+| 3.1 | ✅ **Criar modelo `Processo`** | Campos: `processoId`, `dataCriacao`, `status` (Enum StatusProcesso), FK para `Aluno`. |
 | 3.2 | **Criar Enum `StatusProcesso`** | Valores: `ABERTO`, `EM_ANALISE_SECRETARIA`, `EM_ANALISE_COORDENACAO`, `PENDENTE_AJUSTE`, `APROVADO`, `REPROVADO`, `CONCLUIDO`, `CANCELADO`. |
-| 3.3 | 📌 **Endpoint `POST /processos`** | Cria novo processo. Recebe CNPJ da empresa, datas, carga horária e arquivo TCE. |
+| 3.3 | ✅ **Endpoint `POST /processos`** | Cria novo processo. Recebe CNPJ da empresa, datas, carga horária e arquivo TCE. |
 | 3.4 | 📌 **Validar conflito de processos** | Aluno não pode ter dois processos "Em Andamento" conflitantes (restrição 0..1). |
 | 3.5 | 📌 **Validar formato de arquivo** | Somente `.pdf`, deve ter limitação de tamanho. |
 | 3.6 | 📌 **Validar campos obrigatórios** | Destacar campos faltantes no retorno de erro. |
@@ -67,7 +68,7 @@ A API gerencia toda a burocracia na relação **IES ↔ Aluno** para validação
 
 | # | Task | Detalhes |
 |---|------|----------|
-| 4.1 | 📌 **Criar modelo `Contrato`** | Campos: `dataInicio`, `dataTermino`, `cnpjEmpresa`, `nomeEmpresa`, `apoliceSeguro`, `planoAtividade`, `assinaturaAluno`, `assinaturaEmpresa`, `assinaturaFaculdade`, `arquivoUrl`, `versao`. |
+| 4.1 | ✅ **Criar modelo `Contrato`** | Campos: `dataInicio`, `dataTermino`, `cnpjEmpresa`, `nomeEmpresa`, `apoliceSeguro`, `planoAtividade`, `assinaturaAluno`, `assinaturaEmpresa`, `assinaturaFaculdade`, `arquivoUrl`, `versao`. |
 | 4.2 | 📌 **Serviço de upload de PDF** | Validar MIME type (`application/pdf`) e tamanho (≤Limite). |
 | 4.3 | 📌 **Integrar storage (ex: AWS S3)** | Armazenar PDFs com URLs protegidas. |
 | 4.4 | 📌 **Controle de versionamento de documentos** | Ao receber novo upload no mesmo processo: arquivar anterior (`status = obsoleto`) e incrementar `versão_atual`. |
@@ -206,10 +207,10 @@ A API gerencia toda a burocracia na relação **IES ↔ Aluno** para validação
 
 | # | Task | Detalhes |
 |---|------|----------|
-| 15.1 | 📌 **Configurar projeto Django** | Setup inicial com estrutura de apps, settings, URLs. |
-| 15.2 | 📌 **Configurar banco de dados relacional** | Migrations, modelos, conexões. |
-| 15.3 | 📌 **Criar Enums globais** | `StatusProcesso`, `Unidade` (BARRA, CENTRO, BH, BRASILIA), `Periodo` (P1 a P10). |
-| 15.4 | 📌 **Criar modelos `Curso` e `Area`** | Estrutura acadêmica: Aluno → Curso → Área → Coordenação. |
+| 15.1 | ✅ **Configurar projeto Django** | Setup inicial com estrutura de apps, settings, URLs. |
+| 15.2 | ✅ **Configurar banco de dados relacional** | Migrations, modelos, conexões. |
+| 15.3 | ✅ **Criar Enums globais** | `StatusProcesso`, `Unidade` (BARRA, CENTRO, BH, BRASILIA), `Periodo` (P1 a P10). |
+| 15.4 | ✅ **Criar modelos `Curso` e `Area`** | Estrutura acadêmica: Aluno → Curso → Área → Coordenação. |
 | 15.5 | 📌 **Sistema de logs/auditoria** | Registrar todas as ações e trâmites em sistema de eventos separado. |
 | 15.6 | 📌 **Paginação e filtros padrão** | Implementar paginação e filtros reutilizáveis nas listagens. |
 | 15.7 | **Documentação da API (Swagger/OpenAPI)** | Documentar todas as rotas conforme mencionado no brainstorm. |
