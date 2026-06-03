@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
 from .models import Aluno, Processo
@@ -156,4 +156,19 @@ def processo(request):
             
         else:
             return Response({"error": "Id não informado"}, status=status.HTTP_400_BAD_REQUEST)
-               
+
+
+class MultipleObjectAPIView(ListAPIView):       
+    authentication_classes = [JWTAuthentication]
+    queryset = Aluno.objects.all()
+    serializer_class = AlunoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        print(request.user)
+        response = super().get(request, *args, **kwargs)
+        return response
+
+class SingleObjectAPIView(RetrieveAPIView):
+    queryset = Aluno.objects.all()
+    serializer_class = AlunoSerializer
