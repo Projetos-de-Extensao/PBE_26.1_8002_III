@@ -65,7 +65,11 @@ def api_client():
         senha="test", unidade=Unidade.BARRA.value, areaId=area_test,
     )
 
+    import jwt
+    from django.conf import settings
+    token = jwt.encode({'user_id': user.id}, settings.SECRET_KEY, algorithm='HS256')
     client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
     client.force_authenticate(user=user)
     return client
 

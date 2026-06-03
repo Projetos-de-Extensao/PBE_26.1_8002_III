@@ -36,6 +36,7 @@ class Aluno(Usuario):
     class Meta:
         verbose_name = "Aluno"
         verbose_name_plural = "Alunos"
+        ordering = ['id']
 
     def __str__(self): ##
         # Isso define como o aluno vai aparecer no painel da Secretaria (ex: "dr. bazinga - 20236769420")
@@ -88,7 +89,7 @@ class Curso(models.Model):
 class Processo(models.Model):
     nome_empresa = models.CharField(max_length=255, verbose_name="Nome da empresa")
     data_criacao = models.DateField(verbose_name="Data de Criação",default=timezone.now)
-    status = models.CharField(max_length = 20, choices=StatusProcesso, default = StatusProcesso.PENDENTE_ANALISE )
+    status = models.CharField(max_length = 20, choices=StatusProcesso, default = StatusProcesso.ABERTO )
     matricula_aluno = models.ForeignKey(Aluno, to_field='matricula', related_name="matricula_aluno", on_delete=models.CASCADE, max_length = 30)
     # matricula_coordenacao = models.ForeignKey(Coordenador,to_field='matricula', related_name="matricula_coordenacao", on_delete=models.PROTECT)
     # matricula_secretaria = models.ForeignKey(Secretaria,to_field='matricula', related_name="matricula_secretaria", on_delete=models.PROTECT)
