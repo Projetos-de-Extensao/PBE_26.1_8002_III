@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate
-from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework import status
 from django.core.cache import cache
@@ -56,8 +56,12 @@ class LoginAPIView(APIView):
             except Aluno.DoesNotExist:
                 pass
         
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key})
+            refresh = RefreshToken.for_user(user)
+            
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            }, status=status.HTTP_200_OK)
             
         else:
             attempts += 1
