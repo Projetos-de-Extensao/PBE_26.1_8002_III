@@ -50,8 +50,8 @@ node_modules/
 # Banco de dados SQLite
 db.sqlite3
 db.sqlite3-journal
-migrations/*.py
-migrations/*.pyc
+**/migrations/*
+!**/migrations/__init__.py
 
 # Mídia e Arquivos Estáticos (gerados/enviados)
 media/
