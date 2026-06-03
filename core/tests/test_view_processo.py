@@ -37,6 +37,59 @@ class TestPostProcesso:
         assert ultimo_processo.exists() == True
         assert ultimo_processo.count() == 1
 
+
+@pytest.mark.django_db
+class TestGetProcesso:
+
+    def test_pesquisar_processo_matricula(self, api_client, processo):
+        response = api_client.get('/processo/', {'matricula_aluno': processo.matricula_aluno.matricula})
+        assert response.status_code == 200
+        data = response.data['results']
+        assert len(data) == 1
+        assert data[0]['nome_empresa'] == processo.nome_empresa
+
+    def test_pesquisar_processo_status(self, api_client, processo):
+        response = api_client.get('/processo/', {'status': processo.status})
+        assert response.status_code == 200
+        data = response.data['results']
+        assert len(data) == 1
+
+    def test_pesquisar_processo_nome_empresa(self, api_client, processo):
+        response = api_client.get('/processo/', {'nome_empresa': 'Teste'})
+        assert response.status_code == 200
+        data = response.data['results']
+        assert len(data) == 1
+
+
+@pytest.mark.django_db
+class TestPatchProcesso:
+
+    def test_atualizar_processo_sucesso(self, api_client, processo):
+        payload = {
+            "nome_empresa": "Empresa Modificada LTDA"
+        }
+        response = api_client.patch(f'/processo/?processo_id={processo.id}', payload)
+        assert response.status_code == 200
+        assert response.data["message"] == "updated"
+        processo.refresh_from_db()
+        assert processo.nome_empresa == "Empresa Modificada LTDA"
+
+    def test_atualizar_processo_nao_encontrado(self, api_client):
+        payload = {
+            "nome_empresa": "Não Existe"
+        }
+        response = api_client.patch('/processo/?processo_id=9999', payload)
+        assert response.status_code == 404
+        assert response.data["error"] == "Processo não encontrado"
+
+    def test_atualizar_processo_sem_id(self, api_client):
+        payload = {
+            "nome_empresa": "Sem ID"
+        }
+        response = api_client.patch('/processo/', payload)
+        assert response.status_code == 400
+        assert response.data["error"] == "Id não informado"
+
     
     
 

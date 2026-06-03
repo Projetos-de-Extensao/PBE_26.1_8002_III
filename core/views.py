@@ -1,12 +1,12 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view, permission_classes
+from django.db import IntegrityError
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-from django.views.decorators.csrf import csrf_exempt
+from rest_framework.views import APIView
 from .models import Aluno, Processo
 from .serializers import AlunoSerializer, ProcessoSerializer
 from .permissions import IsSecretaria, IsAluno
@@ -14,31 +14,47 @@ from rest_framework.test import APIClient
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 
-@csrf_exempt
-@extend_schema(
-    methods=['GET'],
-    parameters=[
-        OpenApiParameter(name='matricula', description='Filtra por matrícula do aluno', required=False, type=str)
-    ],
-    responses={200: AlunoSerializer(many=True)}
-)
-@extend_schema(
-    methods=['POST'],
-    request=AlunoSerializer,
-    responses={201: AlunoSerializer}
-)
-@extend_schema(
-    methods=['PATCH'],
-    parameters=[
-        OpenApiParameter(name='matricula_aluno', description='Matrícula do aluno a ser atualizado', required=True, type=str)
-    ],
-    request=AlunoSerializer,
-    responses={200: AlunoSerializer}
-)
-@api_view(['GET','POST','PATCH'])
-# @permission_classes([IsSecretaria])
-def aluno(request):
-    if request.method == 'PATCH':
+class AlunoAPIView(APIView):
+    # permission_classes = [IsSecretaria]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name='matricula', description='Filtra por matrícula do aluno', required=False, type=str)
+        ],
+        responses={200: AlunoSerializer(many=True)}
+    )
+    def get(self, request, *args, **kwargs):
+        data = Aluno.objects.all()
+        matricula = request.query_params.get('matricula', None)
+        nome = request.query_params.get('nome', None)
+        if matricula is not None:
+            data = data.filter(matricula=matricula)
+        if nome is not None:
+            data = data.filter(nome__icontains=nome)
+        paginator = PageNumberPagination()
+        paginated_data = paginator.paginate_queryset(data, request)
+        serializer = AlunoSerializer(paginated_data, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+    @extend_schema(
+        request=AlunoSerializer,
+        responses={201: AlunoSerializer}
+    )
+    def post(self, request, *args, **kwargs):
+        parsed_data = request.data
+        serializer = AlunoSerializer(data=parsed_data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"message": "Aluno criado com sucesso!"}, status=status.HTTP_201_CREATED)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name='matricula_aluno', description='Matrícula do aluno a ser atualizado', required=True, type=str)
+        ],
+        request=AlunoSerializer,
+        responses={200: AlunoSerializer}
+    )
+    def patch(self, request, *args, **kwargs):
         parsed_data = request.data
         matricula = request.query_params.get('matricula_aluno', None)
         if matricula is not None:
@@ -54,52 +70,37 @@ def aluno(request):
         else:
             return Response({"error": "Matrícula não informada"}, status=status.HTTP_400_BAD_REQUEST)
 
-    if request.method == 'POST':
-        parsed_data = request.data
-        serializer = AlunoSerializer(data=parsed_data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({"message":"Aluno criado com sucesso!"}, status=status.HTTP_201_CREATED)
 
-    if request.method == 'GET':
-        data = Aluno.objects.all()
-        matricula = request.GET.get('matricula', None)
-        nome = request.GET.get('nome', None)
-        if matricula is not None:
-            data = data.filter(matricula=matricula)
-        if nome is not None:
-            data = data.filter(nome__icontains=nome)
+class ProcessoAPIView(APIView):
+    # permission_classes = [IsAluno | IsSecretaria]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name='matricula_aluno', description='Filtra processos por matrícula do aluno', required=False, type=str)
+        ],
+        responses={200: ProcessoSerializer(many=True)}
+    )
+    def get(self, request, *args, **kwargs):
+        data = Processo.objects.all()
+        matricula_aluno = request.query_params.get('matricula_aluno', None)
+        status_filtro = request.query_params.get('status', None)
+        nome_empresa = request.query_params.get('nome_empresa', None)
+        if matricula_aluno is not None:
+            data = data.filter(matricula_aluno__matricula=matricula_aluno)
+        if status_filtro is not None:
+            data = data.filter(status=status_filtro)
+        if nome_empresa is not None:
+            data = data.filter(nome_empresa__icontains=nome_empresa)
         paginator = PageNumberPagination()
         paginated_data = paginator.paginate_queryset(data, request)
-        serializer = AlunoSerializer(paginated_data, many=True)
+        serializer = ProcessoSerializer(paginated_data, many=True)
         return paginator.get_paginated_response(serializer.data)
 
-
-@csrf_exempt
-@extend_schema(
-    methods=['GET'],
-    parameters=[
-        OpenApiParameter(name='matricula_aluno', description='Filtra processos por matrícula do aluno', required=False, type=str)
-    ],
-    responses={200: ProcessoSerializer(many=True)}
-)
-@extend_schema(
-    methods=['POST'],
-    request=ProcessoSerializer,
-    responses={201: ProcessoSerializer}
-)
-@extend_schema(
-    methods=['PATCH'],
-    parameters=[
-        OpenApiParameter(name='processo_id', description='ID do processo a ser atualizado', required=True, type=str)
-    ],
-    request=ProcessoSerializer,
-    responses={200: ProcessoSerializer}
-)
-@api_view(['GET','POST','PATCH'])
-# @permission_classes([IsAluno | IsSecretaria])
-def processo(request):
-    if request.method == 'POST':
+    @extend_schema(
+        request=ProcessoSerializer,
+        responses={201: ProcessoSerializer}
+    )
+    def post(self, request, *args, **kwargs):
         parsed_data = request.data
         serializer = ProcessoSerializer(data=parsed_data)
         serializer.is_valid(raise_exception=True)
@@ -120,27 +121,18 @@ def processo(request):
             return Response(erros, status=status.HTTP_400_BAD_REQUEST)
         try:    
             serializer.save(criado_por=criado_por_string)
-            return Response({"criado":"Processo criado com sucesso"},status=status.HTTP_201_CREATED)
+            return Response({"criado": "Processo criado com sucesso"}, status=status.HTTP_201_CREATED)
         except IntegrityError:
-            return Response({"falhou":"Esse processo já existe"},status=status.HTTP_409_CONFLICT)
+            return Response({"falhou": "Esse processo já existe"}, status=status.HTTP_409_CONFLICT)
 
-    if request.method == 'GET':
-        data = Processo.objects.all()
-        matricula_aluno = request.GET.get('matricula_aluno', None)
-        status_filtro = request.GET.get('status', None)
-        nome_empresa = request.GET.get('nome_empresa', None)
-        if matricula_aluno is not None:
-            data = data.filter(matricula_aluno__matricula=matricula_aluno)
-        if status_filtro is not None:
-            data = data.filter(status=status_filtro)
-        if nome_empresa is not None:
-            data = data.filter(nome_empresa__icontains=nome_empresa)
-        paginator = PageNumberPagination()
-        paginated_data = paginator.paginate_queryset(data, request)
-        serializer = ProcessoSerializer(paginated_data, many=True)
-        return paginator.get_paginated_response(serializer.data)
-    
-    if request.method == 'PATCH':
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name='processo_id', description='ID do processo a ser atualizado', required=True, type=str)
+        ],
+        request=ProcessoSerializer,
+        responses={200: ProcessoSerializer}
+    )
+    def patch(self, request, *args, **kwargs):
         parsed_data = request.data
         id = request.query_params.get('processo_id', None)
         if id is not None:
@@ -153,7 +145,5 @@ def processo(request):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response({"message": "updated"}, status=status.HTTP_200_OK)
-            
         else:
             return Response({"error": "Id não informado"}, status=status.HTTP_400_BAD_REQUEST)
-               
