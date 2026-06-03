@@ -7,7 +7,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-
+from .serializers import *
 from .models import Aluno, Processo
 from .serializers import AlunoSerializer, ProcessoSerializer
 from .permissions import IsSecretaria, IsAluno
@@ -70,6 +70,7 @@ class AlunoAPIView(APIView):
 
 
 class ProcessoAPIView(APIView):
+    
     permission_classes = [IsAluno | IsSecretaria]
 
     @extend_schema(
@@ -145,3 +146,13 @@ class ProcessoAPIView(APIView):
             return Response({"message": "updated"}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Id não informado"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class UploadContrato(APIView):
+    permission_classes = [IsSecretaria,IsAluno]
+    serializer_class = ContratoSerializer
+    def post(self,request, *args, **kwargs):
+        pass
+
+    

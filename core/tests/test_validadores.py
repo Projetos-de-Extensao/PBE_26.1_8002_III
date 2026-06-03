@@ -2,8 +2,7 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from core.validators import validar_email_institucional, validar_cpf
-from core.services import validar_pdf_e_tamanho_seguro
-
+from core.services.validacao_arquivos import validar_pdf_e_tamanho_seguro
 
 class TestValidarEmailInstitucional:
     """
