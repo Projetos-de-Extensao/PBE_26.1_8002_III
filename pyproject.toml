@@ -46,4 +46,5 @@ dependencies = [
     "six==1.17.0",
     "urllib3==2.6.3",
     "watchdog==6.0.0",
+    "djangorestframework-simplejwt==5.3.1",
 ]
