@@ -24,11 +24,11 @@ class TipoUsuario(models.TextChoices):
 
 
 class StatusProcesso(models.TextChoices):
-    ABERTO = '1', 'Aberto'
-    PENDENTE = '2', 'Pendente'
-    REPROVADO ='3','Reprovado'
-    CONCLUIDO = '4','Concluido'
-    CANCELADO ='5','Cancelado'
+    ABERTO = 'aberto', 'Aberto'
+    PENDENTE = 'pendente', 'Pendente'
+    REPROVADO ='reprovado','Reprovado'
+    CONCLUIDO = 'concluido','Concluido'
+    CANCELADO ='cancelado','Cancelado'
 
 
 class StatusContrato(models.TextChoices):

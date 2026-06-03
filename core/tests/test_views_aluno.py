@@ -58,7 +58,7 @@ class TestGetAluno():
         response = api_client.get('/aluno/', {'matricula': '20260001'})
         assert response.status_code == 200
         
-        data = response.data
+        data = response.data['results']
         assert len(data) == 1
         assert data[0]['matricula'] == aluno.matricula
         assert data[0]['nome'] == aluno.nome

@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import *
 from .enums import *
+from .validators import validar_email_institucional
+from .enums import StatusProcesso
 
 class NestedProcessoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -63,6 +65,9 @@ class ProcessoSerializer(serializers.ModelSerializer):
             else:
                 return attrs
 
+    def create(self, validated_data):
+        return Processo.objects.create(**validated_data)
+    
 
 class ContratoSerializer(serializers.ModelSerializer):
     class Meta:
