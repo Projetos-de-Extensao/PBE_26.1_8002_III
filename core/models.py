@@ -10,13 +10,14 @@ from django.db.models import functions
 from django.db import models
 from .enums import *
 from .services import *
+from .validators import validar_email_institucional, validar_cpf
 
 
 
 class Usuario(models.Model):
-    matricula = models.CharField(max_length=30,unique=True,editable = False,db_index = True, verbose_name="Matrícula")    
+    matricula = models.CharField(max_length=30, unique=True, db_index=True, verbose_name="Matrícula")    
     nome = models.CharField(max_length=255, verbose_name="Nome")
-    email = models.EmailField(verbose_name="E-mail")
+    email = models.EmailField(verbose_name="E-mail", validators=[validar_email_institucional])
     senha = models.CharField(max_length=255, verbose_name="Senha")
     unidade = models.CharField(max_length=15, choices=Unidade)
 
@@ -26,7 +27,7 @@ class Usuario(models.Model):
         abstract = True 
 
 class Aluno(Usuario):
-    cpf = models.CharField(max_length=14, verbose_name="CPF",default="")
+    cpf = models.CharField(max_length=14, unique=True, verbose_name="CPF", validators=[validar_cpf])
     is_ativo = models.BooleanField(default=True, verbose_name="Status Ativo")
     periodo = models.IntegerField(choices=Periodo, default = Periodo.PRIMEIRO )
     curso = models.ForeignKey("Curso", on_delete=models.CASCADE)
