@@ -10,13 +10,14 @@ from django.db.models import functions
 from django.db import models
 from .enums import *
 from .services import *
+from .validators import validar_email_institucional, validar_cpf
 
 
 
 class Usuario(models.Model):
-    matricula = models.CharField(max_length=30,unique=True,editable = False,db_index = True, verbose_name="Matrícula")    
+    matricula = models.CharField(max_length=30, unique=True, db_index=True, verbose_name="Matrícula")    
     nome = models.CharField(max_length=255, verbose_name="Nome")
-    email = models.EmailField(verbose_name="E-mail")
+    email = models.EmailField(verbose_name="E-mail", validators=[validar_email_institucional])
     senha = models.CharField(max_length=255, verbose_name="Senha")
     unidade = models.CharField(max_length=15, choices=Unidade)
 
@@ -26,14 +27,16 @@ class Usuario(models.Model):
         abstract = True 
 
 class Aluno(Usuario):
-    cpf = models.CharField(max_length=14, verbose_name="CPF",default="")
+    cpf = models.CharField(max_length=14, unique=True, verbose_name="CPF", validators=[validar_cpf])
     is_ativo = models.BooleanField(default=True, verbose_name="Status Ativo")
     periodo = models.IntegerField(choices=Periodo, default = Periodo.PRIMEIRO )
     curso = models.ForeignKey("Curso", on_delete=models.CASCADE)
+    unidade = models.CharField(max_length=15, choices=Unidade)
 
     class Meta:
         verbose_name = "Aluno"
         verbose_name_plural = "Alunos"
+        ordering = ['id']
 
     def __str__(self): ##
         # Isso define como o aluno vai aparecer no painel da Secretaria (ex: "dr. bazinga - 20236769420")
@@ -73,7 +76,7 @@ class Secretaria(Usuario):
 
 
 class Curso(models.Model):
-    nome = models.CharField(max_length=20, verbose_name="Nome")
+    nome = models.CharField(max_length=40, verbose_name="Nome")
     areaId = models.ForeignKey(Area, on_delete=models.CASCADE)
 
     class Meta:
@@ -85,15 +88,18 @@ class Curso(models.Model):
 
 class Processo(models.Model):
     nome_empresa = models.CharField(max_length=255, verbose_name="Nome da empresa")
-    data_criacao = models.DateField(verbose_name="Data de Criação",default=timezone.now)
-    status = models.CharField(max_length = 15, choices=StatusProcesso, default = StatusProcesso.ABERTO )
+    data_criacao = models.DateField(verbose_name="Data de Criação",default=timezone.now())
+    status = models.CharField(max_length = 20, choices=StatusProcesso, default = StatusProcesso.ABERTO )
     matricula_aluno = models.ForeignKey(Aluno, to_field='matricula', related_name="matricula_aluno", on_delete=models.CASCADE, max_length = 30)
     # matricula_coordenacao = models.ForeignKey(Coordenador,to_field='matricula', related_name="matricula_coordenacao", on_delete=models.PROTECT)
     # matricula_secretaria = models.ForeignKey(Secretaria,to_field='matricula', related_name="matricula_secretaria", on_delete=models.PROTECT)
+    criado_por = models.CharField(max_length=100,verbose_name="Criado por",null=True)
+
 
     class Meta:
         verbose_name = "Processo"
         verbose_name_plural = "Processos"
+        ordering = ['status']
 
     @property
     def nome_processo(self):
