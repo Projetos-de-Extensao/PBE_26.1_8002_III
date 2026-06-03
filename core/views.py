@@ -102,6 +102,14 @@ def processo(request):
     if request.method == 'POST':
         parsed_data = request.data
         serializer = ProcessoSerializer(data=parsed_data)
+        serializer.is_valid(raise_exception=True)
+
+        grupo = request.user.groups.first()
+        cargo = grupo.name if grupo else ""
+        nome_completo = f"{request.user.first_name} {request.user.last_name}"
+        username = request.user.username
+        criado_por_string = (cargo + nome_completo + username)[:100]
+
         if not serializer.is_valid():
             erros = {
                 "erro": "Falha na validação dos dados.",
@@ -110,9 +118,11 @@ def processo(request):
                 }
             }
             return Response(erros, status=status.HTTP_400_BAD_REQUEST)
-        serializer.save()
-        return Response({"message": "Processo criado com sucesso!"}, status=status.HTTP_201_CREATED)
-       
+        try:    
+            serializer.save(criado_por=criado_por_string)
+            return Response({"criado":"Processo criado com sucesso"},status=status.HTTP_201_CREATED)
+        except IntegrityError:
+            return Response({"falhou":"Esse processo já existe"},status=status.HTTP_409_CONFLICT)
 
     if request.method == 'GET':
         data = Processo.objects.all()
