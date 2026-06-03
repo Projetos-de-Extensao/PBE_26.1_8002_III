@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import *
 from .enums import StatusProcesso
 
+from django.contrib.auth.hashers import make_password
 
 class CursoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -78,18 +79,23 @@ class ContratoSerializer(serializers.ModelSerializer):
 class AlunoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Aluno
-        fields = ['nome', 'email', 'matricula', 'senha', 'cpf', 'is_ativo', 'unidade', 'periodo', 'curso']
+        fields = ['nome', 'email', 'matricula', 'senha', 'cpf', 'is_ativo', 'unidade']
+        extra_kwargs = { 'senha': {'write_only': True} }
+        
     def create(self, validated_data):
+        validated_data['senha'] = make_password(validated_data['senha'])
         return Aluno.objects.create(**validated_data)
+    
+    def update(self, instance, validated_data):
+        if 'senha' in validated_data:
+            validated_data['senha'] = make_password(validated_data['senha'])
 
-    def update(sekf,instance,validated_data):
-        instance.name = validated_data.get("name",instance.name)
-        instance.email = validated_data.get("email",instance.email)
-        instance.matricula = validated_data.get("matricula",instance.matricula)
-        instance.senha = validated_data.get("senha",instance.senha)
-        instance.cpf = validated_data.get("cpf",instance.cpf)
-        instance.is_ativo = validated_data.get("is_ativo",instance.is_ativo)
-        instance.unidade = validated_data.get("unidade",instance.unidade)
+        instance.nome = validated_data.get('nome', instance.nome)
+        instance.email = validated_data.get('email', instance.email)
+        instance.matricula = validated_data.get('matricula', instance.matricula)
+        instance.senha = validated_data.get('senha', instance.senha)
+        instance.cpf = validated_data.get('cpf', instance.cpf)
+        instance.is_ativo = validated_data.get('is_ativo', instance.is_ativo)
+        instance.unidade = validated_data.get('unidade', instance.unidade)
         instance.save()
         return instance
-
