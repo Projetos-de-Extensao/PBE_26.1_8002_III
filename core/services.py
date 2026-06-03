@@ -6,13 +6,14 @@ from django.core.exceptions import ValidationError
 def upload_contrato_path(instance,matricula,filename):
     tipo = filename.split('.')[-1]
     nome_novo = f"{uuid.uuid4()}.{tipo}"
-    return os.path.join({matricula},"contratos",nome_novo)
+    return os.path.join(matricula,"contratos",nome_novo)
 
     
 def upload_relatorio_path(instance,matricula,filename):
+    matricula = instance.processoId.matricula_aluno.matricula
     tipo = filename.split('.')[-1]
     nome_novo = f"{uuid.uuid4()}.{tipo}"
-    return os.path.join({matricula},"relatorio",nome_novo)
+    return os.path.join(matricula,"relatorio",nome_novo)
 
 
 def validar_pdf_e_tamanho_seguro(value):

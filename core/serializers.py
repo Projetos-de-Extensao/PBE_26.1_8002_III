@@ -15,7 +15,7 @@ class AlunoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Aluno
-        fields = ['nome', 'email', 'matricula', 'senha', 'cpf', 'is_ativo', 'unidade', 'periodo', 'curso', 'processos']
+        fields = ['nome', 'email', 'matricula', 'cpf', 'is_ativo', 'unidade', 'periodo', 'curso', 'processos']
         read_only_fields = ['id']
     
     def create(self, validated_data):

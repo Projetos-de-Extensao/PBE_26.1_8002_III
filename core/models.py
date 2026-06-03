@@ -88,7 +88,7 @@ class Curso(models.Model):
 
 class Processo(models.Model):
     nome_empresa = models.CharField(max_length=255, verbose_name="Nome da empresa")
-    data_criacao = models.DateField(verbose_name="Data de Criação",default=timezone.now)
+    data_criacao = models.DateField(verbose_name="Data de Criação",default=timezone.now())
     status = models.CharField(max_length = 20, choices=StatusProcesso, default = StatusProcesso.ABERTO )
     matricula_aluno = models.ForeignKey(Aluno, to_field='matricula', related_name="matricula_aluno", on_delete=models.CASCADE, max_length = 30)
     # matricula_coordenacao = models.ForeignKey(Coordenador,to_field='matricula', related_name="matricula_coordenacao", on_delete=models.PROTECT)
