@@ -7,6 +7,8 @@ from rest_framework import status
 # Create your views here.
 
 class LoginAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
     def post(self, request):
         usuario = request.data.get('username')
         senha = request.data.get('password')
