@@ -117,7 +117,7 @@ def processo(request):
             return Response({"criado":"Processo criado com sucesso"},status=status.HTTP_201_CREATED)
         except IntegrityError:
             return Response({"falhou":"Esse processo já existe"},status=status.HTTP_409_CONFLICT)
-
+``
     if request.method == 'GET':
         data = Processo.objects.all()
         params = request.query_params.get('matricula_aluno',None)
