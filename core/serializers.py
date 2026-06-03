@@ -3,7 +3,32 @@ from .models import *
 from .validators import validar_email_institucional
 from .enums import StatusProcesso
 
-from django.contrib.auth.hashers import make_password
+class NestedProcessoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Processo
+        fields = ["id", "nome_empresa", "status"]
+
+
+class AlunoSerializer(serializers.ModelSerializer):
+    processos = NestedProcessoSerializer(source="matricula_aluno", many=True, read_only=True)
+
+    class Meta:
+        model = Aluno
+        fields = ['nome', 'email', 'matricula', 'senha', 'cpf', 'is_ativo', 'unidade', 'periodo', 'curso', 'processos']
+
+    def create(self, validated_data):
+        return Aluno.objects.create(**validated_data)
+
+    def update(self,instance,validated_data):
+        instance.nome = validated_data.get("nome",instance.nome)
+        instance.email = validated_data.get("email",instance.email)
+        instance.matricula = validated_data.get("matricula",instance.matricula)
+        instance.senha = validated_data.get("senha",instance.senha)
+        instance.cpf = validated_data.get("cpf",instance.cpf)
+        instance.is_ativo = validated_data.get("is_ativo",instance.is_ativo)
+        instance.unidade = validated_data.get("unidade",instance.unidade)
+        instance.save()
+        return instance
 
 class CursoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -77,31 +102,41 @@ class ContratoSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "arquivo", "data_upload"]
 
-class AlunoSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(
-        validators=[validar_email_institucional],
-        help_text="E-mail institucional do aluno (ex: nome@ibmec.edu.br)"
-    )
 
+
+class CoordenadorSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Aluno
-        fields = ['nome', 'email', 'matricula', 'senha', 'cpf', 'is_ativo', 'unidade']
-        extra_kwargs = { 'senha': {'write_only': True} }
-        
-    def create(self, validated_data):
-        validated_data['senha'] = make_password(validated_data['senha'])
-        return Aluno.objects.create(**validated_data)
-    
-    def update(self, instance, validated_data):
-        if 'senha' in validated_data:
-            validated_data['senha'] = make_password(validated_data['senha'])
+        model = Coordenador
+        fields = ['nome', 'email', 'matricula', 'senha', 'unidade', 'areaId']
+        read_only_fields = ['id']
 
-        instance.nome = validated_data.get('nome', instance.nome)
-        instance.email = validated_data.get('email', instance.email)
-        instance.matricula = validated_data.get('matricula', instance.matricula)
-        instance.senha = validated_data.get('senha', instance.senha)
-        instance.cpf = validated_data.get('cpf', instance.cpf)
-        instance.is_ativo = validated_data.get('is_ativo', instance.is_ativo)
-        instance.unidade = validated_data.get('unidade', instance.unidade)
-        instance.save()
-        return instance
+
+class SecretariaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Secretaria
+        fields = ['nome', 'email', 'matricula', 'senha', 'unidade']
+        read_only_fields = ['id']
+
+
+class RelatorioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Relatorio
+        fields = [
+            'processo_id', 'arquivo', 'data_upload',
+            'horas_trabalhadas', 'data_inicio', 'data_termino', 'status'
+        ]
+        read_only_fields = ['id', 'data_upload']
+
+
+class HistoricoAvaliacaoRelatorioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HistoricoAvaliacaoRelatorio
+        fields = ['observacoes', 'data_avaliacao', 'veredito', 'avaliador', 'relatorio_id']
+        read_only_fields = ['id', 'data_avaliacao']
+
+
+class HistoricoAvaliacaoContratoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HistoricoAvaliacaoContrato
+        fields = ['observacoes', 'data_avaliacao', 'veredito', 'avaliador', 'contrato_id']
+        read_only_fields = ['id', 'data_avaliacao']

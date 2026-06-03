@@ -74,7 +74,7 @@ class Secretaria(Usuario):
 
 
 class Curso(models.Model):
-    nome = models.CharField(max_length=20, verbose_name="Nome")
+    nome = models.CharField(max_length=40, verbose_name="Nome")
     areaId = models.ForeignKey(Area, on_delete=models.CASCADE)
 
     class Meta:

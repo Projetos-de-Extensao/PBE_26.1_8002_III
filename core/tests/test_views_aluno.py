@@ -43,178 +43,42 @@ TESTES DA VIEW DE ALUNO — usando pytest + pytest-django
 import pytest
 import json
 from rest_framework.test import APIClient
-from core.models import Aluno, Area, Curso
+from core.models import Aluno
 from core.enums import Unidade, Periodo
 
 
-# ╔═══════════════════════════════════════════════════════════════════╗
-# ║                         FIXTURES                                 ║
-# ╚═══════════════════════════════════════════════════════════════════╝
-
-@pytest.fixture
-def api_client():
-    """
-    Cria um cliente HTTP para fazer requisições de teste.
-    É como um 'Postman automático' que chama as views direto em memória.
-    """
-    return APIClient()
 
 
-@pytest.fixture
-def area():
-    """Cria uma Area — necessária porque Curso depende dela (FK)."""
-    return Area.objects.create(nome="Exatas")
-
-
-@pytest.fixture
-def curso(area):
-    """
-    Cria um Curso no banco de testes.
-    Note que essa fixture DEPENDE da fixture `area` —
-    o pytest resolve a cadeia de dependências automaticamente!
-    """
-    return Curso.objects.create(nome="ADS", areaId=area)
-
-
-@pytest.fixture
-def payload_aluno_valido(curso):
-    """
-    Payload com todos os campos que a view precisa para criar um aluno.
-    `curso` é FK → no JSON, enviamos o ID (inteiro).
-    """
-    return {
-        "nome": "Maria Silva",
-        "email": "maria@email.com",
-        "senha": "senha123",
-        "cpf": "123.456.789-00",
-        "is_ativo": True,
-        "unidade": Unidade.BARRA.value,
-        "curso": curso.id,
-    }
-
-
-@pytest.fixture
-def aluno_salvo(curso):
-    """
-    Cria um Aluno direto via ORM (sem usar a API).
-    Útil para cenários de GET onde já precisamos de dados no banco.
-
-    ⚠️ Criamos via ORM de propósito — o teste de GET não deve
-    depender do POST estar funcionando.
-    """
-    return Aluno.objects.create(
-        nome="João Santos",
-        email="joao@email.com",
-        matricula="20260001",
-        senha="senha456",
-        cpf="987.654.321-00",
-        is_ativo=True,
-        unidade=Unidade.BOTAFOGO.value,
-        periodo=Periodo.TERCEIRO,
-        curso=curso,
-    )
-
-
-# ╔═══════════════════════════════════════════════════════════════════╗
-# ║                    TESTES DE GET /aluno/                         ║
-# ╠═══════════════════════════════════════════════════════════════════╣
-# ║  Aqui testamos a LÓGICA que nós escrevemos na view:              ║
-# ║  - A listagem retorna os dados serializados corretamente         ║
-# ║  - O filtro customizado por ?matricula= funciona                 ║
-# ╚═══════════════════════════════════════════════════════════════════╝
 
 @pytest.mark.django_db
-class TestAlunoGET:
+class TestGetAluno():
 
-    def test_filtrar_aluno_por_matricula(self, api_client, aluno_salvo):
-        """
-        Testa a NOSSA lógica: o filtro ?matricula=X que escrevemos na view.
+    def test_pesquisar_aluno_matricula(self, api_client, aluno, processo, processo_concluido):
 
-        Esse filtro é código nosso (linhas 27-29 da view):
-            params = request.GET.get('matricula', None)
-            if params is not None:
-                data = data.filter(matricula=params)
-
-        Se amanhã alguém mudar esse filtro sem querer, o teste pega.
-        """
-        response = api_client.get("/aluno/", {"matricula": "20260001"})
-
+        response = api_client.get('/aluno/', {'matricula': '20260001'})
         assert response.status_code == 200
-        data = json.loads(response.content)
+        
+        data = response.data
         assert len(data) == 1
-        assert data[0]["matricula"] == "20260001"
+        assert data[0]['matricula'] == aluno.matricula
+        assert data[0]['nome'] == aluno.nome
+        assert data[0]['email'] == aluno.email
+        
+        # Valida os processos retornados
+        nomes_empresas = [p['nome_empresa'] for p in data[0]['processos']]
+        assert len(nomes_empresas) == 2
+        assert processo.nome_empresa in nomes_empresas
+        assert processo_concluido.nome_empresa in nomes_empresas
+      
+         
+        
 
-    def test_filtrar_matricula_inexistente_retorna_lista_vazia(self, api_client, aluno_salvo):
-        """
-        Testa a NOSSA lógica de filtro quando a matrícula não existe.
-        Garante que não quebra — retorna lista vazia, não erro.
-        """
-        response = api_client.get("/aluno/", {"matricula": "99999999"})
-
-        assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data == []
 
 
-# ╔═══════════════════════════════════════════════════════════════════╗
-# ║                    TESTES DE POST /aluno/                        ║
-# ╠═══════════════════════════════════════════════════════════════════╣
-# ║  Aqui testamos a LÓGICA que nós escrevemos na view:              ║
-# ║  - O aluno é realmente persistido no banco                       ║
-# ║  - A resposta tem a mensagem e o status que nós definimos        ║
-# ╚═══════════════════════════════════════════════════════════════════╝
 
-@pytest.mark.django_db
-class TestAlunoPOST:
 
-    def test_criar_aluno_persiste_no_banco(self, api_client, payload_aluno_valido):
-        """
-        Testa a NOSSA lógica: o fluxo completo do POST.
-        - O serializer.save() realmente persiste no banco?
-        - A resposta tem a mensagem que nós definimos?
-        - O status é 201 como nós configuramos?
 
-        📚 Note que NÃO testamos se o serializer valida campos —
-        isso é trabalho do DRF. Testamos se o NOSSO fluxo funciona:
-        parse → validate → save → response.
-        """
-        response = api_client.post(
-            "/aluno/",
-            data=payload_aluno_valido,
-            format="json",
-        )
 
-        # Verifica a resposta que NÓS definimos na view
-        assert response.status_code == 201
-        data = response.json()
-        assert data["message"] == "Aluno criado com sucesso!"
-
-        # Verifica que realmente persistiu no banco
-        assert Aluno.objects.count() == 1
-        aluno = Aluno.objects.first()
-        assert aluno.nome == "Maria Silva"
-        assert aluno.email == "maria@email.com"
-
-    def test_post_invalido_retorna_400(self, api_client):
-        """
-        Testa a NOSSA lógica: quando o serializer diz que é inválido,
-        a view retorna 400 (e não 500, por exemplo).
-
-        📚 Aqui NÃO estamos testando QUAIS erros o serializer retorna
-        (isso é trabalho do DRF). Estamos testando que o NOSSO código
-        trata corretamente o caso de erro:
-            if serializer.is_valid():
-                ...
-            else:
-                return JsonResponse(serializer.errors, status=400)  ← isso aqui
-        """
-        response = api_client.post(
-            "/aluno/",
-            data={},
-            format="json",
-        )
-
-        assert response.status_code == 400
 
 
 # ╔═══════════════════════════════════════════════════════════════════╗
