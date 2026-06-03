@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-
+from django.views.decorators.csrf import csrf_exempt
 from .models import Aluno, Processo
 from .serializers import AlunoSerializer, ProcessoSerializer
 from .permissions import IsSecretaria, IsAluno
