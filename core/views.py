@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.authentication import TokenAuthentication
@@ -38,13 +39,16 @@ def aluno(request):
 
     if request.method == 'GET':
         data = Aluno.objects.all()
-        params = request.GET.get('matricula', None)
-        if params is not None:
-            data = data.filter(matricula=params)    
-        
-        serializer = AlunoSerializer(data, many=True)
-        # O DRF já renderiza a resposta automaticamente com o Response
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        matricula = request.GET.get('matricula', None)
+        nome = request.GET.get('nome', None)
+        if matricula is not None:
+            data = data.filter(matricula=matricula)
+        if nome is not None:
+            data = data.filter(nome__icontains=nome)
+        paginator = PageNumberPagination()
+        paginated_data = paginator.paginate_queryset(data, request)
+        serializer = AlunoSerializer(paginated_data, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 
 @api_view(['GET', 'POST', 'PATCH'])
@@ -53,17 +57,33 @@ def processo(request):
     if request.method == 'POST':
         parsed_data = request.data
         serializer = ProcessoSerializer(data=parsed_data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            erros = {
+                "erro": "Falha na validação dos dados.",
+                "campos_com_erro": {
+                    campo: mensagens for campo, mensagens in serializer.errors.items()
+                }
+            }
+            return Response(erros, status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
-        return Response({"created":"successfull"}, status=status.HTTP_201_CREATED)
-        
+        return Response({"message": "Processo criado com sucesso!"}, status=status.HTTP_201_CREATED)
+       
+
     if request.method == 'GET':
         data = Processo.objects.all()
-        params = request.GET.get('matricula_aluno', None)
-        if params is not None:
-            data = Processo.objects.select_related('matricula_aluno')
-        serializer = ProcessoSerializer(data, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        matricula_aluno = request.GET.get('matricula_aluno', None)
+        status_filtro = request.GET.get('status', None)
+        nome_empresa = request.GET.get('nome_empresa', None)
+        if matricula_aluno is not None:
+            data = data.filter(matricula_aluno__matricula=matricula_aluno)
+        if status_filtro is not None:
+            data = data.filter(status=status_filtro)
+        if nome_empresa is not None:
+            data = data.filter(nome_empresa__icontains=nome_empresa)
+        paginator = PageNumberPagination()
+        paginated_data = paginator.paginate_queryset(data, request)
+        serializer = ProcessoSerializer(paginated_data, many=True)
+        return paginator.get_paginated_response(serializer.data)
     
     if request.method == 'PATCH':
         parsed_data = request.data
