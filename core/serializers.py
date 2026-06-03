@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import *
+from .enums import *
 from .validators import validar_email_institucional
 from .enums import StatusProcesso
 
@@ -15,7 +16,8 @@ class AlunoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Aluno
         fields = ['nome', 'email', 'matricula', 'senha', 'cpf', 'is_ativo', 'unidade', 'periodo', 'curso', 'processos']
-
+        read_only_fields = ['id']
+    
     def create(self, validated_data):
         return Aluno.objects.create(**validated_data)
 
@@ -47,45 +49,21 @@ class AreaSerializer(serializers.ModelSerializer):
 class ProcessoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Processo
-        fields = ["status", "matricula_aluno", "nome_empresa"]
-        read_only_fields = ["id", "data_criacao", "status"]
-        extra_kwargs = {
-            'nome_empresa': {
-                'error_messages': {
-                    'required': 'O campo Nome da Empresa é obrigatório.',
-                    'blank': 'O campo Nome da Empresa não pode ser vazio.',
-                }
-            },
-            'matricula_aluno': {
-                'error_messages': {
-                    'required': 'O campo Matrícula do Aluno é obrigatório.',
-                    'does_not_exist': 'Aluno com esta matrícula não foi encontrado.',
-                    'null': 'O campo Matrícula do Aluno não pode ser nulo.',
-                }
-            },
-        }
+        fields = ["nome_empresa","status","matricula_aluno"]
+        # "matricula_coordenacao","matricula_secretaria"]
+        read_only_fields = ["id","data_criacao"]
+    def create(self, validated_data):
+        return Processo.objects.create(**validated_data)
 
-    def validate(self, attrs):
-        aluno = attrs.get('matricula_aluno')
-        if aluno:
-            STATUS_TERMINAL = [
-                StatusProcesso.REPROVADO,
-                StatusProcesso.CONCLUIDO,
-                StatusProcesso.CANCELADO,
-            ]
-            processo_ativo = Processo.objects.filter(
-                matricula_aluno=aluno
-            ).exclude(status__in=STATUS_TERMINAL).first()
-
-            if processo_ativo:
-                raise serializers.ValidationError({
-                    "matricula_aluno": (
-                        f"Este aluno já possui um processo ativo "
-                        f"(ID: {processo_ativo.id}, Status: {processo_ativo.get_status_display()}). "
-                        f"Não é possível criar outro processo enquanto houver um em andamento."
-                    )
-                })
-        return attrs
+    def validate(self,attrs):
+        matricula_aluno = attrs.get('matricula_aluno')
+        status = attrs.get('status')
+        if status == StatusProcesso.ABERTO:
+            existe_processo = Processo.objects.filter(matricula_aluno=matricula_aluno,status=StatusProcesso.ABERTO).exists()
+            if existe_processo:
+                raise serializers.ValidationError({"status":"O aluno já tem processos em aberto"})
+            else:
+                return attrs
 
     def create(self, validated_data):
         return Processo.objects.create(**validated_data)

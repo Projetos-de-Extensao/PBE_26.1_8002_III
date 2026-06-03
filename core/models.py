@@ -31,6 +31,7 @@ class Aluno(Usuario):
     is_ativo = models.BooleanField(default=True, verbose_name="Status Ativo")
     periodo = models.IntegerField(choices=Periodo, default = Periodo.PRIMEIRO )
     curso = models.ForeignKey("Curso", on_delete=models.CASCADE)
+    unidade = models.CharField(max_length=15, choices=Unidade)
 
     class Meta:
         verbose_name = "Aluno"
@@ -91,10 +92,13 @@ class Processo(models.Model):
     matricula_aluno = models.ForeignKey(Aluno, to_field='matricula', related_name="matricula_aluno", on_delete=models.CASCADE, max_length = 30)
     # matricula_coordenacao = models.ForeignKey(Coordenador,to_field='matricula', related_name="matricula_coordenacao", on_delete=models.PROTECT)
     # matricula_secretaria = models.ForeignKey(Secretaria,to_field='matricula', related_name="matricula_secretaria", on_delete=models.PROTECT)
+    criado_por = models.CharField(max_length=100,verbose_name="Criado por",null=True)
+
 
     class Meta:
         verbose_name = "Processo"
         verbose_name_plural = "Processos"
+        ordering = ['status']
 
     @property
     def nome_processo(self):
