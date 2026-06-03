@@ -3,19 +3,17 @@ from django.db import IntegrityError
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
-from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+
 from .models import Aluno, Processo
 from .serializers import AlunoSerializer, ProcessoSerializer
 from .permissions import IsSecretaria, IsAluno
-from rest_framework.test import APIClient
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-
 
 class AlunoAPIView(APIView):
-    # permission_classes = [IsSecretaria]
+    permission_classes = [IsSecretaria]
 
     @extend_schema(
         parameters=[
@@ -72,7 +70,7 @@ class AlunoAPIView(APIView):
 
 
 class ProcessoAPIView(APIView):
-    # permission_classes = [IsAluno | IsSecretaria]
+    permission_classes = [IsAluno | IsSecretaria]
 
     @extend_schema(
         parameters=[
