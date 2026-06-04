@@ -10,7 +10,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from .serializers import *
 from .models import Aluno, Processo
 from .serializers import AlunoSerializer, ProcessoSerializer
-from .permissions import IsSecretaria, IsAluno
+from .permissions import IsCoordenador, IsSecretaria, IsAluno
 from .services.email_service import EmailNotificationService
 
 class AlunoAPIView(APIView):
@@ -248,3 +248,31 @@ class UploadRelatorio(APIView):
         )
         
         return Response({"message": "Relatório enviado e coordenação notificada."}, status=status.HTTP_201_CREATED)
+
+class AvaliarRelatorioAPIView(APIView):
+    permission_classes = [IsCoordenador] 
+    
+    def post(self, request, *args, **kwargs):
+        serializer = HistoricoAvaliacaoRelatorioSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        avaliacao = serializer.save()
+        relatorio = avaliacao.relatorio_id
+        
+        # Atualiza status
+        if avaliacao.veredito == Veredito.APROVADO:
+            relatorio.status = StatusRelatorio.APROVADO 
+        elif avaliacao.veredito == Veredito.REPROVADO:
+            relatorio.status = StatusRelatorio.REPROVADO
+        relatorio.save()
+        
+        aluno = relatorio.processo_id.matricula_aluno
+        
+        EmailNotificationService.notificar_avaliacao(
+            email_destino=aluno.email,
+            nome_aluno=aluno.nome,
+            status=avaliacao.veredito, 
+            observacoes=avaliacao.observacoes
+        )
+        
+        return Response({"message": f"Relatório {avaliacao.veredito} e aluno notificado."}, status=status.HTTP_201_CREATED)
