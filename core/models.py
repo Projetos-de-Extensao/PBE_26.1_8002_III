@@ -46,6 +46,7 @@ class Aluno(Usuario):
 
 class Area(models.Model):
     nome = models.CharField(max_length=20, verbose_name="Nome")
+    coordenador = models.OneToOneField('Coordenador',on_delete=models.PROTECT)
 
     class Meta:
         verbose_name = "Area"
@@ -55,8 +56,7 @@ class Area(models.Model):
         return self.nome
 
 class Coordenador(Usuario):
-    areaId = models.ForeignKey("Area", on_delete=models.PROTECT)
-
+    
     class Meta:
         verbose_name = "Coordenador"
         verbose_name_plural = "Coordenadores"
@@ -90,11 +90,11 @@ class Curso(models.Model):
 
 class Processo(models.Model):
     nome_empresa = models.CharField(max_length=255, verbose_name="Nome da empresa")
-    data_criacao = models.DateField(verbose_name="Data de Criação",default=timezone.now())
-    status = models.CharField(max_length = 20, choices=StatusProcesso, default = StatusProcesso.ABERTO )
-    matricula_aluno = models.ForeignKey(Aluno, to_field='matricula', related_name="matricula_aluno", on_delete=models.CASCADE, max_length = 30)
-    # matricula_coordenacao = models.ForeignKey(Coordenador,to_field='matricula', related_name="matricula_coordenacao", on_delete=models.PROTECT)
-    # matricula_secretaria = models.ForeignKey(Secretaria,to_field='matricula', related_name="matricula_secretaria", on_delete=models.PROTECT)
+    data_criacao = models.DateField(verbose_name="Data de Criação",default=timezone.now)
+    status = models.CharField(max_length = 20,choices=StatusProcesso, default = StatusProcesso.ABERTO )
+    aluno = models.ForeignKey(Aluno, to_field='matricula', related_name="aluno", on_delete=models.CASCADE, max_length = 30)
+    coordenacao = models.ForeignKey(Coordenador,to_field='matricula', related_name="coordenacao", on_delete=models.PROTECT)
+    secretaria = models.ForeignKey(Secretaria,to_field='matricula', related_name="secretaria", on_delete=models.PROTECT)
     criado_por = models.CharField(max_length=100,verbose_name="Criado por",null=True)
 
 
@@ -117,7 +117,7 @@ class Processo(models.Model):
 
 class Contrato(models.Model):
     arquivo = models.FileField(upload_to=upload_contrato_path,verbose_name="Arquivo", validators=[validar_pdf_e_tamanho_seguro])
-    data_upload = models.DateField(verbose_name="Data de Upload", default=timezone.now())
+    data_upload = models.DateField(verbose_name="Data de Upload", default=timezone.now)
     cnpj_empresa = models.CharField(max_length=14, verbose_name="CNPJ da empresa",null=True,blank=True)
     nome_empresa = models.CharField(max_length=255, verbose_name="Nome da empresa",null=True,blank=True)
     data_inicio = models.DateField(verbose_name="Data de Início",null=True,blank=True)   
@@ -146,7 +146,7 @@ class Contrato(models.Model):
 class Relatorio(models.Model):
     processo_id = models.ForeignKey(Processo, on_delete= models.CASCADE)
     arquivo = models.FileField(upload_to=upload_relatorio_path,verbose_name="url do arquivo",null=True,blank=True)
-    data_upload = models.DateField(verbose_name="Data de upload",default=timezone.now())
+    data_upload = models.DateField(verbose_name="Data de upload",default=timezone.now)
     horas_trabalhadas = models.IntegerField(verbose_name="Horas trabalhadas",null=True,blank=True)
     data_inicio = models.DateField(verbose_name="Data de início do relatório",null=True,blank=True)
     data_termino = models.DateField(verbose_name="Data de término do relatório",null=True,blank=True)
@@ -155,7 +155,7 @@ class Relatorio(models.Model):
 
 class HistoricoAvaliacao(models.Model):
     observacoes = models.TextField(verbose_name="Observações")
-    data_avaliacao = models.DateField(verbose_name="Data de avaliação",default=timezone.now())
+    data_avaliacao = models.DateField(verbose_name="Data de avaliação",default=timezone.now)
     veredito = models.CharField(max_length=20,choices=Veredito,verbose_name="Veredito")
     
     class Meta:
