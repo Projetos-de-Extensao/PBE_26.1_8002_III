@@ -12,6 +12,7 @@ from .models import Aluno, Processo
 from .serializers import AlunoSerializer, ProcessoSerializer
 from .permissions import IsSecretaria, IsAluno
 from .services.email_service import EmailNotificationService
+from core.enums import Veredito, StatusContrato
 
 class AlunoAPIView(APIView):
     permission_classes = [IsSecretaria]
