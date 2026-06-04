@@ -1,11 +1,17 @@
+from django.core.exceptions import ValidationError
+from rest_framework import status
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 from .models import *
 from .enums import *
 from .validators import validar_email_institucional
 from .enums import StatusProcesso
-from .services.ler_extrair_infos_pdf import ler_pdf_modo_layout, extrair_infos
+from .services import *
+from .validators import valida_periodo_relatorio
 from datetime import datetime
+from django.shortcuts import get_object_or_404
+
+
 
 class NestedProcessoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -157,6 +163,24 @@ class RelatorioSerializer(serializers.ModelSerializer):
             'horas_trabalhadas', 'data_inicio', 'data_termino', 'status'
         ]
         read_only_fields = ['id', 'data_upload']
+
+    def create(self, validated_data):
+        processo = validated_data['processo_id']
+        contrato = Contrato.objects.filter(processoId=processo,status = StatusContrato.APROVADO).first()
+        
+        # Cria a instância temporária do Relatório em memória para validar
+        relatorio = Relatorio(**validated_data)
+        
+        if contrato:
+            # Valida o período e altera o status se estiver incorreto
+            if not valida_periodo_relatorio(relatorio, contrato):
+                validated_data['status'] = StatusRelatorio.REPROVADO
+        else:
+            # Se não houver contrato ativo, o relatório é reprovado
+            validated_data['status'] = StatusRelatorio.REPROVADO
+            
+        return Relatorio.objects.create(**validated_data) 
+
 
 
 class HistoricoAvaliacaoRelatorioSerializer(serializers.ModelSerializer):
