@@ -163,6 +163,12 @@ class UploadContrato(APIView):
     permission_classes = [IsSecretaria | IsAluno]
     serializer_class = ContratoSerializer
     
+    @extend_schema(
+        summary="Upload de Contrato de Estágio",
+        description="Permite que alunos enviem contratos de estágio e notifica a secretaria sobre novos envios.",
+        request=ContratoSerializer,
+        responses={201: ContratoSerializer}
+    )
     def post(self, request, *args, **kwargs):
         processo_id = kwargs.get('id')
         processo = get_object_or_404(Processo, id=processo_id)
@@ -225,6 +231,13 @@ class AvaliarContratoAPIView(APIView):
 
 class UploadRelatorio(APIView):
     permission_classes = [IsAluno]
+
+    @extend_schema(
+        summary="Upload de Relatório de Estágio",
+        description="Permite que alunos enviem relatórios de estágio e notifica a coordenação sobre novos envios.", 
+        request=RelatorioSerializer,
+        responses={201: RelatorioSerializer}
+    )
     
     def post(self, request, *args, **kwargs):
         processo_id = kwargs.get('id')
@@ -247,6 +260,13 @@ class UploadRelatorio(APIView):
 
 class AvaliarRelatorioAPIView(APIView):
     permission_classes = [IsCoordenador] 
+
+    @extend_schema(
+        summary="Avaliação de Relatório de Estágio",
+        description="Permite que coordenadores avaliem relatórios de estágio e notifica os alunos sobre a decisão.",
+        request=HistoricoAvaliacaoRelatorioSerializer,
+        responses={201: HistoricoAvaliacaoRelatorioSerializer}
+    )
     
     def post(self, request, *args, **kwargs):
         serializer = HistoricoAvaliacaoRelatorioSerializer(data=request.data)
