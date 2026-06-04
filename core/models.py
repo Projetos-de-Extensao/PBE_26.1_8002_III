@@ -1,4 +1,5 @@
 
+from core.enums import StatusRelatorio
 from django.template.defaultfilters import default
 import email
 from core.services.upload_contrato import upload_contrato_path
@@ -113,6 +114,7 @@ class Processo(models.Model):
 
 
 
+
 class Contrato(models.Model):
     arquivo = models.FileField(upload_to=upload_contrato_path,verbose_name="Arquivo", validators=[validar_pdf_e_tamanho_seguro])
     data_upload = models.DateField(verbose_name="Data de Upload", default=timezone.now())
@@ -143,11 +145,11 @@ class Contrato(models.Model):
 
 class Relatorio(models.Model):
     processo_id = models.ForeignKey(Processo, on_delete= models.CASCADE)
-    arquivo = models.FileField(upload_to=upload_relatorio_path,verbose_name="url do arquivo")
+    arquivo = models.FileField(upload_to=upload_relatorio_path,verbose_name="url do arquivo",null=True,blank=True)
     data_upload = models.DateField(verbose_name="Data de upload",default=timezone.now())
-    horas_trabalhadas = models.IntegerField(verbose_name="Horas trabalhadas")
-    data_inicio = models.DateField(verbose_name="Data de início do relatório")
-    data_termino = models.DateField(verbose_name="Data de término do relatório")
+    horas_trabalhadas = models.IntegerField(verbose_name="Horas trabalhadas",null=True,blank=True)
+    data_inicio = models.DateField(verbose_name="Data de início do relatório",null=True,blank=True)
+    data_termino = models.DateField(verbose_name="Data de término do relatório",null=True,blank=True)
     status = models.CharField(max_length = 15, choices=StatusRelatorio, default = StatusRelatorio.PENDENTE )
     
 
