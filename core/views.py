@@ -193,3 +193,87 @@ class UploadContrato(APIView):
             }, 
             status=status.HTTP_201_CREATED
         )
+
+class AvaliarContratoAPIView(APIView):
+    permission_classes = [IsSecretaria]
+
+    @extend_schema(
+        request=HistoricoAvaliacaoContratoSerializer,
+        responses={201: HistoricoAvaliacaoContratoSerializer}
+    )
+    def post(self, request, *args, **kwargs):
+        serializer = HistoricoAvaliacaoContratoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        avaliacao = serializer.save()
+        contrato = avaliacao.contrato_Id
+
+        if avaliacao.veredito == Veredito.APROVADO:
+            contrato.status = StatusContrato.APROVADO
+        elif avaliacao.veredito == Veredito.REPROVADO:
+            contrato.status = StatusContrato.REPROVADO
+        
+        contrato.save()
+        
+        aluno = contrato.processoId.matricula_aluno
+
+        EmailNotificationService.notificar_avaliacao(
+            email_destino=aluno.email,
+            nome_aluno=aluno.nome,
+            status=avaliacao.veredito,
+            observacoes=avaliacao.observacoes
+        )
+
+        return Response(
+            {"message":f"Contrato avaliado como {avaliacao.veredito} e aluno notificado!"},
+            status=status.HTTP_201_CREATED
+        )
+
+class UploadRelatorio(APIView):
+    permission_classes = [IsAluno]
+    
+    def post(self, request, *args, **kwargs):
+        processo_id = kwargs.get('id')
+        processo = get_object_or_404(Processo, id=processo_id)
+        
+        serializer = RelatorioSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        relatorio = serializer.save(processo_id=processo)
+        
+        aluno = relatorio.processo_id.matricula_aluno
+        email_coordenacao = "coordenacao@ibmec.edu.br" 
+        
+        EmailNotificationService.notificar_novo_envio(
+            email_destino=email_coordenacao,
+            nome_aluno=aluno.nome, 
+            nome_documento="Relatório de Estágio"
+        )
+        
+        return Response({"message": "Relatório enviado e coordenação notificada."}, status=status.HTTP_201_CREATED)
+
+class AvaliarRelatorioAPIView(APIView):
+    permission_classes = [IsCoordenador] 
+    
+    def post(self, request, *args, **kwargs):
+        serializer = HistoricoAvaliacaoRelatorioSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        avaliacao = serializer.save()
+        relatorio = avaliacao.relatorio_id
+        
+        # Atualiza status
+        if avaliacao.veredito == Veredito.APROVADO:
+            relatorio.status = StatusRelatorio.APROVADO 
+        elif avaliacao.veredito == Veredito.REPROVADO:
+            relatorio.status = StatusRelatorio.REPROVADO
+        relatorio.save()
+        
+        aluno = relatorio.processo_id.matricula_aluno
+        
+        EmailNotificationService.notificar_avaliacao(
+            email_destino=aluno.email,
+            nome_aluno=aluno.nome,
+            status=avaliacao.veredito, 
+            observacoes=avaliacao.observacoes
+        )
+        
+        return Response({"message": f"Relatório {avaliacao.veredito} e aluno notificado."}, status=status.HTTP_201_CREATED)
