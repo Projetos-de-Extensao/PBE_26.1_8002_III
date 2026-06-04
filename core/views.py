@@ -8,13 +8,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from .serializers import *
-from .models import Aluno, Processo
+from .models import Aluno, Processo, Secretaria, Coordenador
 from .permissions import IsSecretaria, IsAluno, IsCoordenador
 from .services.email_service import EmailNotificationService
 from core.enums import Veredito, StatusContrato, StatusRelatorio
 
 class AlunoAPIView(APIView):
-    permission_classes = []
+    permission_classes = [IsAluno | IsSecretaria]
 
     @extend_schema(
         parameters=[
@@ -84,7 +84,7 @@ class AlunoAPIView(APIView):
         else:
             return Response({"error": "Matrícula não informada"}, status=status.HTTP_400_BAD_REQUEST)
 class ProcessoAPIView(APIView):
-    permission_classes = [IsAluno | IsSecretaria]
+    permission_classes = []
 
     @extend_schema(
         parameters=[
@@ -94,23 +94,29 @@ class ProcessoAPIView(APIView):
         ],
         responses={200: ProcessoSerializer(many=True)}
     )
-    def get(self, request, *args, **kwargs):
-        user_matricula = getattr(request.user, 'name', None) or getattr(request.user, 'username', None)
-        try:
-            if user_matricula:
-                aluno = Aluno.objects.get(matricula=user_matricula)
-                data = Processo.objects.filter(matricula_aluno=aluno)
-            else:
-                data = Processo.objects.all()
-        except Aluno.DoesNotExist:
-            data = Processo.objects.all()
+    def get(self, request,id, *args, **kwargs):
+        # Verifica se o usuário logado é Secretaria ou Coordenador (acesso total)
+        is_staff = Secretaria.objects.filter(email=request.user.email).exists() or \
+                   Coordenador.objects.filter(email=request.user.email).exists()
 
+        if is_staff:
+            data = Processo.objects.all()
+        else:
+            try:
+                aluno = Aluno.objects.get(email=request.user.email)
+                data = Processo.objects.filter(aluno=aluno)
+            except Aluno.DoesNotExist:
+                data = Processo.objects.none()  # Retorna vazio por segurança se o perfil de Aluno não for achado
+        
+        
+
+        # Query params
         matricula_aluno = request.query_params.get('matricula_aluno', None)
         status_filtro = request.query_params.get('status', None)
         nome_empresa = request.query_params.get('nome_empresa', None)
 
         if matricula_aluno is not None:
-            data = data.filter(matricula_aluno=matricula_aluno)    
+            data = data.filter(aluno=matricula_aluno)    
         if status_filtro is not None:
             data = data.filter(status=status_filtro)
         if nome_empresa is not None:
@@ -173,6 +179,22 @@ class ProcessoAPIView(APIView):
         else:
             return Response({"error": "Id não informado"}, status=status.HTTP_400_BAD_REQUEST)
 
+
+class ProcessoDetailAPIView(APIView):
+    permission_classes = [IsAluno | IsCoordenador | IsSecretaria]
+
+    def get(self, request, id, *args, **kwargs):
+        print(id)
+        processo = get_object_or_404(
+            Processo.objects.select_related('aluno', 'secretaria', 'coordenacao')
+                            .prefetch_related('contrato_set', 'relatorio_set'),
+            id=id
+        )
+        serializer = ProcessoDetailSerializer(processo)
+        return Response(serializer.data)
+
+
+
 class UploadContrato(APIView):
     permission_classes = [IsSecretaria | IsAluno]
     serializer_class = ContratoSerializer
@@ -192,7 +214,7 @@ class UploadContrato(APIView):
         
         contrato = serializer.save(processoId=processo)
         
-        aluno = contrato.processoId.matricula_aluno
+        aluno = contrato.processoId.aluno
         email_secretaria = "secretaria@ibmec.edu.br" 
 
         EmailNotificationService.notificar_novo_envio(
@@ -229,7 +251,7 @@ class AvaliarContratoAPIView(APIView):
         
         contrato.save()
         
-        aluno = contrato.processoId.matricula_aluno
+        aluno = contrato.processoId.aluno
 
         EmailNotificationService.notificar_avaliacao(
             email_destino=aluno.email,
@@ -261,7 +283,7 @@ class UploadRelatorio(APIView):
         serializer.is_valid(raise_exception=True)
         relatorio = serializer.save(processo_id=processo)
         
-        aluno = relatorio.processo_id.matricula_aluno
+        aluno = relatorio.processo_id.aluno
         email_coordenacao = "coordenacao@ibmec.edu.br" 
         
         EmailNotificationService.notificar_novo_envio(
@@ -295,7 +317,7 @@ class AvaliarRelatorioAPIView(APIView):
             relatorio.status = StatusRelatorio.REPROVADO
         relatorio.save()
         
-        aluno = relatorio.processo_id.matricula_aluno
+        aluno = relatorio.processo_id.aluno
         
         EmailNotificationService.notificar_avaliacao(
             email_destino=aluno.email,

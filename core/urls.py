@@ -5,6 +5,7 @@ from .views import UploadContrato, AvaliarContratoAPIView, AvaliarRelatorioAPIVi
 urlpatterns = [
     path('aluno/', views.AlunoAPIView.as_view()),
     path('processo/', views.ProcessoAPIView.as_view()),
+    path('processo/<int:id>/', views.ProcessoDetailAPIView.as_view()),
     path('processo/<int:id>/contrato/', UploadContrato.as_view(), name='upload_contrato'),
     path('contrato/avaliar/', AvaliarContratoAPIView.as_view(), name='avaliar_contrato'),
     path('processo/<int:id>/relatorio/', UploadRelatorio.as_view(), name='upload_relatorio'),
