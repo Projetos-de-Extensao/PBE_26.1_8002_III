@@ -79,6 +79,7 @@ class TestPostAluno:
             "nome": "Pedro Santos",
             "email": "pedro@ibmec.edu.br",
             "matricula": "20260002",
+            "senha": "senha_segura_123",
             "cpf": "123.456.789-09",
             "is_ativo": True,
             "unidade": Unidade.BARRA.value,

@@ -165,20 +165,31 @@ class ProcessoAPIView(APIView):
 
 
 class UploadContrato(APIView):
-    permission_classes = [IsSecretaria,IsAluno]
+    permission_classes = [IsSecretaria | IsAluno]
     serializer_class = ContratoSerializer
-    def post(self,request, *args, **kwargs):
+    
+    def post(self, request, *args, **kwargs):
+        processo_id = kwargs.get('id')
+        processo = get_object_or_404(Processo, id=processo_id)
+        
         serializer = ContratoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        contrato = serializer.save()
+        
+        contrato = serializer.save(processoId=processo)
+        
         aluno = contrato.processoId.matricula_aluno
         email_secretaria = "secretaria@ibmec.edu.br" 
 
         EmailNotificationService.notificar_novo_envio(
             email_destino=email_secretaria,
-            noeme_aluno=aluno.name,
+            nome_aluno=aluno.nome, 
             nome_documento="Contrato de Estágio"
         )
-        return Response({"message": "Contrato enviado com sucesso!"}, status=status.HTTP_201_CREATED)
-
-    
+        
+        return Response(
+            {
+                "message": "Contrato enviado com sucesso e secretaria notificada!",
+                "data": serializer.data
+            }, 
+            status=status.HTTP_201_CREATED
+        )
