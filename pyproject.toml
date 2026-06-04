@@ -55,4 +55,5 @@ dependencies = [
     "pytesseract>=0.3.13",
     "pypdf>=6.12.2",
     "python-dotenv>=1.2.2",
+    "thefuzz>=0.22.1",
 ]

@@ -1,4 +1,6 @@
 from pypdf import PdfReader
+from collections import Counter
+import regex
 
 
 
@@ -14,10 +16,13 @@ def ler_pdf_modo_layout(caminho_pdf):
         str: O texto extraído da primeira página ou None se ocorrer erro.
     """
     reader = PdfReader(caminho_pdf)
-    
+    textos = ""
     for idx, pagina in enumerate(reader.pages):
         texto = pagina.extract_text(extraction_mode="layout")
-        return texto
+        textos = textos+texto
+    
+    return textos
+
 
 
 
@@ -103,10 +108,13 @@ def separar_apolice_seguradora(string):
 
 
 
-def extrair_infos(pdf):
+
+def extrair_infos_primeira_tabela(pdf):
     """
     Analisa o texto de layout do PDF, remove os cabeçalhos/rótulos do contrato
     e retorna os dados essenciais limpos em formato de dicionário.
+
+    recolhe dados da primeira tabela não cobrindo os checkboxes e as outras paginas 
     
     Args:
         pdf (str): O texto bruto extraído da página do PDF em modo layout.
@@ -157,6 +165,63 @@ def extrair_infos(pdf):
         contrato_dict["seguradora"] = seguradora
         
     return contrato_dict
+
+
+def extrair_dados_checkboxes(pdf):
+    index_checkbox = pdf.find('[')
+    padrao = r"1\s*\.\s*A"
+    palavra = regex.search(padrao, pdf)
+    if palavra:
+        index_clausulas = palavra.start()
+        fragmento_checkbox = pdf[index_checkbox:index_clausulas-1]
+        pass
+        
+    else:
+        raise IndexError("Index de onde começam as cláusulas não encontrado")
+
+    # Padrão para encontrar colchetes [] com qualquer conteúdo (ou vazios) dentro deles
+    padrao_colchetes = r"\[[^\]]*\]"
+    checkboxes = regex.findall(padrao_colchetes, fragmento_checkbox)
+    print(checkboxes)
+
+    preenchimento = []
+    for checkbox in checkboxes:
+        checkbox = set(checkbox)
+        vazio = {'[', ']',' '}
+        
+        if checkbox.difference(vazio) != set():
+            preenchimento.append(True)
+        else:
+            preenchimento.append(False)
+
+    if len(preenchimento) < 7:
+        faltantes = 7 - len(preenchimento)
+        for i in range(faltantes):
+            preenchimento.append(False)
+    if len(preenchimento) > 7:
+        raise ValueError(f"Mais de 7 checkboxes foram marcadas: {len(preenchimento)}")
+
+    dados = {'estagio_obrigatorio':preenchimento[1], 'nao_obrigatorio':preenchimento[2], 'nao_obrigatorio_recebe_bolsa':preenchimento[3],'nao_obrigatorio_recebe_contraprestacao':  preenchimento[4],'obrigatorio_nao_remunerado':preenchimento[5],'obrigatorio_recebe_bolsa':preenchimento[6],'obrigatorio_recebe_contraprestacao':preenchimento[7]}  
+
+    return dados   
+
+
+def extrair_infos(pdf):
+    """
+    Analisa o texto de layout do PDF, remove os cabeçalhos/rótulos do contrato
+    e retorna os dados essenciais limpos em formato de dicionário.
+    
+    Args:
+        pdf (str): O texto bruto extraído da página do PDF em modo layout.
+        
+    Returns:
+        dict: Dicionário contendo os campos do modelo Contrato:
+              "nome_empresa", "cnpj_empresa", "data_inicio", "data_termino", "apolice_seguro" e "seguradora".
+    """
+    
+
+    dados_primeira_tabela = extrair_infos_primeira_tabela(pdf)
+
 
 
 
