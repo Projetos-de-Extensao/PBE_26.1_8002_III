@@ -9,10 +9,9 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from .serializers import *
 from .models import Aluno, Processo
-from .serializers import AlunoSerializer, ProcessoSerializer
 from .permissions import IsSecretaria, IsAluno, IsCoordenador
 from .services.email_service import EmailNotificationService
-from core.enums import Veredito, StatusContrato
+from core.enums import Veredito, StatusContrato, StatusRelatorio
 
 class AlunoAPIView(APIView):
     permission_classes = [IsSecretaria]
@@ -70,9 +69,7 @@ class AlunoAPIView(APIView):
         else:
             return Response({"error": "Matrícula não informada"}, status=status.HTTP_400_BAD_REQUEST)
 
-
 class ProcessoAPIView(APIView):
-    
     permission_classes = [IsAluno | IsSecretaria]
 
     @extend_schema(
@@ -162,8 +159,6 @@ class ProcessoAPIView(APIView):
         else:
             return Response({"error": "Id não informado"}, status=status.HTTP_400_BAD_REQUEST)
 
-
-
 class UploadContrato(APIView):
     permission_classes = [IsSecretaria | IsAluno]
     serializer_class = ContratoSerializer
@@ -205,7 +200,7 @@ class AvaliarContratoAPIView(APIView):
         serializer = HistoricoAvaliacaoContratoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         avaliacao = serializer.save()
-        contrato = avaliacao.contrato_Id
+        contrato = avaliacao.contrato_id
 
         if avaliacao.veredito == Veredito.APROVADO:
             contrato.status = StatusContrato.APROVADO
@@ -260,7 +255,6 @@ class AvaliarRelatorioAPIView(APIView):
         avaliacao = serializer.save()
         relatorio = avaliacao.relatorio_id
         
-        # Atualiza status
         if avaliacao.veredito == Veredito.APROVADO:
             relatorio.status = StatusRelatorio.APROVADO 
         elif avaliacao.veredito == Veredito.REPROVADO:
