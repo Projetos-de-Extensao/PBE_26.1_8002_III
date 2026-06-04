@@ -30,11 +30,15 @@ class AlunoSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         validated_data['senha'] = make_password(validated_data['senha'])
+        validated_data['nome'] = validated_data['nome'].lower().capitalize().strip()
         return Aluno.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
         if 'senha' in validated_data:
             validated_data['senha'] = make_password(validated_data['senha'])
+        
+        if 'nome' in validated_data:
+            validated_data['nome'] = validated_data['nome'].lower().capitalize().strip()
 
         instance.nome = validated_data.get("nome", instance.nome)
         instance.email = validated_data.get("email", instance.email)
