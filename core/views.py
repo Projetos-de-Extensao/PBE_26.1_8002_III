@@ -11,6 +11,7 @@ from .serializers import *
 from .models import Aluno, Processo
 from .serializers import AlunoSerializer, ProcessoSerializer
 from .permissions import IsSecretaria, IsAluno
+from .services.email_service import EmailNotificationService
 
 class AlunoAPIView(APIView):
     permission_classes = [IsSecretaria]
@@ -172,6 +173,22 @@ class UploadContrato(APIView):
         
         serializer = ContratoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        # Passa o processoId diretamente pelo save(), injetando-o no validated_data
-        serializer.save(processoId=processo)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        contrato = serializer.save(processoId=processo)
+        
+        aluno = contrato.processoId.matricula_aluno
+        email_secretaria = "secretaria@ibmec.edu.br" 
+
+        EmailNotificationService.notificar_novo_envio(
+            email_destino=email_secretaria,
+            nome_aluno=aluno.nome, 
+            nome_documento="Contrato de Estágio"
+        )
+        
+        return Response(
+            {
+                "message": "Contrato enviado com sucesso e secretaria notificada!",
+                "data": serializer.data
+            }, 
+            status=status.HTTP_201_CREATED
+        )
