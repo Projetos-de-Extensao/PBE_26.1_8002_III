@@ -6,18 +6,39 @@ from .models import *
 from .enums import *
 from .validators import validar_email_institucional
 from .enums import StatusProcesso
-from .services import *
+from .services.ler_extrair_infos_pdf import ler_pdf_modo_layout, extrair_infos 
 from .validators import valida_periodo_relatorio
 from datetime import datetime
 from django.shortcuts import get_object_or_404
 
 
+class NestedContratoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contrato
+        fields = ['nome_empresa', 'data_upload', 'status'] 
+
+class NestedRelatorioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Relatorio
+        fields = ['data_upload', 'status']
 
 class NestedProcessoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Processo
         fields = ["id", "nome_empresa", "status"]
 
+class NestedAlunoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Aluno
+        fields = ["nome", "matricula"]
+class NestedCoordenacaoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Coordenador
+        fields = ["nome", "matricula", "area", "unidade"]
+class NestedSecretariaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Secretaria
+        fields = ["nome", "matricula", "unidade"]
 
 class AlunoSerializer(serializers.ModelSerializer):
     processos = NestedProcessoSerializer(source="matricula_aluno", many=True, read_only=True)
@@ -67,29 +88,43 @@ class AreaSerializer(serializers.ModelSerializer):
 
 
 class ProcessoSerializer(serializers.ModelSerializer):
+    matricula_aluno = serializers.SlugRelatedField(slug_field='matricula', queryset=Aluno.objects.all(), source='aluno')
+    matricula_secretaria = serializers.SlugRelatedField(slug_field='matricula', queryset=Secretaria.objects.all(), source='secretaria')
+    matricula_coordenacao = serializers.SlugRelatedField(slug_field='matricula', queryset=Coordenador.objects.all(), source='coordenacao')
+
     class Meta:
         model = Processo
-        fields = ["nome_empresa", "status", "matricula_aluno"]
+        fields = ["nome_empresa", "status", "matricula_aluno", "matricula_secretaria", "matricula_coordenacao"]
         read_only_fields = ["id", "data_criacao"]
 
     def validate(self, attrs):
-        matricula_aluno = attrs.get('matricula_aluno')
+        aluno = attrs.get('aluno')
         status_atual = attrs.get('status')
         if status_atual == StatusProcesso.ABERTO:
-            existe_processo = Processo.objects.filter(matricula_aluno=matricula_aluno, status=StatusProcesso.ABERTO).exists()
+            existe_processo = Processo.objects.filter(aluno=aluno, status=StatusProcesso.ABERTO).exists()
             if existe_processo:
                 raise serializers.ValidationError({"status": "O aluno já tem processos em aberto"})
         return attrs
 
     def create(self, validated_data):
         return Processo.objects.create(**validated_data)
-    
+
+class ProcessoDetailSerializer(serializers.ModelSerializer):
+    aluno = NestedAlunoSerializer(read_only=True)
+    secretaria = NestedSecretariaSerializer(read_only=True)
+    coordenacao = NestedCoordenacaoSerializer(read_only=True)
+    contrato = NestedContratoSerializer(source='contrato_set', many=True, read_only=True)
+    relatorio = NestedRelatorioSerializer(source='relatorio_set', many=True, read_only=True)
+
+    class Meta:
+        model = Processo
+        fields = ["nome_empresa", "status", "aluno", "secretaria", "coordenacao", "contrato", "relatorio"]
 
 class ContratoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contrato
         fields = [
-            "id", "arquivo"
+            "id", "arquivo",'status'
         ]
         read_only_fields = ["id", "data_upload", "cnpj_empresa", "nome_empresa",
             "data_inicio", "data_termino", "apolice_seguro", "plano_atividade",
@@ -166,7 +201,7 @@ class RelatorioSerializer(serializers.ModelSerializer):
             'processo_id', 'arquivo', 'data_upload',
             'horas_trabalhadas', 'data_inicio', 'data_termino', 'status'
         ]
-        read_only_fields = ['id', 'data_upload']
+        read_only_fields = ['id', 'data_upload', 'processo_id']
 
     def create(self, validated_data):
         processo = validated_data['processo_id']

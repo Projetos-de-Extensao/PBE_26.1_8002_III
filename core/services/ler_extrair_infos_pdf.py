@@ -221,6 +221,9 @@ def extrair_infos(pdf):
     
 
     dados_primeira_tabela = extrair_infos_primeira_tabela(pdf)
+    dados_checkboxes = extrair_dados_checkboxes(pdf)
+
+    return {**dados_primeira_tabela,**dados_checkboxes}
 
 
 
