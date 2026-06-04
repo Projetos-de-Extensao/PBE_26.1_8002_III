@@ -14,27 +14,26 @@ from .services.email_service import EmailNotificationService
 from core.enums import Veredito, StatusContrato, StatusRelatorio
 
 class AlunoAPIView(APIView):
-    permission_classes = [IsSecretaria | IsCoordenador]
+    permission_classes = []
 
     @extend_schema(
         parameters=[
             OpenApiParameter(name='matricula', description='Filtra por matrícula do aluno', required=False, type=str),
-            OpenApiParameter(name='nome', description='Filtra por nome (busca parcial)', required=False, type=str)
+            OpenApiParameter(name='nome', description='Filtra por nome (busca parcial). Nomes deve ser separados por + em caso de nome composto ou sobrenomes.', required=False, type=str),
+            OpenApiParameter(name='cpf', description='Filtra por CPF do aluno', required=False, type=str)
         ],
         responses={200: AlunoSerializer(many=True)}
     )
     def get(self, request, *args, **kwargs):
         data = Aluno.objects.all()
-        matricula = request.query_params.get('matricula', None)
-        nome = request.query_params.get('nome', None)
+        matricula = request.query_params.get('matricula')
+        cpf = request.query_params.get('cpf')
+        nome = request.query_params.get('nome')
 
-        if matricula:
-            data = data.filter(matricula=matricula)
+        data = data.filter(matricula=matricula) if matricula is not None else data
+        data = data.filter(cpf=cpf) if cpf is not None else data
+        data = data.filter(nome__icontains=nome) if nome is not None else data
 
-        if nome:
-            termos_da_busca = nome.split() 
-            for termo in termos_da_busca:
-                data = data.filter(nome__icontains=termo)
 
         if not data.exists():
             return Response(
