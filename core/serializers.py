@@ -4,6 +4,8 @@ from .models import *
 from .enums import *
 from .validators import validar_email_institucional
 from .enums import StatusProcesso
+from .services.ler_extrair_infos_pdf import ler_pdf_modo_layout, extrair_infos
+from datetime import datetime
 
 class NestedProcessoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -76,9 +78,52 @@ class ProcessoSerializer(serializers.ModelSerializer):
 class ContratoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contrato
-        fields = ["arquivo","processoId"]
-        read_only_fields = ["id","data_upload"]
+        fields = [
+            "id", "arquivo"
+        ]
+        read_only_fields = ["id", "data_upload", "cnpj_empresa", "nome_empresa",
+            "data_inicio", "data_termino", "apolice_seguro", "plano_atividade",
+            "assinatura_aluno", "assinatura_empresa", "assinatura_faculdade",
+            "processoId"]
 
+    def create(self, validated_data):
+        pdf = validated_data['arquivo']
+        
+        # Reseta ponteiro do arquivo para leitura do PDF
+        pdf.seek(0)
+        texto = ler_pdf_modo_layout(pdf)
+        # Reseta o ponteiro de volta para que o Django possa salvar o arquivo corretamente
+        pdf.seek(0)
+        
+        infos = extrair_infos(texto)
+        
+        extra_data = {}
+        if infos:
+            extra_data["cnpj_empresa"] = infos.get("cnpj_empresa", "")
+            extra_data["nome_empresa"] = infos.get("nome_empresa", "")
+            
+            data_ini_str = infos.get("data_inicio")
+            data_fim_str = infos.get("data_termino")
+            
+            # Converte string formatada "DD/MM/AAAA" para datetime.date
+            if data_ini_str and '/' in data_ini_str:
+                try:
+                    extra_data["data_inicio"] = datetime.strptime(data_ini_str, "%d/%m/%Y").date()
+                except ValueError:
+                    pass
+            if data_fim_str and '/' in data_fim_str:
+                try:
+                    extra_data["data_termino"] = datetime.strptime(data_fim_str, "%d/%m/%Y").date()
+                except ValueError:
+                    pass
+                    
+            extra_data["apolice_seguro"] = infos.get("apolice_seguro", "")
+            
+        contrato = Contrato.objects.create(
+            **validated_data,
+            **extra_data
+        )
+        return contrato
 
 class CoordenadorSerializer(serializers.ModelSerializer):
     class Meta:
