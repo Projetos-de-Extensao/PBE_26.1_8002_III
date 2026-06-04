@@ -150,9 +150,15 @@ class ProcessoAPIView(APIView):
 
 
 class UploadContrato(APIView):
-    permission_classes = [IsSecretaria,IsAluno]
+    permission_classes = [IsSecretaria | IsAluno]
     serializer_class = ContratoSerializer
-    def post(self,request, *args, **kwargs):
-        pass
-
     
+    def post(self, request, *args, **kwargs):
+        processo_id = kwargs.get('id')
+        processo = get_object_or_404(Processo, id=processo_id)
+        
+        serializer = ContratoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        # Passa o processoId diretamente pelo save(), injetando-o no validated_data
+        serializer.save(processoId=processo)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

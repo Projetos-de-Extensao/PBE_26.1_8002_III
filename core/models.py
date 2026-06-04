@@ -1,4 +1,5 @@
 
+from django.template.defaultfilters import default
 import email
 from core.services.upload_contrato import upload_contrato_path
 from core.services.validacao_arquivos import validar_pdf_e_tamanho_seguro
@@ -114,16 +115,16 @@ class Processo(models.Model):
 
 class Contrato(models.Model):
     arquivo = models.FileField(upload_to=upload_contrato_path,verbose_name="Arquivo", validators=[validar_pdf_e_tamanho_seguro])
-    data_upload = models.DateField(verbose_name="Data de Upload")
-    cnpj_empresa = models.CharField(max_length=14, verbose_name="CNPJ da empresa")
-    nome_empresa = models.CharField(max_length=255, verbose_name="Nome da empresa")
-    data_inicio = models.DateField(verbose_name="Data de Início")   
-    data_termino = models.DateField(verbose_name="Data de Término")
-    apolice_seguro = models.CharField(max_length=100, verbose_name="Apólice de Seguro")
-    plano_atividade = models.BooleanField(default=False, verbose_name="Plano de Atividade")
-    assinatura_aluno = models.BooleanField(default=False, verbose_name="Assinatura do Aluno")
-    assinatura_empresa = models.BooleanField(default=False, verbose_name="Assinatura da Empresa")
-    assinatura_faculdade = models.BooleanField(default=False, verbose_name="Assinatura da Faculdade")
+    data_upload = models.DateField(verbose_name="Data de Upload", default=timezone.now())
+    cnpj_empresa = models.CharField(max_length=14, verbose_name="CNPJ da empresa",null=True,blank=True)
+    nome_empresa = models.CharField(max_length=255, verbose_name="Nome da empresa",null=True,blank=True)
+    data_inicio = models.DateField(verbose_name="Data de Início",null=True,blank=True)   
+    data_termino = models.DateField(verbose_name="Data de Término",null=True,blank=True)
+    apolice_seguro = models.CharField(max_length=100, verbose_name="Apólice de Seguro",null=True,blank=True)
+    plano_atividade = models.BooleanField(default=False, verbose_name="Plano de Atividade",null=True,blank=True)
+    assinatura_aluno = models.BooleanField(default=False, verbose_name="Assinatura do Aluno",null=True,blank=True)
+    assinatura_empresa = models.BooleanField(default=False, verbose_name="Assinatura da Empresa",null=True,blank=True)
+    assinatura_faculdade = models.BooleanField(default=False, verbose_name="Assinatura da Faculdade",null=True,blank=True)
     processoId = models.ForeignKey(Processo, on_delete=models.CASCADE, verbose_name="Processo")
     status = models.CharField(max_length = 15, choices=StatusContrato, default = StatusContrato.PENDENTE )
 
