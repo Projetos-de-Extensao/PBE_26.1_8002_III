@@ -231,6 +231,13 @@ class AvaliarContratoAPIView(APIView):
 
 class UploadRelatorio(APIView):
     permission_classes = [IsAluno]
+
+    @extend_schema(
+        summary="Upload de Relatório de Estágio",
+        description="Permite que alunos enviem relatórios de estágio e notifica a coordenação sobre novos envios.", 
+        request=RelatorioSerializer,
+        responses={201: RelatorioSerializer}
+    )
     
     def post(self, request, *args, **kwargs):
         processo_id = kwargs.get('id')
