@@ -260,6 +260,13 @@ class UploadRelatorio(APIView):
 
 class AvaliarRelatorioAPIView(APIView):
     permission_classes = [IsCoordenador] 
+
+    @extend_schema(
+        summary="Avaliação de Relatório de Estágio",
+        description="Permite que coordenadores avaliem relatórios de estágio e notifica os alunos sobre a decisão.",
+        request=HistoricoAvaliacaoRelatorioSerializer,
+        responses={201: HistoricoAvaliacaoRelatorioSerializer}
+    )
     
     def post(self, request, *args, **kwargs):
         serializer = HistoricoAvaliacaoRelatorioSerializer(data=request.data)
