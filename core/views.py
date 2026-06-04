@@ -163,6 +163,12 @@ class UploadContrato(APIView):
     permission_classes = [IsSecretaria | IsAluno]
     serializer_class = ContratoSerializer
     
+    @extend_schema(
+        summary="Upload de Contrato de Estágio",
+        description="Permite que alunos enviem contratos de estágio e notifica a secretaria sobre novos envios.",
+        request=ContratoSerializer,
+        responses={201: ContratoSerializer}
+    )
     def post(self, request, *args, **kwargs):
         processo_id = kwargs.get('id')
         processo = get_object_or_404(Processo, id=processo_id)
