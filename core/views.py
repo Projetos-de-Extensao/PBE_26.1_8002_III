@@ -75,7 +75,9 @@ class ProcessoAPIView(APIView):
 
     @extend_schema(
         parameters=[
-            OpenApiParameter(name='matricula_aluno', description='Filtra processos por matrícula do aluno', required=False, type=str)
+            OpenApiParameter(name='matricula_aluno', description='Filtra por matrícula do aluno', required=False, type=str),
+            OpenApiParameter(name='status', description='Filtra por status do processo', required=False, type=str),
+            OpenApiParameter(name='nome_empresa', description='Filtra por nome da empresa', required=False, type=str)
         ],
         responses={200: ProcessoSerializer(many=True)}
     )
