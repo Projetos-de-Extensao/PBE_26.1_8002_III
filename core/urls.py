@@ -2,7 +2,7 @@ from core.views import UploadContrato
 from django.urls import path, include
 from . import views
 from .views import UploadContrato, AvaliarContratoAPIView
-from .views import AvaliarRelatorioAPIView, UploadRelatorioAPIView
+from .views import AvaliarRelatorioAPIView, UploadRelatorio
 
 urlpatterns = [
     path('aluno/', views.AlunoAPIView.as_view()),
@@ -10,7 +10,7 @@ urlpatterns = [
     path('processo/<int:id>/contrato/', UploadContrato.as_view()),
     path('contrato/upload/', UploadContrato.as_view(), name='upload_contrato'),
     path('contrato/avaliar/', AvaliarContratoAPIView.as_view(), name='avaliar_contrato'),
-    path('relatorio/upload/', UploadRelatorioAPIView.as_view(), name='upload_relatorio'),
+    path('relatorio/upload/', UploadRelatorio.as_view(), name='upload_relatorio'),
     path('relatorio/avaliar/', AvaliarRelatorioAPIView.as_view(), name='avaliar_relatorio'),
 ]
 
