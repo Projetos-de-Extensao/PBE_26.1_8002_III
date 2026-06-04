@@ -10,7 +10,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from .serializers import *
 from .models import Aluno, Processo
 from .serializers import AlunoSerializer, ProcessoSerializer
-from .permissions import IsSecretaria, IsAluno
+from .permissions import IsSecretaria, IsAluno, IsCoordenador
 from .services.email_service import EmailNotificationService
 from core.enums import Veredito, StatusContrato
 
