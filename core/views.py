@@ -75,21 +75,34 @@ class ProcessoAPIView(APIView):
 
     @extend_schema(
         parameters=[
-            OpenApiParameter(name='matricula_aluno', description='Filtra processos por matrícula do aluno', required=False, type=str)
+            OpenApiParameter(name='matricula_aluno', description='Filtra por matrícula do aluno', required=False, type=str),
+            OpenApiParameter(name='status', description='Filtra por status do processo', required=False, type=str),
+            OpenApiParameter(name='nome_empresa', description='Filtra por nome da empresa', required=False, type=str)
         ],
         responses={200: ProcessoSerializer(many=True)}
     )
     def get(self, request, *args, **kwargs):
-        data = Processo.objects.all()
+        user_matricula = getattr(request.user, 'name', None) or getattr(request.user, 'username', None)
+        try:
+            if user_matricula:
+                aluno = Aluno.objects.get(matricula=user_matricula)
+                data = Processo.objects.filter(matricula_aluno=aluno)
+            else:
+                data = Processo.objects.all()
+        except Aluno.DoesNotExist:
+            data = Processo.objects.all()
+
         matricula_aluno = request.query_params.get('matricula_aluno', None)
         status_filtro = request.query_params.get('status', None)
         nome_empresa = request.query_params.get('nome_empresa', None)
+
         if matricula_aluno is not None:
-            data = data.filter(matricula_aluno__matricula=matricula_aluno)
+            data = data.filter(matricula_aluno=matricula_aluno)    
         if status_filtro is not None:
             data = data.filter(status=status_filtro)
         if nome_empresa is not None:
             data = data.filter(nome_empresa__icontains=nome_empresa)
+
         paginator = PageNumberPagination()
         paginated_data = paginator.paginate_queryset(data, request)
         serializer = ProcessoSerializer(paginated_data, many=True)
