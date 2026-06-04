@@ -226,3 +226,25 @@ class AvaliarContratoAPIView(APIView):
             {"message":f"Contrato avaliado como {avaliacao.veredito} e aluno notificado!"},
             status=status.HTTP_201_CREATED
         )
+
+class UploadRelatorio(APIView):
+    permission_classes = [IsAluno]
+    
+    def post(self, request, *args, **kwargs):
+        processo_id = kwargs.get('id')
+        processo = get_object_or_404(Processo, id=processo_id)
+        
+        serializer = RelatorioSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        relatorio = serializer.save(processo_id=processo)
+        
+        aluno = relatorio.processo_id.matricula_aluno
+        email_coordenacao = "coordenacao@ibmec.edu.br" 
+        
+        EmailNotificationService.notificar_novo_envio(
+            email_destino=email_coordenacao,
+            nome_aluno=aluno.nome, 
+            nome_documento="Relatório de Estágio"
+        )
+        
+        return Response({"message": "Relatório enviado e coordenação notificada."}, status=status.HTTP_201_CREATED)
