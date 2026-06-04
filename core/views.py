@@ -82,16 +82,23 @@ class ProcessoAPIView(APIView):
         responses={200: ProcessoSerializer(many=True)}
     )
     def get(self, request, *args, **kwargs):
-        data = Processo.objects.all()
+        try:
+            aluno = Aluno.objects.get(matricula=request.user.name)
+            data = Processo.objects.filter(matricula_aluno=aluno)
+        except Aluno.DoesNotExist:
+            data = Processo.objects.all()
+
         matricula_aluno = request.query_params.get('matricula_aluno', None)
         status_filtro = request.query_params.get('status', None)
         nome_empresa = request.query_params.get('nome_empresa', None)
+
         if matricula_aluno is not None:
-            data = data.filter(matricula_aluno__matricula=matricula_aluno)
+            data = data.filter(matricula_aluno=matricula_aluno)    
         if status_filtro is not None:
             data = data.filter(status=status_filtro)
         if nome_empresa is not None:
             data = data.filter(nome_empresa__icontains=nome_empresa)
+
         paginator = PageNumberPagination()
         paginated_data = paginator.paginate_queryset(data, request)
         serializer = ProcessoSerializer(paginated_data, many=True)
