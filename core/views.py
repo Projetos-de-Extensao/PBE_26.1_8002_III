@@ -82,9 +82,13 @@ class ProcessoAPIView(APIView):
         responses={200: ProcessoSerializer(many=True)}
     )
     def get(self, request, *args, **kwargs):
+        user_matricula = getattr(request.user, 'name', None) or getattr(request.user, 'username', None)
         try:
-            aluno = Aluno.objects.get(matricula=request.user.name)
-            data = Processo.objects.filter(matricula_aluno=aluno)
+            if user_matricula:
+                aluno = Aluno.objects.get(matricula=user_matricula)
+                data = Processo.objects.filter(matricula_aluno=aluno)
+            else:
+                data = Processo.objects.all()
         except Aluno.DoesNotExist:
             data = Processo.objects.all()
 
