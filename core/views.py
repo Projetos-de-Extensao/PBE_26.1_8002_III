@@ -192,3 +192,37 @@ class UploadContrato(APIView):
             }, 
             status=status.HTTP_201_CREATED
         )
+
+class AvaliarContratoAPIView(APIView):
+    permission_classes = [IsSecretaria]
+
+    @extend_schema(
+        request=HistoricoAvaliacaoContratoSerializer,
+        responses={201: HistoricoAvaliacaoContratoSerializer}
+    )
+    def post(self, request, *args, **kwargs):
+        serializer = HistoricoAvaliacaoContratoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        avaliacao = serializer.save()
+        contrato = avaliacao.contrato_Id
+
+        if avaliacao.veredito == Veredito.APROVADO:
+            contrato.status = StatusContrato.APROVADO
+        elif avaliacao.veredito == Veredito.REPROVADO:
+            contrato.status = StatusContrato.REPROVADO
+        
+        contrato.save()
+        
+        aluno = contrato.processoId.matricula_aluno
+
+        EmailNotificationService.notificar_avaliacao(
+            email_destino=aluno.email,
+            nome_aluno=aluno.nome,
+            status=avaliacao.veredito,
+            observacoes=avaliacao.observacoes
+        )
+
+        return Response(
+            {"message":f"Contrato avaliado como {avaliacao.veredito} e aluno notificado!"},
+            status=status.HTTP_201_CREATED
+        )
