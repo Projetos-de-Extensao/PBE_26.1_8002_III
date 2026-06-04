@@ -14,11 +14,12 @@ from .services.email_service import EmailNotificationService
 from core.enums import Veredito, StatusContrato, StatusRelatorio
 
 class AlunoAPIView(APIView):
-    permission_classes = [IsSecretaria]
+    permission_classes = [IsSecretaria | IsCoordenador]
 
     @extend_schema(
         parameters=[
-            OpenApiParameter(name='matricula', description='Filtra por matrícula do aluno', required=False, type=str)
+            OpenApiParameter(name='matricula', description='Filtra por matrícula do aluno', required=False, type=str),
+            OpenApiParameter(name='nome', description='Filtra por nome (busca parcial)', required=False, type=str)
         ],
         responses={200: AlunoSerializer(many=True)}
     )
@@ -26,10 +27,25 @@ class AlunoAPIView(APIView):
         data = Aluno.objects.all()
         matricula = request.query_params.get('matricula', None)
         nome = request.query_params.get('nome', None)
-        if matricula is not None:
+
+        if matricula:
             data = data.filter(matricula=matricula)
-        if nome is not None:
-            data = data.filter(nome__icontains=nome)
+
+        if nome:
+            termos_da_busca = nome.split() 
+            for termo in termos_da_busca:
+                data = data.filter(nome__icontains=termo)
+
+        if not data.exists():
+            return Response(
+                {
+                    "mensagem": "Nenhum aluno encontrado com os dados informados.",
+                    "sugestao": "Tente buscar apenas pelo primeiro nome ou limpe os filtros e tente novamente.",
+                    "resultados": []
+                }, 
+                status=status.HTTP_200_OK
+            )
+
         paginator = PageNumberPagination()
         paginated_data = paginator.paginate_queryset(data, request)
         serializer = AlunoSerializer(paginated_data, many=True)
@@ -56,7 +72,7 @@ class AlunoAPIView(APIView):
     def patch(self, request, *args, **kwargs):
         parsed_data = request.data
         matricula = request.query_params.get('matricula_aluno', None)
-        if matricula is not None:
+        if matricula:
             try:
                 old_data = Aluno.objects.get(matricula=matricula)
             except Aluno.DoesNotExist:
@@ -68,7 +84,6 @@ class AlunoAPIView(APIView):
             return Response({"message": "updated"}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Matrícula não informada"}, status=status.HTTP_400_BAD_REQUEST)
-
 class ProcessoAPIView(APIView):
     permission_classes = [IsAluno | IsSecretaria]
 
