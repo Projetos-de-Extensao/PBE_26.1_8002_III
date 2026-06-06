@@ -1,3 +1,8 @@
+import os # Interage com o OS para verificar arquivos no disco e extrair o nome original
+from django.http import FileResponse # Permite o envio do arquivo em pedaços (streaming)
+from rest_framework.exceptions import PermissionDenied # Levanta um erro 403 (Forbidden) padronizado para bloquear acessos indevidos
+from drf_spectacular.utils import extend_schema, OpenApiParameter # Gera a documentação automática desta rota e dos seus parâmetros no Swagger
+
 from django.shortcuts import get_object_or_404
 from django.db import IntegrityError
 from rest_framework.response import Response
@@ -327,3 +332,57 @@ class AvaliarRelatorioAPIView(APIView):
         )
         
         return Response({"message": f"Relatório {avaliacao.veredito} e aluno notificado."}, status=status.HTTP_201_CREATED)
+    
+class DownloadDocumentoAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="Download de documentos (Contratos ou Relatórios)",
+        description="Busca um documento pelo ID e tipo. Retorna o arquivo para download.",
+        parameters=[
+            OpenApiParameter(name='tipo', description="Deve ser 'contrato' ou 'relatorio'", required=True, type=str)
+        ],
+        responses={200: bytes, 400: dict, 403: dict, 404: dict}
+    )
+    def get(self, request, id, *args, **kwargs):
+        # 1. Prevenção de Colisão de IDs
+        tipo = request.query_params.get('tipo', '').lower()
+        if tipo not in ['contrato', 'relatorio']:
+            return Response(
+                {"error": "Informe o 'tipo' válido do documento (contrato ou relatorio) nos parâmetros da URL."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 2. Busca do Documento Dinamicamente
+        try:
+            if tipo == 'contrato':
+                documento = Contrato.objects.get(id=id)
+                # No seu código original de UploadContrato a FK é processoId
+                aluno_dono = documento.processoId.aluno 
+            else:
+                documento = Relatorio.objects.get(id=id)
+                # No seu código original de UploadRelatorio a FK é processo_id
+                aluno_dono = documento.processo_id.aluno 
+        except (Contrato.DoesNotExist, Relatorio.DoesNotExist):
+            return Response({"error": "Documento não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+        # 3. Segurança Contra IDOR (Object-Level Permission)
+        is_staff = Secretaria.objects.filter(email=request.user.email).exists() or \
+                Coordenador.objects.filter(email=request.user.email).exists()
+        
+        if not is_staff and aluno_dono.email != request.user.email:
+            raise PermissionDenied("Você não tem permissão para baixar documentos de outros alunos.")
+
+        # 4. Verificação de Integridade Física do Ficheiro (Issue 154 contemplada parcialmente)
+        arquivo_campo = documento.arquivo # Mude '.arquivo' se o campo no models.py tiver outro nome (ex: .pdf, .documento)
+        
+        if not arquivo_campo or not os.path.exists(arquivo_campo.path):
+            return Response(
+                {"error": "O registro existe, mas o arquivo físico está indisponível no servidor."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # 5. Retorno Assíncrono/Streaming via FileResponse
+        nome_original = os.path.basename(arquivo_campo.path)
+        return FileResponse(open(arquivo_campo.path, 'rb'), as_attachment=True, filename=nome_original)
+    

@@ -1,8 +1,11 @@
+from .views import DownloadDocumentoAPIView
+
 from django.urls import path
 from . import views
 from .views import UploadContrato, AvaliarContratoAPIView, AvaliarRelatorioAPIView, UploadRelatorio
 
 urlpatterns = [
+    path('documentos/<int:id>/download/', DownloadDocumentoAPIView.as_view(), name='documento-download'),
     path('aluno/', views.AlunoAPIView.as_view()),
     path('processo/', views.ProcessoAPIView.as_view()),
     path('processo/<int:id>/', views.ProcessoDetailAPIView.as_view()),
