@@ -11,7 +11,6 @@ from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-from drf_spectacular.utils import extend_schema, OpenApiParameter
 from .serializers import *
 from .models import Aluno, Processo, Secretaria, Coordenador
 from .permissions import IsSecretaria, IsAluno, IsCoordenador
@@ -337,16 +336,19 @@ class DownloadDocumentoAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
-        summary="Download de documentos (Contratos ou Relatórios)",
-        description="Busca um documento pelo ID e tipo. Retorna o arquivo para download.",
+        summary="Download ou Visualização de documentos (Contratos ou Relatórios)",
+        description="Busca um documento pelo ID e tipo. Permite download forçado ou visualização inline (in-browser) otimizada.",
         parameters=[
-            OpenApiParameter(name='tipo', description="Deve ser 'contrato' ou 'relatorio'", required=True, type=str)
+            OpenApiParameter(name='tipo', description="Deve ser 'contrato' ou 'relatorio'", required=True, type=str),
+            OpenApiParameter(name='preview', description="Se 'true', otimiza e renderiza o PDF diretamente no navegador (iframe/canvas)", required=False, type=bool)
         ],
         responses={200: bytes, 400: dict, 403: dict, 404: dict}
     )
     def get(self, request, id, *args, **kwargs):
         # 1. Prevenção de Colisão de IDs
         tipo = request.query_params.get('tipo', '').lower()
+        preview_mode = request.query_params.get('preview', '').lower() == 'true'
+
         if tipo not in ['contrato', 'relatorio']:
             return Response(
                 {"error": "Informe o 'tipo' válido do documento (contrato ou relatorio) nos parâmetros da URL."}, 
@@ -357,12 +359,10 @@ class DownloadDocumentoAPIView(APIView):
         try:
             if tipo == 'contrato':
                 documento = Contrato.objects.get(id=id)
-                # No seu código original de UploadContrato a FK é processoId
                 aluno_dono = documento.processoId.aluno 
             else:
                 documento = Relatorio.objects.get(id=id)
-                # No seu código original de UploadRelatorio a FK é processo_id
-                aluno_dono = documento.processo_id.aluno 
+                aluno_dono = documento.process_id.aluno 
         except (Contrato.DoesNotExist, Relatorio.DoesNotExist):
             return Response({"error": "Documento não encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -371,18 +371,28 @@ class DownloadDocumentoAPIView(APIView):
                 Coordenador.objects.filter(email=request.user.email).exists()
         
         if not is_staff and aluno_dono.email != request.user.email:
-            raise PermissionDenied("Você não tem permissão para baixar documentos de outros alunos.")
+            raise PermissionDenied("Você não tem permissão para acessar documentos de outros alunos.")
 
-        # 4. Verificação de Integridade Física do Ficheiro (Issue 154 contemplada parcialmente)
-        arquivo_campo = documento.arquivo # Mude '.arquivo' se o campo no models.py tiver outro nome (ex: .pdf, .documento)
+        # 4. Verificação de Integridade Física do Ficheiro (Erro 404 claro)
+        arquivo_campo = documento.arquivo 
         
         if not arquivo_campo or not os.path.exists(arquivo_campo.path):
             return Response(
-                {"error": "O registro existe, mas o arquivo físico está indisponível no servidor."},
+                {"error": "O registro existe, mas o arquivo físico está indisponível no servidor para visualização ou download."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # 5. Retorno Assíncrono/Streaming via FileResponse
         nome_original = os.path.basename(arquivo_campo.path)
-        return FileResponse(open(arquivo_campo.path, 'rb'), as_attachment=True, filename=nome_original)
+        
+        # 5. Otimização para Visualização In-Browser ou Download Fallback
+        # Se preview_mode for True, as_attachment=False define o cabeçalho como 'inline'
+        # Isso permite que a resposta HTTP seja lida por iframes, tags <object> ou bibliotecas como PDF.js (canvas)
+        comportamento_download = not preview_mode 
+
+        return FileResponse(
+            open(arquivo_campo.path, 'rb'), 
+            as_attachment=comportamento_download, 
+            filename=nome_original,
+            content_type='application/pdf' # Garante que o navegador saiba exatamente que é um PDF para abrir nativamente
+        )
     
