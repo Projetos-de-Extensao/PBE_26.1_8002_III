@@ -29,11 +29,12 @@ class StatusContrato(models.TextChoices):
     REPROVADO = 'reprovado', 'Reprovado'
 
 class StatusRelatorio(models.TextChoices):
+    AGUARDANDO_VALIDACAO = 'aguardando_validacao', 'Aguardando Validação'
     PENDENTE = 'pendente', 'Pendente'
     EM_ANALISE_COORDENACAO = 'analise_coord', 'Análise Coordenação'
     APROVADO = 'aprovado', 'Aprovado'
     REPROVADO = 'reprovado', 'Reprovado'
-    
+
 
 class Unidade(models.TextChoices):
     BARRA = 'barra', 'Barra'

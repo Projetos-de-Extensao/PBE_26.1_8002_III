@@ -214,6 +214,11 @@ class RelatorioSerializer(serializers.ModelSerializer):
             # Valida o período e altera o status se estiver incorreto
             if not valida_periodo_relatorio(relatorio, contrato):
                 validated_data['status'] = StatusRelatorio.REPROVADO
+            else:
+                validated_data['status'] = StatusRelatorio.AGUARDANDO_VALIDACAO
+                
+            if relatorio.data_termino and datetime.today().date() > relatorio.data_termino:
+                validated_data['fora_do_prazo'] = True
         else:
             # Se não houver contrato ativo, o relatório é reprovado
             validated_data['status'] = StatusRelatorio.REPROVADO
