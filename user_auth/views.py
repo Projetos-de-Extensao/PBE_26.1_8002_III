@@ -7,8 +7,15 @@ from django.core.cache import cache
 from rest_framework.request import Request
 import logging
 from django.contrib.auth.hashers import make_password
+from drf_spectacular.utils import extend_schema
 
 from core.models import Aluno
+from .serializers import (
+    LoginRequestSerializer,
+    LoginResponseSerializer,
+    PrimeiroAcessoRequestSerializer,
+    MessageResponseSerializer,
+)
 
 def get_client_ip(request: Request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -22,6 +29,17 @@ class LoginAPIView(APIView):
     authentication_classes = []
     permission_classes = []
     
+    @extend_schema(
+        summary="Login de Usuário",
+        description="Autentica um usuário e retorna os tokens JWT de acesso e refresh.",
+        request=LoginRequestSerializer,
+        responses={
+            200: LoginResponseSerializer,
+            401: MessageResponseSerializer,
+            403: MessageResponseSerializer,
+            429: MessageResponseSerializer
+        }
+    )
     def post(self, request: Request):
         usuario = request.data.get('username')
         senha = request.data.get('password')
@@ -80,6 +98,17 @@ class PrimeiroAcessoAPIView(APIView):
     authentication_classes = []
     permission_classes = []
 
+    @extend_schema(
+        summary="Primeiro Acesso / Redefinição de Senha",
+        description="Permite que o aluno altere a senha temporária no primeiro acesso ao sistema.",
+        request=PrimeiroAcessoRequestSerializer,
+        responses={
+            200: MessageResponseSerializer,
+            400: MessageResponseSerializer,
+            401: MessageResponseSerializer,
+            404: MessageResponseSerializer
+        }
+    )
     def post(self, request: Request):
         usuario = request.data.get('username')
         senha_atual = request.data.get('old_password')
