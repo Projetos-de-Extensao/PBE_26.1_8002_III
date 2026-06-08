@@ -12,9 +12,10 @@ from .models import Aluno, Processo, Secretaria, Coordenador
 from .permissions import IsSecretaria, IsAluno, IsCoordenador
 from .services.email_service import EmailNotificationService
 from core.enums import Veredito, StatusContrato, StatusRelatorio
+from .tasks import processarContratoComIa
 
 class AlunoAPIView(APIView):
-    permission_classes = [IsAluno | IsSecretaria]
+    permission_classes = []
 
     @extend_schema(
         parameters=[
@@ -183,6 +184,11 @@ class ProcessoAPIView(APIView):
 class ProcessoDetailAPIView(APIView):
     permission_classes = [IsAluno | IsCoordenador | IsSecretaria]
 
+    @extend_schema(
+        summary="Detalhes do Processo de Estágio",
+        description="Retorna informações detalhadas de um processo de estágio pelo ID, incluindo histórico de avaliações, contratos e relatórios.",
+        responses={200: ProcessoDetailSerializer}
+    )
     def get(self, request, id, *args, **kwargs):
         print(id)
         processo = get_object_or_404(
@@ -214,6 +220,8 @@ class UploadContrato(APIView):
         
         contrato = serializer.save(processoId=processo)
         
+        processarContratoComIa.delay(contrato.id)
+
         aluno = contrato.processoId.aluno
         email_secretaria = "secretaria@ibmec.edu.br" 
 
