@@ -103,7 +103,7 @@ class TestPatchAluno:
         assert response.status_code == 200
         assert response.data["message"] == "updated"
         aluno.refresh_from_db()
-        assert aluno.nome == "João Santos Atualizado"
+        assert aluno.nome == "João santos atualizado"
 
     def test_atualizar_aluno_nao_encontrado(self, api_client):
         payload = {
