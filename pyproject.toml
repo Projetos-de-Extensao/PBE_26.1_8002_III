@@ -56,4 +56,6 @@ dependencies = [
     "pypdf>=6.12.2",
     "python-dotenv>=1.2.2",
     "thefuzz>=0.22.1",
+    "google-genai>=2.8.0",
+    "celery>=5.4.0",
 ]
