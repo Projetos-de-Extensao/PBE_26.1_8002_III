@@ -1,7 +1,8 @@
 import pytest
+from datetime import date, timedelta
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
-from core.validators import validar_email_institucional, validar_cpf
+from core.validators import validar_email_institucional, validar_cpf, valida_carga_horaria, valida_limite_formatura, valida_retroatividade
 from core.services.validacao_arquivos import validar_pdf_e_tamanho_seguro
 
 class TestValidarEmailInstitucional:
@@ -134,3 +135,131 @@ class TestValidarPDFETamanhoSeguro:
         
         # Se o ponteiro foi resetado corretamente, ler novamente deve retornar o conteúdo desde o início
         assert arquivo_fake.file.read() == conteudo
+
+
+class TestValidarCargaHoraria:
+    """
+    Testes para o validador de carga horária:
+    valida_carga_horaria(contrato)
+    """
+
+    class MockContrato:
+        def __init__(self, horas_diarias, horas_semanais):
+            self.horas_diarias = horas_diarias
+            self.horas_semanais = horas_semanais
+
+    def test_carga_horaria_dentro_do_limite(self):
+        # Horas dentro do permitido pela Lei 11.788 devem passar
+        contrato = self.MockContrato(horas_diarias=6, horas_semanais=30)
+        assert valida_carga_horaria(contrato) is True
+
+    def test_carga_horaria_abaixo_do_limite(self):
+        # Horas abaixo do limite devem passar
+        contrato = self.MockContrato(horas_diarias=4, horas_semanais=20)
+        assert valida_carga_horaria(contrato) is True
+
+    def test_horas_diarias_acima_do_limite(self):
+        # Horas diárias acima de 6 devem falhar
+        contrato = self.MockContrato(horas_diarias=7, horas_semanais=30)
+        assert valida_carga_horaria(contrato) is False
+
+    def test_horas_semanais_acima_do_limite(self):
+        # Horas semanais acima de 30 devem falhar
+        contrato = self.MockContrato(horas_diarias=6, horas_semanais=31)
+        assert valida_carga_horaria(contrato) is False
+
+    def test_ambas_acima_do_limite(self):
+        # Ambas acima do limite devem falhar
+        contrato = self.MockContrato(horas_diarias=8, horas_semanais=40)
+        assert valida_carga_horaria(contrato) is False
+
+    def test_campos_none_devem_passar(self):
+        # Campos não preenchidos não devem bloquear
+        contrato = self.MockContrato(horas_diarias=None, horas_semanais=None)
+        assert valida_carga_horaria(contrato) is True
+
+
+class TestValidarLimiteFormatura:
+    """
+    Testes para o validador de limite de formatura:
+    valida_limite_formatura(contrato, aluno)
+    """
+
+    class MockContrato:
+        def __init__(self, data_termino):
+            self.data_termino = data_termino
+
+    class MockAluno:
+        def __init__(self, data_previsao_formatura):
+            self.data_previsao_formatura = data_previsao_formatura
+
+    def test_data_termino_antes_da_formatura(self):
+        # Data de término antes da previsão de formatura deve passar
+        contrato = self.MockContrato(data_termino=date(2026, 6, 1))
+        aluno = self.MockAluno(data_previsao_formatura=date(2026, 12, 1))
+        assert valida_limite_formatura(contrato, aluno) is True
+
+    def test_data_termino_igual_a_formatura(self):
+        # Data de término igual à previsão de formatura deve passar
+        contrato = self.MockContrato(data_termino=date(2026, 12, 1))
+        aluno = self.MockAluno(data_previsao_formatura=date(2026, 12, 1))
+        assert valida_limite_formatura(contrato, aluno) is True
+
+    def test_data_termino_depois_da_formatura(self):
+        # Data de término após a previsão de formatura deve falhar
+        contrato = self.MockContrato(data_termino=date(2027, 1, 1))
+        aluno = self.MockAluno(data_previsao_formatura=date(2026, 12, 1))
+        assert valida_limite_formatura(contrato, aluno) is False
+
+    def test_campos_none_devem_passar(self):
+        # Campos não preenchidos não devem bloquear
+        contrato = self.MockContrato(data_termino=None)
+        aluno = self.MockAluno(data_previsao_formatura=None)
+        assert valida_limite_formatura(contrato, aluno) is True
+
+    def test_previsao_formatura_none_deve_passar(self):
+        # Previsão de formatura não preenchida não deve bloquear
+        contrato = self.MockContrato(data_termino=date(2026, 12, 1))
+        aluno = self.MockAluno(data_previsao_formatura=None)
+        assert valida_limite_formatura(contrato, aluno) is True
+
+
+class TestValidarRetroatividade:
+    """
+    Testes para o validador de retroatividade:
+    valida_retroatividade(contrato)
+    """
+
+    class MockContrato:
+        def __init__(self, data_inicio):
+            self.data_inicio = data_inicio
+
+    def test_data_inicio_recente(self):
+        # Data de início de 10 dias atrás deve passar
+        contrato = self.MockContrato(data_inicio=date.today() - timedelta(days=10))
+        assert valida_retroatividade(contrato) is True
+
+    def test_data_inicio_exatamente_30_dias(self):
+        # Data de início de exatamente 30 dias atrás deve passar (limite)
+        contrato = self.MockContrato(data_inicio=date.today() - timedelta(days=30))
+        assert valida_retroatividade(contrato) is True
+
+    def test_data_inicio_mais_de_30_dias(self):
+        # Data de início de mais de 30 dias atrás deve falhar
+        contrato = self.MockContrato(data_inicio=date.today() - timedelta(days=31))
+        assert valida_retroatividade(contrato) is False
+
+    def test_data_inicio_muito_retroativa(self):
+        # Data de início de 90 dias atrás deve falhar
+        contrato = self.MockContrato(data_inicio=date.today() - timedelta(days=90))
+        assert valida_retroatividade(contrato) is False
+
+    def test_data_inicio_futura(self):
+        # Data de início futura deve passar
+        contrato = self.MockContrato(data_inicio=date.today() + timedelta(days=10))
+        assert valida_retroatividade(contrato) is True
+
+    def test_campo_none_deve_passar(self):
+        # Campo não preenchido não deve bloquear
+        contrato = self.MockContrato(data_inicio=None)
+        assert valida_retroatividade(contrato) is True

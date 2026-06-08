@@ -34,6 +34,7 @@ class Aluno(Usuario):
     periodo = models.IntegerField(choices=Periodo, default = Periodo.PRIMEIRO )
     curso = models.ForeignKey("Curso", on_delete=models.CASCADE)
     unidade = models.CharField(max_length=15, choices=Unidade)
+    data_previsao_formatura = models.DateField(verbose_name="Data de previsão de formatura", null=True, blank=True)
 
     class Meta:
         verbose_name = "Aluno"
@@ -122,6 +123,8 @@ class Contrato(models.Model):
     nome_empresa = models.CharField(max_length=255, verbose_name="Nome da empresa",null=True,blank=True)
     data_inicio = models.DateField(verbose_name="Data de Início",null=True,blank=True)   
     data_termino = models.DateField(verbose_name="Data de Término",null=True,blank=True)
+    horas_diarias = models.IntegerField(verbose_name="Horas diárias",null=True,blank=True)
+    horas_semanais = models.IntegerField(verbose_name="Horas semanais",null=True,blank=True)
     apolice_seguro = models.CharField(max_length=100, verbose_name="Apólice de Seguro",null=True,blank=True)
     plano_atividade = models.BooleanField(default=False, verbose_name="Plano de Atividade",null=True,blank=True)
     assinatura_aluno = models.BooleanField(default=False, verbose_name="Assinatura do Aluno",null=True,blank=True)

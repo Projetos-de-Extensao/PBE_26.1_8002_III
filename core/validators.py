@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
+from datetime import date
 import re
 
 
@@ -90,3 +91,42 @@ def valida_periodo_relatorio(relatorio, contrato):
         else:
             return True
 
+
+def valida_carga_horaria(contrato):
+        horas_diarias = contrato.horas_diarias
+        horas_semanais = contrato.horas_semanais
+
+        if horas_diarias is None or horas_semanais is None:
+            return True
+
+        if horas_diarias > 6 or horas_semanais > 30:
+            return False
+        
+        return True
+
+
+def valida_limite_formatura(contrato, aluno):
+        data_termino = contrato.data_termino
+        data_previsao_formatura = aluno.data_previsao_formatura
+
+        if data_termino is None or data_previsao_formatura is None:
+            return True
+
+        if data_termino > data_previsao_formatura:
+            return False
+        
+        return True
+
+
+def valida_retroatividade(contrato):
+        data_inicio = contrato.data_inicio
+
+        if data_inicio is None:
+            return True
+
+        diferenca = (date.today() - data_inicio).days
+
+        if diferenca > 30:
+            return False
+        
+        return True

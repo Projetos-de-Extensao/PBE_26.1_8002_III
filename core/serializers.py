@@ -7,7 +7,7 @@ from .enums import *
 from .validators import validar_email_institucional
 from .enums import StatusProcesso
 from .services.ler_extrair_infos_pdf import ler_pdf_modo_layout, extrair_infos 
-from .validators import valida_periodo_relatorio
+from .validators import valida_periodo_relatorio, valida_carga_horaria, valida_limite_formatura, valida_retroatividade
 from datetime import datetime
 from django.shortcuts import get_object_or_404
 
@@ -164,6 +164,24 @@ class ContratoSerializer(serializers.ModelSerializer):
                     
             extra_data["apolice_seguro"] = infos.get("apolice_seguro", "")
             
+        # Cria instância temporária em memória para validar
+        contrato_temp = Contrato(**validated_data, **extra_data)
+
+        # Validação #172 — Carga horária (Lei 11.788)
+        if not valida_carga_horaria(contrato_temp):
+            raise serializers.ValidationError({"carga_horaria": "Carga horária excede o limite da Lei 11.788 (máx. 6h/dia e 30h/semana)."})
+
+        # Validação #176 — Retroatividade
+        if not valida_retroatividade(contrato_temp):
+            raise serializers.ValidationError({"data_inicio": "O TCE não pode ser submetido com mais de 30 dias de retroatividade."})
+
+        # Validação #175 — Limite de formatura
+        processo = validated_data.get('processoId')
+        if processo:
+            aluno = processo.aluno
+            if not valida_limite_formatura(contrato_temp, aluno):
+                raise serializers.ValidationError({"data_termino": "A data de término do contrato ultrapassa a previsão de formatura do aluno."})
+
         contrato = Contrato.objects.create(
             **validated_data,
             **extra_data
