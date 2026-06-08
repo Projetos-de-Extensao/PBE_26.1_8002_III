@@ -85,14 +85,6 @@ Esta forma inicializa automaticamente todos os serviços necessários em paralel
    * **API Django & Swagger UI (Documentação):** [http://localhost:8000/api/docs/](http://localhost:8000/api/docs/)
    * **Painel Administrativo do RabbitMQ:** [http://localhost:15672/](http://localhost:15672/) (Login: `guest` / Senha: `guest`)
 
-5. **Executar o Script de Teste Integrado (E2E):**
-   Com os containers rodando, abra outro terminal e execute o fluxo completo de teste (criação de usuário, login, processo e upload do TCE):
-   ```bash
-   docker compose exec web uv run python test_api_flow.py
-   ```
-
----
-
 ### Método 2: Execução Local (Desenvolvimento Manual)
 
 #### Pré-requisitos:
