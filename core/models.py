@@ -177,3 +177,19 @@ class HistoricoAvaliacaoContrato(HistoricoAvaliacao):
     def delete(self,*args,**kwargs):
         raise ProtectedError("Histórico de Justificativas não pode ser alterado ou deletado.")
 
+
+
+class Horarios(models.Model):
+    periodo = models.CharField(max_length = 12,choices=Periodo)
+    dia = models.CharField(max_length = 20,choices = DiasDaSemana)
+    hora_inicio = models.TimeField(verbose_name="Hora de Início")
+    hora_fim = models.TimeField(verbose_name="Hora de Término")
+    aluno = models.OneToOneField(Aluno, on_delete=models.CASCADE)
+
+
+    class Meta:
+        verbose_name = "Grade Horária"
+        verbose_name_plural = "Grades Horárias"
+    
+    def __str__(self):
+        return f"{self.aluno} - {self.dia} - {self.periodo}"

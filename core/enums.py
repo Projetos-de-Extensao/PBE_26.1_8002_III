@@ -54,3 +54,12 @@ class Periodo(models.IntegerChoices):
 class Veredito(models.TextChoices):
     APROVADO = 'aprovado', 'Aprovado'
     REPROVADO = 'reprovado', 'Reprovado'
+
+
+class DiasDaSemana(models.TextChoices):
+    SEGUNDA = 'segunda', 'Segunda-Feira'
+    TERCA = 'terca', 'Terça-Feira'
+    QUARTA = 'quarta', 'Quarta-Feira'
+    QUINTA = 'quinta', 'Quinta-Feira'
+    SEXTA = 'sexta', 'Sexta-Feira'
+    SABADO = 'sabado', 'Sábado'
