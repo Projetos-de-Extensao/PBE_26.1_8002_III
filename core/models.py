@@ -1,4 +1,5 @@
 
+from django.db.models import ProtectedError
 from core.enums import StatusRelatorio
 from django.template.defaultfilters import default
 import email
@@ -113,8 +114,6 @@ class Processo(models.Model):
         return self.nome_processo
 
 
-
-
 class Contrato(models.Model):
     arquivo = models.FileField(upload_to=upload_contrato_path,verbose_name="Arquivo", validators=[validar_pdf_e_tamanho_seguro])
     data_upload = models.DateField(verbose_name="Data de Upload", default=timezone.now)
@@ -157,7 +156,7 @@ class HistoricoAvaliacao(models.Model):
     observacoes = models.TextField(verbose_name="Observações")
     data_avaliacao = models.DateField(verbose_name="Data de avaliação",default=timezone.now)
     veredito = models.CharField(max_length=20,choices=Veredito,verbose_name="Veredito")
-    
+
     class Meta:
         abstract = True
         
@@ -166,6 +165,15 @@ class HistoricoAvaliacaoRelatorio(HistoricoAvaliacao):
     avaliador = models.ForeignKey(Coordenador, on_delete=models.PROTECT)
     relatorio_id = models.OneToOneField(Relatorio, on_delete=models.CASCADE)
 
+    def delete(self,*args,**kwargs):
+        raise ProtectedError("Histórico de Justificativas não pode ser alterado ou deletado.")
+
+
+
 class HistoricoAvaliacaoContrato(HistoricoAvaliacao):
     avaliador = models.ForeignKey(Secretaria, on_delete=models.PROTECT)
     contrato_id = models.OneToOneField(Contrato, on_delete=models.CASCADE)
+
+    def delete(self,*args,**kwargs):
+        raise ProtectedError("Histórico de Justificativas não pode ser alterado ou deletado.")
+
