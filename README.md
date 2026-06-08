@@ -47,63 +47,102 @@ Atualmente, o processo de estágio envolve diversas tarefas manuais, burocrátic
 
 ## 🚀 Como Executar
 
-### 1. Instalar o `uv`
+O projeto pode ser executado de duas formas: através de **Containers (Docker Compose)** ou **Localmente (desenvolvimento manual)**.
 
-O projeto utiliza o [**uv**](https://docs.astral.sh/uv/) como gerenciador de pacotes e ambientes virtuais.
+---
 
-**Windows (PowerShell):**
+### Método 1: Utilizando Docker Compose (Recomendado)
 
-```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
+Esta forma inicializa automaticamente todos os serviços necessários em paralelo (Django API, RabbitMQ Broker e Celery Worker).
 
-**Linux / macOS (wget):**
+#### Pré-requisitos:
+* [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado e rodando em sua máquina.
 
-```bash
-wget -qO- https://astral.sh/uv/install.sh | sh
-```
+#### Passo a Passo:
 
-**Linux / macOS (curl):**
+1. **Clonar o repositório:**
+   ```bash
+   git clone https://github.com/Projetos-de-Extensao/PBE_26.1_8002_III.git
+   cd PBE_26.1_8002_III
+   ```
 
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
+2. **Configurar as Variáveis de Ambiente:**
+   Duplique o arquivo `.env.example`, salve como `.env` e preencha com sua chave de API do Gemini:
+   ```bash
+   cp .env.example .env
+   ```
+   Abra o arquivo `.env` e insira sua chave:
+   ```env
+   GEMINI_API_KEY=sua_chave_aqui
+   ```
 
-> Após a instalação, reinicie o terminal para que o comando `uv` fique disponível no PATH.
+3. **Subir os containers:**
+   ```bash
+   docker compose up --build
+   ```
 
-### 2. Clonar o repositório
+4. **Acessar as plataformas:**
+   * **API Django & Swagger UI (Documentação):** [http://localhost:8000/api/docs/](http://localhost:8000/api/docs/)
+   * **Painel Administrativo do RabbitMQ:** [http://localhost:15672/](http://localhost:15672/) (Login: `guest` / Senha: `guest`)
 
-```bash
-git clone https://github.com/Projetos-de-Extensao/PBE_26.1_8002_III.git
-cd PBE_26.1_8002_III
-```
+5. **Executar o Script de Teste Integrado (E2E):**
+   Com os containers rodando, abra outro terminal e execute o fluxo completo de teste (criação de usuário, login, processo e upload do TCE):
+   ```bash
+   docker compose exec web uv run python test_api_flow.py
+   ```
 
-### 3. Instalar dependências
+---
 
-O `uv` cria o ambiente virtual automaticamente e instala tudo que está no `pyproject.toml`:
+### Método 2: Execução Local (Desenvolvimento Manual)
 
-```bash
-uv sync
-```
+#### Pré-requisitos:
+* Ter o **RabbitMQ** instalado e rodando localmente no host na porta `5672`.
 
-### 4. Executar o servidor Django
+#### Passo a Passo:
 
-```bash
-uv run python manage.py migrate
-uv run python manage.py runserver
-```
+1. **Instalar o `uv`** (gerenciador de pacotes rápido e moderno):
+   * **Windows (PowerShell):**
+     ```powershell
+     powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+     ```
+   * **Linux / macOS (curl):**
+     ```bash
+     curl -LsSf https://astral.sh/uv/install.sh | sh
+     ```
+   *(Reinicie o terminal após instalar o uv).*
 
-### 5. Rodar a documentação localmente
+2. **Instalar as dependências e criar o ambiente virtual:**
+   ```bash
+   uv sync
+   ```
 
-```bash
-uv run mkdocs serve
-```
+3. **Configurar as variáveis de ambiente:**
+   Copie `.env.example` para `.env` e adicione a sua `GEMINI_API_KEY`.
 
-### 6. Rodar os testes
+4. **Rodar as migrações do banco de dados:**
+   ```bash
+   uv run python manage.py migrate
+   ```
 
-```bash
-uv run pytest
-```
+5. **Executar o servidor de desenvolvimento Django:**
+   ```bash
+   uv run python manage.py runserver
+   ```
+
+6. **Executar o Worker do Celery** (em outro terminal):
+   ```bash
+   uv run celery -A setup worker -l info
+   ```
+
+7. **Rodar a documentação local (MkDocs):**
+   ```bash
+   uv run mkdocs serve
+   ```
+
+8. **Rodar os testes unitários:**
+   ```bash
+   uv run pytest
+   ```
 
 ---
 
