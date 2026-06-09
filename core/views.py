@@ -15,13 +15,13 @@ from core.enums import Veredito, StatusContrato, StatusRelatorio
 from .tasks import processarContratoComIa
 
 class AlunoAPIView(APIView):
-    permission_classes = []
+    permission_classes = [IsSecretaria | IsCoordenador]
 
     @extend_schema(
         parameters=[
             OpenApiParameter(name='matricula', description='Filtra por matrícula do aluno', required=False, type=str),
-            OpenApiParameter(name='nome', description='Filtra por nome (busca parcial). Nomes deve ser separados por + em caso de nome composto ou sobrenomes.', required=False, type=str),
-            OpenApiParameter(name='cpf', description='Filtra por CPF do aluno', required=False, type=str)
+            OpenApiParameter(name='nome', description='Filtra por nome (busca parcial)', required=False, type=str),
+            OpenApiParameter(name='cpf', description='Filtra por CPF', required=False, type=str)
         ],
         responses={200: AlunoSerializer(many=True)}
     )
@@ -31,16 +31,20 @@ class AlunoAPIView(APIView):
         cpf = request.query_params.get('cpf')
         nome = request.query_params.get('nome')
 
-        data = data.filter(matricula=matricula) if matricula is not None else data
-        data = data.filter(cpf=cpf) if cpf is not None else data
-        data = data.filter(nome__icontains=nome) if nome is not None else data
-
+        if matricula:
+            data = data.filter(matricula=matricula)
+        if cpf:
+            data = data.filter(cpf=cpf)
+        if nome:
+            termos_da_busca = nome.split()
+            for termo in termos_da_busca:
+                data = data.filter(nome__icontains=termo)
 
         if not data.exists():
             return Response(
                 {
                     "mensagem": "Nenhum aluno encontrado com os dados informados.",
-                    "sugestao": "Tente buscar apenas pelo primeiro nome ou limpe os filtros e tente novamente.",
+                    "sugestao": "Tente buscar apenas pelo primeiro nome ou limpe os filtros.",
                     "resultados": []
                 }, 
                 status=status.HTTP_200_OK
@@ -51,10 +55,7 @@ class AlunoAPIView(APIView):
         serializer = AlunoSerializer(paginated_data, many=True)
         return paginator.get_paginated_response(serializer.data)
 
-    @extend_schema(
-        request=AlunoSerializer,
-        responses={201: AlunoSerializer}
-    )
+    @extend_schema(request=AlunoSerializer, responses={201: AlunoSerializer})
     def post(self, request, *args, **kwargs):
         parsed_data = request.data
         serializer = AlunoSerializer(data=parsed_data)
@@ -63,15 +64,13 @@ class AlunoAPIView(APIView):
         return Response({"message": "Aluno criado com sucesso!"}, status=status.HTTP_201_CREATED)
 
     @extend_schema(
-        parameters=[
-            OpenApiParameter(name='matricula_aluno', description='Matrícula do aluno a ser atualizado', required=True, type=str)
-        ],
+        parameters=[OpenApiParameter(name='matricula_aluno', required=True, type=str)],
         request=AlunoSerializer,
         responses={200: AlunoSerializer}
     )
     def patch(self, request, *args, **kwargs):
         parsed_data = request.data
-        matricula = request.query_params.get('matricula_aluno', None)
+        matricula = request.query_params.get('matricula_aluno')
         if matricula:
             try:
                 old_data = Aluno.objects.get(matricula=matricula)
@@ -82,8 +81,7 @@ class AlunoAPIView(APIView):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response({"message": "updated"}, status=status.HTTP_200_OK)
-        else:
-            return Response({"error": "Matrícula não informada"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "Matrícula não informada"}, status=status.HTTP_400_BAD_REQUEST)
 class ProcessoAPIView(APIView):
     permission_classes = []
 
