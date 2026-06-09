@@ -297,8 +297,11 @@ class UploadRelatorio(APIView):
             nome_aluno=aluno.nome, 
             nome_documento="Relatório de Estágio"
         )
-        
-        return Response({"message": "Relatório enviado e coordenação notificada."}, status=status.HTTP_201_CREATED)
+        response_data = {"message": "Relatório enviado e coordenação notificada."}
+        if relatorio.fora_do_prazo:
+            response_data["alerta"] = "Relatório enviado fora do prazo."
+            
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
 class AvaliarRelatorioAPIView(APIView):
     permission_classes = [IsCoordenador] 
