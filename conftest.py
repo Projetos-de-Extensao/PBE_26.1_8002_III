@@ -15,10 +15,11 @@ from core.models import (
     Area, Curso, Aluno, Coordenador, Secretaria,
     Processo, Contrato, Relatorio,
     HistoricoAvaliacaoRelatorio, HistoricoAvaliacaoContrato,
+    Horarios,
 )
 from core.enums import (
     Unidade, Periodo, StatusProcesso, StatusContrato,
-    StatusRelatorio, Veredito,
+    StatusRelatorio, Veredito, Turno, DiasDaSemana,
 )
 
 
@@ -38,7 +39,7 @@ def api_client():
     Esses registros são exclusivos do client — não conflitam com
     as fixtures de model (que usam emails diferentes).
     """
-    EMAIL_TEST = "testuser@test.com"
+    EMAIL_TEST = "testuser@ibmec.edu.br"
 
     # User do Django (necessário para autenticação)
     user = User.objects.create_user(
@@ -47,22 +48,26 @@ def api_client():
         password="test1234",
     )
 
-    # Registros para satisfazer cada permissão customizada
-    area_test = Area.objects.create(nome="TestArea")
+    # Coordenador precisa existir antes de Area (Area.coordenador é OneToOne)
+    coord_test = Coordenador.objects.create(
+        matricula="TEST0003",
+        nome="Test User",
+        email=EMAIL_TEST,
+        senha="test",
+        unidade=Unidade.BARRA.value,
+    )
+
+    area_test = Area.objects.create(nome="TestArea", coordenador=coord_test)
     curso_test = Curso.objects.create(nome="TestCurso", areaId=area_test)
 
     Aluno.objects.create(
         matricula="TEST0001", nome="Test User", email=EMAIL_TEST,
-        senha="test", cpf="000.000.000-00", unidade=Unidade.BARRA.value,
+        senha="test", cpf="45678912364", unidade=Unidade.BARRA.value,
         curso=curso_test,
     )
     Secretaria.objects.create(
         matricula="TEST0002", nome="Test User", email=EMAIL_TEST,
         senha="test", unidade=Unidade.BARRA.value,
-    )
-    Coordenador.objects.create(
-        matricula="TEST0003", nome="Test User", email=EMAIL_TEST,
-        senha="test", unidade=Unidade.BARRA.value, areaId=area_test,
     )
 
     import jwt
@@ -73,12 +78,26 @@ def api_client():
     client.force_authenticate(user=user)
     return client
 
-# ── Models independentes ──────────────────────────────────────────────
+# ── Coordenador (sem FK extra) ───────────────────────────────────────
 
 @pytest.fixture
-def area():
-    """Cria uma Area."""
-    return Area.objects.create(nome="Exatas")
+def coordenador():
+    """Cria um Coordenador."""
+    return Coordenador.objects.create(
+        matricula="COORD0001",
+        nome="Prof. Orientador",
+        email="coordenador@ibmec.edu.br",
+        senha="senha123",
+        unidade=Unidade.BOTAFOGO.value,
+    )
+
+
+# ── Area (depende de Coordenador via OneToOne) ───────────────────────
+
+@pytest.fixture
+def area(coordenador):
+    """Cria uma Area (depende de Coordenador via OneToOne)."""
+    return Area.objects.create(nome="Exatas", coordenador=coordenador)
 
 
 # ── Models que dependem de Area ───────────────────────────────────────
@@ -89,19 +108,6 @@ def curso(area):
     return Curso.objects.create(nome="ADS", areaId=area)
 
 
-@pytest.fixture
-def coordenador(area):
-    """Cria um Coordenador (depende de Area via FK)."""
-    return Coordenador.objects.create(
-        matricula="COORD0001",
-        nome="Prof. Orientador",
-        email="coordenador@email.com",
-        senha="senha123",
-        unidade=Unidade.BOTAFOGO.value,
-        areaId=area,
-    )
-
-
 # ── Models que dependem de Curso ──────────────────────────────────────
 
 @pytest.fixture
@@ -110,9 +116,9 @@ def aluno(curso):
     return Aluno.objects.create(
         matricula="20260001",
         nome="João Santos",
-        email="joao@email.com",
+        email="joao@ibmec.edu.br",
         senha="senha456",
-        cpf="987.654.321-00",
+        cpf="12345678909",
         is_ativo=True,
         unidade=Unidade.BOTAFOGO.value,
         periodo=Periodo.TERCEIRO,
@@ -128,31 +134,35 @@ def secretaria():
     return Secretaria.objects.create(
         matricula="SEC0001",
         nome="Ana Secretaria",
-        email="secretaria@email.com",
+        email="secretaria@ibmec.edu.br",
         senha="senha789",
         unidade=Unidade.BARRA.value,
     )
 
 
-# ── Processo (depende de Aluno) ──────────────────────────────────────
+# ── Processo (depende de Aluno, Coordenador e Secretaria) ────────────
 
 @pytest.fixture
-def processo(aluno):
-    """Cria um Processo (depende de Aluno via FK)."""
+def processo(aluno, coordenador, secretaria):
+    """Cria um Processo (depende de Aluno, Coordenador e Secretaria via FK)."""
     return Processo.objects.create(
         nome_empresa="Empresa Teste LTDA",
         status=StatusProcesso.ABERTO,
-        matricula_aluno=aluno,
+        aluno=aluno,
+        coordenacao=coordenador,
+        secretaria=secretaria,
     )
 
 
 @pytest.fixture
-def processo_concluido(aluno):
-    """Cria um Processo concluído/encerrado (depende de Aluno via FK)."""
+def processo_concluido(aluno, coordenador, secretaria):
+    """Cria um Processo concluído (depende de Aluno, Coordenador e Secretaria)."""
     return Processo.objects.create(
         nome_empresa="Empresa Antiga LTDA",
         status=StatusProcesso.CONCLUIDO,
-        matricula_aluno=aluno,
+        aluno=aluno,
+        coordenacao=coordenador,
+        secretaria=secretaria,
     )
 
 
@@ -217,4 +227,37 @@ def historico_avaliacao_contrato(secretaria, contrato):
         veredito=Veredito.APROVADO,
         avaliador=secretaria,
         contrato_id=contrato,
+        justificativa="Documentação em ordem.",
     )
+
+
+# ── Horários ─────────────────────────────────────────────────────────
+
+@pytest.fixture
+def horario_segunda_manha():
+    """Cria um Horario: Segunda - Manhã."""
+    return Horarios.objects.create(dia=DiasDaSemana.SEGUNDA, turno=Turno.MANHA)
+
+
+@pytest.fixture
+def horario_segunda_tarde():
+    """Cria um Horario: Segunda - Tarde."""
+    return Horarios.objects.create(dia=DiasDaSemana.SEGUNDA, turno=Turno.TARDE)
+
+
+@pytest.fixture
+def horario_terca_noite():
+    """Cria um Horario: Terça - Noite."""
+    return Horarios.objects.create(dia=DiasDaSemana.TERCA, turno=Turno.NOITE)
+
+
+@pytest.fixture
+def horario_quarta_manha():
+    """Cria um Horario: Quarta - Manhã."""
+    return Horarios.objects.create(dia=DiasDaSemana.QUARTA, turno=Turno.MANHA)
+
+
+@pytest.fixture
+def horario_quinta_tarde():
+    """Cria um Horario: Quinta - Tarde."""
+    return Horarios.objects.create(dia=DiasDaSemana.QUINTA, turno=Turno.TARDE)

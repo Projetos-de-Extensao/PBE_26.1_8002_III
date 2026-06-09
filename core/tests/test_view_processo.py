@@ -7,12 +7,14 @@ from core.serializers import *
 
 
 @pytest.fixture
-def processo2(aluno):
+def processo2(aluno, coordenador, secretaria):
     """Retorna um payload de Processo secundário válido."""
     return {
         "nome_empresa": "Empresa 2 LTDA",
         "status": StatusProcesso.ABERTO.value,
         "matricula_aluno": aluno.matricula,
+        "matricula_secretaria": secretaria.matricula,
+        "matricula_coordenacao": coordenador.matricula,
     }
 
 
@@ -31,7 +33,7 @@ class TestPostProcesso:
         resp = api_client.post('/processo/',processo2)
         matricula_aluno = processo2['matricula_aluno']
         processos = Processo.objects.all()
-        ultimo_processo = processos.filter(matricula_aluno=matricula_aluno, status=StatusProcesso.ABERTO)
+        ultimo_processo = processos.filter(aluno=aluno, status=StatusProcesso.ABERTO)
 
         assert resp.status_code == 400
         assert ultimo_processo.exists() == True
@@ -42,7 +44,7 @@ class TestPostProcesso:
 class TestGetProcesso:
 
     def test_pesquisar_processo_matricula(self, api_client, processo):
-        response = api_client.get('/processo/', {'matricula_aluno': processo.matricula_aluno.matricula})
+        response = api_client.get('/processo/', {'matricula_aluno': processo.aluno.matricula})
         assert response.status_code == 200
         data = response.data['results']
         assert len(data) == 1

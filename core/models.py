@@ -35,6 +35,7 @@ class Aluno(Usuario):
     periodo = models.IntegerField(choices=Periodo, default = Periodo.PRIMEIRO )
     curso = models.ForeignKey("Curso", on_delete=models.CASCADE)
     unidade = models.CharField(max_length=15, choices=Unidade)
+    grade = models.ManyToManyField('Horarios',db_table='grade_horaria')
 
     class Meta:
         verbose_name = "Aluno"
@@ -65,8 +66,6 @@ class Coordenador(Usuario):
     def __str__(self):
         return self.nome
 
-
-
 class Secretaria(Usuario):
     class Meta:
         verbose_name = "Secretária"
@@ -74,9 +73,6 @@ class Secretaria(Usuario):
 
     def __str__(self):
         return self.nome
-
-
-
 
 class Curso(models.Model):
     nome = models.CharField(max_length=40, verbose_name="Nome")
@@ -113,7 +109,6 @@ class Processo(models.Model):
     def __str__(self):
         return self.nome_processo
 
-
 class Contrato(models.Model):
     arquivo = models.FileField(upload_to=upload_contrato_path,verbose_name="Arquivo", validators=[validar_pdf_e_tamanho_seguro])
     data_upload = models.DateField(verbose_name="Data de Upload", default=timezone.now)
@@ -123,6 +118,7 @@ class Contrato(models.Model):
     data_termino = models.DateField(verbose_name="Data de Término",null=True,blank=True)
     apolice_seguro = models.CharField(max_length=100, verbose_name="Apólice de Seguro",null=True,blank=True)
     plano_atividade = models.BooleanField(default=False, verbose_name="Plano de Atividade",null=True,blank=True)
+    horarios_atividade = models.ManyToManyField('Horarios',db_table='horarios_contrato')
     assinatura_aluno = models.BooleanField(default=False, verbose_name="Assinatura do Aluno",null=True,blank=True)
     assinatura_empresa = models.BooleanField(default=False, verbose_name="Assinatura da Empresa",null=True,blank=True)
     assinatura_faculdade = models.BooleanField(default=False, verbose_name="Assinatura da Faculdade",null=True,blank=True)
@@ -140,7 +136,6 @@ class Contrato(models.Model):
     
     def __str__(self):
         return self.nome_contrato
-
 
 class Relatorio(models.Model):
     processo_id = models.ForeignKey(Processo, on_delete= models.CASCADE)
@@ -161,7 +156,6 @@ class HistoricoAvaliacao(models.Model):
     class Meta:
         abstract = True
         
-
 class HistoricoAvaliacaoRelatorio(HistoricoAvaliacao):
     avaliador = models.ForeignKey(Coordenador, on_delete=models.PROTECT)
     relatorio_id = models.OneToOneField(Relatorio, on_delete=models.CASCADE)
@@ -169,12 +163,21 @@ class HistoricoAvaliacaoRelatorio(HistoricoAvaliacao):
     def delete(self,*args,**kwargs):
         raise ProtectedError("Histórico de Justificativas não pode ser alterado ou deletado.")
 
-
-
 class HistoricoAvaliacaoContrato(HistoricoAvaliacao):
     avaliador = models.ForeignKey(Secretaria, on_delete=models.PROTECT)
     contrato_id = models.OneToOneField(Contrato, on_delete=models.CASCADE)
+    justificativa = models.CharField(max_length=200,verbose_name="Justificativa")
 
     def delete(self,*args,**kwargs):
         raise ProtectedError("Histórico de Justificativas não pode ser alterado ou deletado.")
 
+class Horarios(models.Model):
+    turno = models.CharField(max_length = 12,choices=Turno)
+    dia = models.CharField(max_length = 20,choices = DiasDaSemana)
+
+    class Meta:
+        verbose_name = "Grade Horária"
+        verbose_name_plural = "Grades Horárias"
+    
+    def __str__(self):
+        return f"{self.aluno} - {self.dia} - {self.periodo}"
