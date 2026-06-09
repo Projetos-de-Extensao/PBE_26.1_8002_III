@@ -83,7 +83,7 @@ class AlunoAPIView(APIView):
             return Response({"message": "updated"}, status=status.HTTP_200_OK)
         return Response({"error": "Matrícula não informada"}, status=status.HTTP_400_BAD_REQUEST)
 class ProcessoAPIView(APIView):
-    permission_classes = []
+    permission_classes = [IsAluno | IsSecretaria | IsCoordenador]
 
     @extend_schema(
         parameters=[
