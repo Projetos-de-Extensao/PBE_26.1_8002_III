@@ -6,13 +6,12 @@ from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from .serializers import *
-from .models import Aluno, Processo, Secretaria, Coordenador
+from .models import Aluno, Processo
 from .permissions import IsSecretaria, IsAluno, IsCoordenador
 from .services.email_service import EmailNotificationService
 from core.enums import Veredito, StatusContrato, StatusRelatorio
-from .tasks import processarContratoComIa
 
 class AlunoAPIView(APIView):
     permission_classes = [IsSecretaria | IsCoordenador]
@@ -20,23 +19,20 @@ class AlunoAPIView(APIView):
     @extend_schema(
         parameters=[
             OpenApiParameter(name='matricula', description='Filtra por matrícula do aluno', required=False, type=str),
-            OpenApiParameter(name='nome', description='Filtra por nome (busca parcial)', required=False, type=str),
-            OpenApiParameter(name='cpf', description='Filtra por CPF', required=False, type=str)
+            OpenApiParameter(name='nome', description='Filtra por nome (busca parcial)', required=False, type=str)
         ],
         responses={200: AlunoSerializer(many=True)}
     )
     def get(self, request, *args, **kwargs):
         data = Aluno.objects.all()
-        matricula = request.query_params.get('matricula')
-        cpf = request.query_params.get('cpf')
-        nome = request.query_params.get('nome')
+        matricula = request.query_params.get('matricula', None)
+        nome = request.query_params.get('nome', None)
 
         if matricula:
             data = data.filter(matricula=matricula)
-        if cpf:
-            data = data.filter(cpf=cpf)
+
         if nome:
-            termos_da_busca = nome.split()
+            termos_da_busca = nome.split() 
             for termo in termos_da_busca:
                 data = data.filter(nome__icontains=termo)
 
@@ -44,7 +40,7 @@ class AlunoAPIView(APIView):
             return Response(
                 {
                     "mensagem": "Nenhum aluno encontrado com os dados informados.",
-                    "sugestao": "Tente buscar apenas pelo primeiro nome ou limpe os filtros.",
+                    "sugestao": "Tente buscar apenas pelo primeiro nome ou limpe os filtros e tente novamente.",
                     "resultados": []
                 }, 
                 status=status.HTTP_200_OK
@@ -55,7 +51,10 @@ class AlunoAPIView(APIView):
         serializer = AlunoSerializer(paginated_data, many=True)
         return paginator.get_paginated_response(serializer.data)
 
-    @extend_schema(request=AlunoSerializer, responses={201: AlunoSerializer})
+    @extend_schema(
+        request=AlunoSerializer,
+        responses={201: AlunoSerializer}
+    )
     def post(self, request, *args, **kwargs):
         parsed_data = request.data
         serializer = AlunoSerializer(data=parsed_data)
@@ -64,13 +63,15 @@ class AlunoAPIView(APIView):
         return Response({"message": "Aluno criado com sucesso!"}, status=status.HTTP_201_CREATED)
 
     @extend_schema(
-        parameters=[OpenApiParameter(name='matricula_aluno', required=True, type=str)],
+        parameters=[
+            OpenApiParameter(name='matricula_aluno', description='Matrícula do aluno a ser atualizado', required=True, type=str)
+        ],
         request=AlunoSerializer,
         responses={200: AlunoSerializer}
     )
     def patch(self, request, *args, **kwargs):
         parsed_data = request.data
-        matricula = request.query_params.get('matricula_aluno')
+        matricula = request.query_params.get('matricula_aluno', None)
         if matricula:
             try:
                 old_data = Aluno.objects.get(matricula=matricula)
@@ -81,7 +82,8 @@ class AlunoAPIView(APIView):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response({"message": "updated"}, status=status.HTTP_200_OK)
-        return Response({"error": "Matrícula não informada"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"error": "Matrícula não informada"}, status=status.HTTP_400_BAD_REQUEST)
 class ProcessoAPIView(APIView):
     permission_classes = [IsAluno | IsSecretaria | IsCoordenador]
 
@@ -93,8 +95,7 @@ class ProcessoAPIView(APIView):
         ],
         responses={200: ProcessoSerializer(many=True)}
     )
-    def get(self, request,id, *args, **kwargs):
-        # Verifica se o usuário logado é Secretaria ou Coordenador (acesso total)
+    def get(self, request, *args, **kwargs):
         is_staff = Secretaria.objects.filter(email=request.user.email).exists() or \
                    Coordenador.objects.filter(email=request.user.email).exists()
 
@@ -105,21 +106,21 @@ class ProcessoAPIView(APIView):
                 aluno = Aluno.objects.get(email=request.user.email)
                 data = Processo.objects.filter(aluno=aluno)
             except Aluno.DoesNotExist:
-                data = Processo.objects.none()  # Retorna vazio por segurança se o perfil de Aluno não for achado
-        
-        
+                data = Processo.objects.none()  
 
-        # Query params
         matricula_aluno = request.query_params.get('matricula_aluno', None)
         status_filtro = request.query_params.get('status', None)
         nome_empresa = request.query_params.get('nome_empresa', None)
 
         if matricula_aluno is not None:
             data = data.filter(aluno=matricula_aluno)    
-        if status_filtro == StatusContrato.PENDENTE:
-            data = data.filter(contrato__status=StatusContrato.PENDENTE).distinct()
-        elif status_filtro is not None:
-            data = data.filter(status=status_filtro)
+        
+        if status_filtro is not None:
+            if status_filtro == StatusContrato.PENDENTE:
+                data = data.filter(contrato__status=StatusContrato.PENDENTE).distinct()
+            else:
+                data = data.filter(status=status_filtro)
+                
         if nome_empresa is not None:
             data = data.filter(nome_empresa__icontains=nome_empresa)
 
@@ -127,6 +128,8 @@ class ProcessoAPIView(APIView):
         paginated_data = paginator.paginate_queryset(data, request)
         serializer = ProcessoSerializer(paginated_data, many=True)
         return paginator.get_paginated_response(serializer.data)
+        
+    # ... os métodos post e patch continuam normais aqui ...
 
     @extend_schema(
         request=ProcessoSerializer,
@@ -180,27 +183,6 @@ class ProcessoAPIView(APIView):
         else:
             return Response({"error": "Id não informado"}, status=status.HTTP_400_BAD_REQUEST)
 
-
-class ProcessoDetailAPIView(APIView):
-    permission_classes = [IsAluno | IsCoordenador | IsSecretaria]
-
-    @extend_schema(
-        summary="Detalhes do Processo de Estágio",
-        description="Retorna informações detalhadas de um processo de estágio pelo ID, incluindo histórico de avaliações, contratos e relatórios.",
-        responses={200: ProcessoDetailSerializer}
-    )
-    def get(self, request, id, *args, **kwargs):
-        print(id)
-        processo = get_object_or_404(
-            Processo.objects.select_related('aluno', 'secretaria', 'coordenacao')
-                            .prefetch_related('contrato_set', 'relatorio_set'),
-            id=id
-        )
-        serializer = ProcessoDetailSerializer(processo)
-        return Response(serializer.data)
-
-
-
 class UploadContrato(APIView):
     permission_classes = [IsSecretaria | IsAluno]
     serializer_class = ContratoSerializer
@@ -220,9 +202,7 @@ class UploadContrato(APIView):
         
         contrato = serializer.save(processoId=processo)
         
-        processarContratoComIa.delay(contrato.id)
-
-        aluno = contrato.processoId.aluno
+        aluno = contrato.processoId.matricula_aluno
         email_secretaria = "secretaria@ibmec.edu.br" 
 
         EmailNotificationService.notificar_novo_envio(
@@ -259,7 +239,7 @@ class AvaliarContratoAPIView(APIView):
         
         contrato.save()
         
-        aluno = contrato.processoId.aluno
+        aluno = contrato.processoId.matricula_aluno
 
         EmailNotificationService.notificar_avaliacao(
             email_destino=aluno.email,
@@ -272,59 +252,6 @@ class AvaliarContratoAPIView(APIView):
             {"message":f"Contrato avaliado como {avaliacao.veredito} e aluno notificado!"},
             status=status.HTTP_201_CREATED
         )
-
-class ReprovarContratoAPIView(APIView):
-    permission_classes = [IsSecretaria]
-
-    @extend_schema(
-        request=inline_serializer(
-            name='ReprovarContratoSerializer',
-            fields={
-                'justificativa': serializers.CharField(required=True)
-            }
-        ),
-        responses={200: ProcessoSerializer}
-    )
-    def patch(self, request, id, *args, **kwargs):
-        processo = get_object_or_404(Processo, id=id)
-        
-        justificativa = request.data.get('justificativa')
-        if not justificativa or not str(justificativa).strip():
-            return Response(
-                {"error": "Campo 'justificativa' é obrigatório para reprovação."}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            
-        contrato = processo.contrato_set.last()
-        if not contrato:
-            return Response(
-                {"error": "Nenhum contrato encontrado para este processo."}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        contrato.status = StatusContrato.REPROVADO
-        contrato.save()
-        
-        processo.status = StatusProcesso.REPROVADO
-        processo.save()
-
-        secretaria = get_object_or_404(Secretaria, email=request.user.email)
-        HistoricoAvaliacaoContrato.objects.create(
-            observacoes=justificativa,
-            veredito=Veredito.REPROVADO,
-            avaliador=secretaria,
-            contrato_id=contrato
-        )
-
-        EmailNotificationService.notificar_avaliacao(
-            email_destino=processo.aluno.email,
-            nome_aluno=processo.aluno.nome,
-            status=Veredito.REPROVADO,
-            observacoes=justificativa
-        )
-
-        serializer = ProcessoSerializer(processo)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class UploadRelatorio(APIView):
     permission_classes = [IsAluno]
@@ -344,7 +271,7 @@ class UploadRelatorio(APIView):
         serializer.is_valid(raise_exception=True)
         relatorio = serializer.save(processo_id=processo)
         
-        aluno = relatorio.processo_id.aluno
+        aluno = relatorio.processo_id.matricula_aluno
         email_coordenacao = "coordenacao@ibmec.edu.br" 
         
         EmailNotificationService.notificar_novo_envio(
@@ -352,11 +279,8 @@ class UploadRelatorio(APIView):
             nome_aluno=aluno.nome, 
             nome_documento="Relatório de Estágio"
         )
-        response_data = {"message": "Relatório enviado e coordenação notificada."}
-        if relatorio.fora_do_prazo:
-            response_data["alerta"] = "Relatório enviado fora do prazo."
-            
-        return Response(response_data, status=status.HTTP_201_CREATED)
+        
+        return Response({"message": "Relatório enviado e coordenação notificada."}, status=status.HTTP_201_CREATED)
 
 class AvaliarRelatorioAPIView(APIView):
     permission_classes = [IsCoordenador] 
@@ -381,7 +305,7 @@ class AvaliarRelatorioAPIView(APIView):
             relatorio.status = StatusRelatorio.REPROVADO
         relatorio.save()
         
-        aluno = relatorio.processo_id.aluno
+        aluno = relatorio.processo_id.matricula_aluno
         
         EmailNotificationService.notificar_avaliacao(
             email_destino=aluno.email,
