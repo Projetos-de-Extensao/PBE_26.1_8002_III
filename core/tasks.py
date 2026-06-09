@@ -2,8 +2,9 @@ from celery import shared_task
 from .services.AI.client import client as ai_client
 from .services.AI.lerContrato import lerContrato
 from .services.ler_extrair_infos_pdf import ler_pdf_modo_layout
-from .models import Contrato
-
+from .models import *
+from .services.validacao_sistema.validaGradeContrato import validarGradeContrato
+from .exceptions import gradeHorariaIncompativelException
 
 @shared_task
 def processarContratoComIa(fileId):
@@ -23,7 +24,25 @@ def processarContratoComIa(fileId):
     contrato.assinatura_empresa = dados_contrato["assinatura_empresa"]
     contrato.assinatura_faculdade = dados_contrato["assinatura_faculdade"]
     contrato.save()
+
+    # Associa os horários de atividade extraídos ao contrato
+    horarios_data = dados_contrato.get("horarios_atividade", [])
+    if horarios_data:
+        contrato.horarios_atividade.clear()
+        for h in horarios_data:
+            horario, _ = Horarios.objects.get_or_create(
+                dia=h["dia"],
+                turno=h["turno"],
+            )
+            contrato.horarios_atividade.add(horario)
     
-
-
-  
+@shared_task
+def validarContrato(fileId,alunoId):
+    contrato = Contrato.objects.get(id = fileId)
+    aluno = Aluno.objects.get(id = alunoId)
+    
+    try:
+        validarGradeContrato(alunoId,fileId)
+    except gradeHorariaIncompativelException:
+        contrato.status = StatusContrato.REPROVADO
+        contrato.save()
