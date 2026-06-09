@@ -23,8 +23,8 @@ class Usuario(models.Model):
     email = models.EmailField(verbose_name="E-mail", validators=[validar_email_institucional])
     senha = models.CharField(max_length=255, verbose_name="Senha")
     unidade = models.CharField(max_length=15, choices=Unidade)
-
     precisa_redefinir_senha = models.BooleanField(default=True, verbose_name="Precisa redefinir senha?")
+    aceite_lgpd = models.BooleanField(default=False, verbose_name="Aceite dos Termos de Uso e LGPD")
 
     class Meta:
         abstract = True 
