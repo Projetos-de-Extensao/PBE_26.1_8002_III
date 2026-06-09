@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 from .serializers import *
 from .models import Aluno, Processo, Secretaria, Coordenador
 from .permissions import IsSecretaria, IsAluno, IsCoordenador
@@ -116,7 +116,9 @@ class ProcessoAPIView(APIView):
 
         if matricula_aluno is not None:
             data = data.filter(aluno=matricula_aluno)    
-        if status_filtro is not None:
+        if status_filtro == StatusContrato.PENDENTE:
+            data = data.filter(contrato__status=StatusContrato.PENDENTE).distinct()
+        elif status_filtro is not None:
             data = data.filter(status=status_filtro)
         if nome_empresa is not None:
             data = data.filter(nome_empresa__icontains=nome_empresa)
@@ -270,6 +272,59 @@ class AvaliarContratoAPIView(APIView):
             {"message":f"Contrato avaliado como {avaliacao.veredito} e aluno notificado!"},
             status=status.HTTP_201_CREATED
         )
+
+class ReprovarContratoAPIView(APIView):
+    permission_classes = [IsSecretaria]
+
+    @extend_schema(
+        request=inline_serializer(
+            name='ReprovarContratoSerializer',
+            fields={
+                'justificativa': serializers.CharField(required=True)
+            }
+        ),
+        responses={200: ProcessoSerializer}
+    )
+    def patch(self, request, id, *args, **kwargs):
+        processo = get_object_or_404(Processo, id=id)
+        
+        justificativa = request.data.get('justificativa')
+        if not justificativa or not str(justificativa).strip():
+            return Response(
+                {"error": "Campo 'justificativa' é obrigatório para reprovação."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        contrato = processo.contrato_set.last()
+        if not contrato:
+            return Response(
+                {"error": "Nenhum contrato encontrado para este processo."}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        contrato.status = StatusContrato.REPROVADO
+        contrato.save()
+        
+        processo.status = StatusProcesso.REPROVADO
+        processo.save()
+
+        secretaria = get_object_or_404(Secretaria, email=request.user.email)
+        HistoricoAvaliacaoContrato.objects.create(
+            observacoes=justificativa,
+            veredito=Veredito.REPROVADO,
+            avaliador=secretaria,
+            contrato_id=contrato
+        )
+
+        EmailNotificationService.notificar_avaliacao(
+            email_destino=processo.aluno.email,
+            nome_aluno=processo.aluno.nome,
+            status=Veredito.REPROVADO,
+            observacoes=justificativa
+        )
+
+        serializer = ProcessoSerializer(processo)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class UploadRelatorio(APIView):
     permission_classes = [IsAluno]
