@@ -95,7 +95,7 @@ class ProcessoAPIView(APIView):
         ],
         responses={200: ProcessoSerializer(many=True)}
     )
-    def get(self, request,id, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         # Verifica se o usuário logado é Secretaria ou Coordenador (acesso total)
         is_staff = Secretaria.objects.filter(email=request.user.email).exists() or \
                    Coordenador.objects.filter(email=request.user.email).exists()

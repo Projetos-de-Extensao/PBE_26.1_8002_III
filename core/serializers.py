@@ -6,7 +6,7 @@ from .models import *
 from .enums import *
 from .validators import validar_email_institucional
 from .enums import StatusProcesso
-from .services.ler_extrair_infos_pdf import ler_pdf_modo_layout, extrair_infos 
+from .services.ler_extrair_infos_pdf import ler_pdf_modo_layout
 from .validators import valida_periodo_relatorio
 from datetime import datetime
 from django.shortcuts import get_object_or_404
@@ -41,7 +41,7 @@ class NestedSecretariaSerializer(serializers.ModelSerializer):
         fields = ["nome", "matricula", "unidade"]
 
 class AlunoSerializer(serializers.ModelSerializer):
-    processos = NestedProcessoSerializer(source="matricula_aluno", many=True, read_only=True)
+    processos = NestedProcessoSerializer(source="aluno", many=True, read_only=True)
 
     class Meta:
         model = Aluno

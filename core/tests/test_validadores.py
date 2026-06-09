@@ -3,6 +3,8 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from core.validators import validar_email_institucional, validar_cpf
 from core.services.validacao_arquivos import validar_pdf_e_tamanho_seguro
+from core.services.validacao_sistema.validaGradeContrato import validarGradeContrato
+from core.exceptions import gradeHorariaIncompativelException
 
 class TestValidarEmailInstitucional:
     """
@@ -134,3 +136,44 @@ class TestValidarPDFETamanhoSeguro:
         
         # Se o ponteiro foi resetado corretamente, ler novamente deve retornar o conteúdo desde o início
         assert arquivo_fake.file.read() == conteudo
+
+
+@pytest.mark.django_db
+class TestValidaGradeContrato:
+    """
+    Testes para o validador de grade horária do contrato:
+    validarGradeContrato(AlunoId, ContratoId)
+    """
+
+    def test_grade_sem_conflito(self, aluno, contrato, horario_segunda_manha, horario_terca_noite):
+        """Aluno com grade em horários diferentes do contrato — deve passar sem erro."""
+        # Aluno estuda segunda de manhã
+        aluno.grade.add(horario_segunda_manha)
+        # Contrato é terça à noite
+        contrato.horarios_atividade.add(horario_terca_noite)
+
+        # Não deve levantar exceção
+        validarGradeContrato(aluno.id, contrato.id)
+
+    def test_grade_com_conflito(self, aluno, contrato, horario_segunda_manha):
+        """Aluno com grade no mesmo horário do contrato — deve levantar erro."""
+        # Mesmo horário nos dois
+        aluno.grade.add(horario_segunda_manha)
+        contrato.horarios_atividade.add(horario_segunda_manha)
+
+        with pytest.raises(gradeHorariaIncompativelException):
+            validarGradeContrato(aluno.id, contrato.id)
+
+    def test_contrato_sem_horarios(self, aluno, contrato, horario_segunda_manha):
+        """Contrato sem horários de atividade — deve passar sem erro."""
+        aluno.grade.add(horario_segunda_manha)
+        # Contrato não tem horários
+
+        validarGradeContrato(aluno.id, contrato.id)
+
+    def test_aluno_sem_grade(self, aluno, contrato, horario_segunda_manha):
+        """Aluno sem grade — deve passar sem erro."""
+        # Aluno não tem grade
+        contrato.horarios_atividade.add(horario_segunda_manha)
+
+        validarGradeContrato(aluno.id, contrato.id)
