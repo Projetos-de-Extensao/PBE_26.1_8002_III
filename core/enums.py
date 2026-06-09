@@ -2,6 +2,7 @@
 #                             ass: doutor bazinga (lucas jesus)
 
 from django.db import models
+import datetime
 
 
 class TipoUsuario(models.TextChoices):
@@ -63,3 +64,28 @@ class DiasDaSemana(models.TextChoices):
     QUINTA = 'quinta', 'Quinta-Feira'
     SEXTA = 'sexta', 'Sexta-Feira'
     SABADO = 'sabado', 'Sábado'
+
+class Turno(models.TextChoices):
+    MANHA = 'manha','Manhã'
+    TARDE = 'tarde','Tarde'
+    NOITE = 'noite','Noite'
+
+    @property
+    def inicio(self) -> datetime.time:
+        horarios = {
+            Turno.MANHA:datetime.time(7,30),
+            Turno.TARDE:datetime.time(13,30),
+            Turno.NOITE:datetime.time(18,30)
+        }
+        return horarios[self]
+
+    @property
+    def fim(self) -> datetime.time:
+        horarios = {
+            Turno.MANHA:datetime.time(11,40),
+            Turno.TARDE:datetime.time(17,40),
+            Turno.NOITE:datetime.time(22,30)
+        }
+        return horarios[self]
+
+
