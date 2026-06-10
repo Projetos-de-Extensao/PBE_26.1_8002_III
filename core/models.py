@@ -273,3 +273,35 @@ class FeatureFlag(models.Model):
         except cls.DoesNotExist:
             return False
 
+
+class EmailLog(models.Model):
+    """
+    Registro de todos os emails enviados pelo sistema.
+    Permite auditoria e rastreamento de entregas e falhas.
+    """
+    destinatario = models.EmailField(verbose_name="Destinatário")
+    assunto = models.CharField(max_length=255, verbose_name="Assunto")
+    corpo_texto = models.TextField(verbose_name="Corpo (texto)", blank=True, default="")
+    corpo_html = models.TextField(verbose_name="Corpo (HTML)", blank=True, default="")
+    status = models.CharField(
+        max_length=15,
+        choices=StatusEmail,
+        default=StatusEmail.PENDENTE,
+        verbose_name="Status"
+    )
+    tentativas = models.PositiveIntegerField(default=0, verbose_name="Tentativas")
+    erro = models.TextField(verbose_name="Mensagem de Erro", blank=True, default="")
+    celery_task_id = models.CharField(
+        max_length=255, blank=True, default="",
+        verbose_name="Celery Task ID"
+    )
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
+    enviado_em = models.DateTimeField(null=True, blank=True, verbose_name="Enviado em")
+
+    class Meta:
+        verbose_name = "Log de Email"
+        verbose_name_plural = "Logs de Email"
+        ordering = ['-criado_em']
+
+    def __str__(self):
+        return f"[{self.status}] {self.assunto} → {self.destinatario}"

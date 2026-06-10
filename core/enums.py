@@ -58,6 +58,12 @@ class Veredito(models.TextChoices):
     REPROVADO = 'reprovado', 'Reprovado'
 
 
+class StatusEmail(models.TextChoices):
+    PENDENTE = 'pendente', 'Pendente'
+    ENVIADO = 'enviado', 'Enviado'
+    FALHOU = 'falhou', 'Falhou'
+
+
 class DiasDaSemana(models.TextChoices):
     SEGUNDA = 'segunda', 'Segunda-Feira'
     TERCA = 'terca', 'Terça-Feira'
