@@ -2,15 +2,12 @@
 from django.db.models import ProtectedError
 from core.enums import StatusRelatorio
 from django.template.defaultfilters import default
-import email
 from core.services.upload_contrato import upload_contrato_path
 from core.services.validacao_arquivos import validar_pdf_e_tamanho_seguro
 from django.utils import choices,timezone
 from core.enums import StatusProcesso
 from django.db.models import CASCADE
 from django.db.models import ForeignKey
-from enum import unique
-from django.db.models import functions
 from django.db import models
 from .enums import *
 from core.services.upload_relatorio import upload_relatorio_path
