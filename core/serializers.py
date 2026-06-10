@@ -50,7 +50,12 @@ class AlunoSerializer(serializers.ModelSerializer):
         model = Aluno
         fields = ['nome', 'email', 'matricula', 'senha', 'cpf', 'is_ativo', 'unidade', 'periodo', 'curso', 'processos', 'aceite_lgpd']
         read_only_fields = ['id']
-        extra_kwargs = {'senha': {'write_only': True}}
+        extra_kwargs = {
+            'senha': {'write_only': True},
+            # UC-04: Mensagem customizada para unicidade
+            'matricula': {'error_messages': {'unique': "A matrícula ou CPF informados já estão em uso por outro aluno."}},
+            'cpf': {'error_messages': {'unique': "A matrícula ou CPF informados já estão em uso por outro aluno."}}
+        }
     
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -215,6 +220,20 @@ class RelatorioSerializer(serializers.ModelSerializer):
             'horas_trabalhadas', 'data_inicio', 'data_termino', 'status'
         ]
         read_only_fields = ['id', 'data_upload', 'processo_id']
+
+    def validate(self, attrs):
+        horas = attrs.get('horas_trabalhadas')
+        dt_inicio = attrs.get('data_inicio')
+        dt_termino = attrs.get('data_termino')
+        if horas and dt_inicio and dt_termino:
+            dias = (dt_termino - dt_inicio).days + 1
+            # Limite legal de 6h/dia útil -> aproximação de 6h por dia corrido para cobrir a carga horária do TCE
+            if dias > 0 and horas > (dias * 6):
+                # UC-05: Regra de negócio limitando as horas
+                raise serializers.ValidationError({
+                    "horas_trabalhadas": "O total de horas não pode exceder a carga horária máxima permitida para o período."
+                })
+        return attrs
 
     def create(self, validated_data):
         processo = validated_data['processo_id']
