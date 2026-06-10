@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 from rest_framework import status
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import User
 from .models import *
 from .enums import *
 from .validators import validar_email_institucional
@@ -62,7 +63,16 @@ class AlunoSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['senha'] = make_password(validated_data['senha'])
         validated_data['nome'] = validated_data['nome'].lower().capitalize().strip()
-        return Aluno.objects.create(**validated_data)
+        aluno = Aluno.objects.create(**validated_data)
+
+        User.objects.get_or_create(
+            username=aluno.matricula,
+            defaults={
+                "email": aluno.email,
+                "password": aluno.senha,
+            }
+        )
+        return aluno
 
     def update(self, instance, validated_data):
         if 'senha' in validated_data:
@@ -79,6 +89,23 @@ class AlunoSerializer(serializers.ModelSerializer):
         instance.unidade = validated_data.get("unidade", instance.unidade)
         instance.aceite_lgpd = validated_data.get("aceite_lgpd", instance.aceite_lgpd)
         instance.save()
+
+        try:
+            user = User.objects.get(username=instance.matricula)
+            if 'email' in validated_data:
+                user.email = instance.email
+            if 'senha' in validated_data:
+                user.password = instance.senha
+            if 'matricula' in validated_data:
+                user.username = instance.matricula
+            user.save()
+        except User.DoesNotExist:
+            User.objects.create(
+                username=instance.matricula,
+                email=instance.email,
+                password=instance.senha,
+            )
+
         return instance
 
 class CursoSerializer(serializers.ModelSerializer):
@@ -86,7 +113,6 @@ class CursoSerializer(serializers.ModelSerializer):
         model = Curso
         fields = ["nome"]
         read_only_fields = ["id"]
-        exclude = ["areaId"]
 
 class AreaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -150,7 +176,16 @@ class CoordenadorSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['senha'] = make_password(validated_data['senha'])
-        return Coordenador.objects.create(**validated_data)
+        coordenador = Coordenador.objects.create(**validated_data)
+
+        User.objects.get_or_create(
+            username=coordenador.matricula,
+            defaults={
+                "email": coordenador.email,
+                "password": coordenador.senha,
+            }
+        )
+        return coordenador
 
 class SecretariaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -161,7 +196,16 @@ class SecretariaSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['senha'] = make_password(validated_data['senha'])
-        return Secretaria.objects.create(**validated_data)
+        secretaria = Secretaria.objects.create(**validated_data)
+
+        User.objects.get_or_create(
+            username=secretaria.matricula,
+            defaults={
+                "email": secretaria.email,
+                "password": secretaria.senha,
+            }
+        )
+        return secretaria
 
 class RelatorioSerializer(serializers.ModelSerializer):
     class Meta:
@@ -174,13 +218,11 @@ class RelatorioSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         processo = validated_data['processo_id']
-        contrato = Contrato.objects.filter(processoId=processo,status = StatusContrato.APROVADO).first()
+        contrato = Contrato.objects.filter(processoId=processo, status=StatusContrato.APROVADO).first()
         
-        # Cria a instância temporária do Relatório em memória para validar
         relatorio = Relatorio(**validated_data)
         
         if contrato:
-            # Valida o período e altera o status se estiver incorreto
             if not valida_periodo_relatorio(relatorio, contrato):
                 validated_data['status'] = StatusRelatorio.REPROVADO
             else:
@@ -189,7 +231,6 @@ class RelatorioSerializer(serializers.ModelSerializer):
             if relatorio.data_termino and datetime.today().date() > relatorio.data_termino:
                 validated_data['fora_do_prazo'] = True
         else:
-            # Se não houver contrato ativo, o relatório é reprovado
             validated_data['status'] = StatusRelatorio.REPROVADO
             
         return Relatorio.objects.create(**validated_data) 
