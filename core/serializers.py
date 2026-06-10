@@ -291,3 +291,8 @@ class HistoricoAvaliacaoContratoSerializer(serializers.ModelSerializer):
                         {"veredito": "O contrato não pode ser aprovado pois a vigência supera 24 meses para alunos não-PCD."}
                     )
         return attrs
+
+class HorariosSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Horarios
+        fields = ['id', 'dia', 'turno']
