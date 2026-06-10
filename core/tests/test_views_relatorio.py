@@ -13,7 +13,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 
 from core.models import Relatorio, HistoricoAvaliacaoRelatorio
-from core.enums import StatusRelatorio, StatusContrato, Veredito
+from core.enums import StatusRelatorio, StatusContrato, Veredito, StatusProcesso
 
 
 # ── Upload de Relatório ──────────────────────────────────────────────
@@ -26,6 +26,9 @@ class TestUploadRelatorio:
         # Aprovar contrato para que o relatório seja aceito
         contrato.status = StatusContrato.APROVADO
         contrato.save()
+        
+        processo.status = StatusProcesso.EM_ANDAMENTO
+        processo.save()
 
         arquivo = SimpleUploadedFile(
             "relatorio.pdf",
@@ -36,9 +39,7 @@ class TestUploadRelatorio:
             f"/processo/{processo.id}/relatorio/",
             {
                 "arquivo": arquivo,
-                "horas_trabalhadas": 120,
-                "data_inicio": "2026-06-01",
-                "data_termino": "2026-11-30",
+                "titulo": "Meu Relatório Final",
             },
             format="multipart"
         )
@@ -74,9 +75,7 @@ class TestUploadRelatorio:
             f"/processo/{processo.id}/relatorio/",
             {
                 "arquivo": arquivo,
-                "horas_trabalhadas": 120,
-                "data_inicio": "2026-06-01",
-                "data_termino": "2026-11-30",
+                "titulo": "Meu Relatório Final",
             },
             format="multipart"
         )
@@ -106,6 +105,7 @@ class TestAvaliarRelatorio:
         """Avaliação com veredito REPROVADO atualiza status do relatório."""
         payload = {
             "observacoes": "Horas insuficientes.",
+            "justificativa": "Falta de requisitos",
             "veredito": Veredito.REPROVADO.value,
             "avaliador": coordenador.id,
             "relatorio_id": relatorio.id,

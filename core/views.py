@@ -15,6 +15,39 @@ from .models import Aluno, Processo, Secretaria, Coordenador, Contrato, Historic
 from .permissions import IsSecretaria, IsAluno, IsCoordenador
 from .services.email_service import EmailNotificationService
 from core.enums import Veredito, StatusContrato, StatusRelatorio, StatusProcesso
+from rest_framework.exceptions import PermissionDenied
+
+def is_user_staff(user):
+    """Verifica se o usuário é Secretaria ou Coordenador."""
+    if hasattr(user, '_cached_is_staff'):
+        return user._cached_is_staff
+    is_staff = Secretaria.objects.filter(email=user.email).exists() or \
+               Coordenador.objects.filter(email=user.email).exists()
+    user._cached_is_staff = is_staff
+    return is_staff
+
+def get_processo_seguro(processo_id, user, prefetch=None, select=None):
+    """
+    Busca um processo e valida se o usuário tem permissão para acessá-lo.
+    Alunos só podem acessar seus próprios processos.
+    """
+    queryset = Processo.objects.all()
+    if select:
+        queryset = queryset.select_related(*select)
+    if prefetch:
+        queryset = queryset.prefetch_related(*prefetch)
+        
+    processo = get_object_or_404(queryset, id=processo_id)
+    
+    if not is_user_staff(user):
+        try:
+            aluno = Aluno.objects.get(email=user.email)
+            if processo.aluno != aluno:
+                raise PermissionDenied("Você não tem permissão para acessar este processo.")
+        except Aluno.DoesNotExist:
+            raise PermissionDenied("Usuário não autorizado.")
+            
+    return processo
 
 class AlunoAPIView(APIView):
     permission_classes = [IsSecretaria | IsCoordenador]
@@ -28,7 +61,7 @@ class AlunoAPIView(APIView):
         responses={200: AlunoSerializer(many=True)}
     )
     def get(self, request, *args, **kwargs):
-        data = Aluno.objects.all()
+        data = Aluno.objects.select_related('curso').prefetch_related('aluno').all()
         matricula = request.query_params.get('matricula', None)
         cpf = request.query_params.get('cpf', None)
         nome = request.query_params.get('nome', None)
@@ -105,11 +138,8 @@ class ProcessoAPIView(APIView):
         responses={200: ProcessoSerializer(many=True)}
     )
     def get(self, request, *args, **kwargs):
-        is_staff = Secretaria.objects.filter(email=request.user.email).exists() or \
-                   Coordenador.objects.filter(email=request.user.email).exists()
-
-        if is_staff:
-            data = Processo.objects.all()
+        if is_user_staff(request.user):
+            data = Processo.objects.select_related('aluno', 'secretaria', 'coordenacao').all()
         else:
             try:
                 aluno = Aluno.objects.get(email=request.user.email)
@@ -182,10 +212,7 @@ class ProcessoAPIView(APIView):
         parsed_data = request.data
         id = request.query_params.get('processo_id', None)
         if id is not None:
-            try:
-                old_data = Processo.objects.get(id=id)
-            except Processo.DoesNotExist:
-                return Response({"error": "Processo não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+            old_data = get_processo_seguro(id, request.user)
             
             serializer = ProcessoSerializer(old_data, data=parsed_data, partial=True)
             serializer.is_valid(raise_exception=True)
@@ -203,10 +230,10 @@ class ProcessoDetailAPIView(APIView):
         responses={200: ProcessoDetailSerializer}
     )
     def get(self, request, id, *args, **kwargs):
-        processo = get_object_or_404(
-            Processo.objects.select_related('aluno', 'secretaria', 'coordenacao')
-                            .prefetch_related('contrato_set', 'relatorio_set'),
-            id=id
+        processo = get_processo_seguro(
+            id, request.user,
+            select=['aluno', 'secretaria', 'coordenacao'],
+            prefetch=['contrato_set', 'relatorio_set']
         )
         serializer = ProcessoDetailSerializer(processo)
         return Response(serializer.data)
@@ -223,7 +250,7 @@ class UploadContrato(APIView):
     )
     def post(self, request, *args, **kwargs):
         processo_id = kwargs.get('id')
-        processo = get_object_or_404(Processo, id=processo_id)
+        processo = get_processo_seguro(processo_id, request.user)
         
         serializer = ContratoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -301,7 +328,7 @@ class UploadRelatorio(APIView):
     )
     def post(self, request, *args, **kwargs):
         processo_id = kwargs.get('id')
-        processo = get_object_or_404(Processo, id=processo_id)
+        processo = get_processo_seguro(processo_id, request.user)
         
         # Validar se o processo está ativo (Em Andamento) - Issue 148
         if processo.status != StatusProcesso.EM_ANDAMENTO:
@@ -443,14 +470,11 @@ class DownloadContratoAPIView(APIView):
         responses={200: OpenApiTypes.BINARY}
     )
     def get(self, request, id, *args, **kwargs):
-        contrato = get_object_or_404(Contrato, id=id)
+        contrato = get_object_or_404(Contrato.objects.select_related('processoId__aluno'), id=id)
         processo = contrato.processoId
         
         # Validação de permissão (Aluno só baixa o dele)
-        is_staff = Secretaria.objects.filter(email=request.user.email).exists() or \
-                   Coordenador.objects.filter(email=request.user.email).exists()
-        
-        if not is_staff:
+        if not is_user_staff(request.user):
             try:
                 aluno = Aluno.objects.get(email=request.user.email)
                 if processo.aluno != aluno:
