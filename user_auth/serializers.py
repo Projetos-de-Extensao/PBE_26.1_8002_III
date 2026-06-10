@@ -29,3 +29,14 @@ class PrimeiroAcessoRequestSerializer(serializers.Serializer):
 
 class MessageResponseSerializer(serializers.Serializer):
     message = serializers.CharField(help_text="Mensagem descritiva do resultado da operação")
+
+class UserMeSerializer(serializers.Serializer):
+    """
+    Serializer de retorno para o endpoint /me/.
+    Contém os dados básicos do usuário logado e o seu papel (role).
+    """
+    id = serializers.IntegerField(help_text="ID do usuário na tabela de domínio")
+    nome = serializers.CharField(help_text="Nome do usuário")
+    email = serializers.EmailField(help_text="E-mail do usuário")
+    matricula = serializers.CharField(help_text="Matrícula do usuário")
+    role = serializers.CharField(help_text="Papel do usuário (ALUNO, SECRETARIA, COORDENADOR)")
