@@ -142,18 +142,33 @@ def validarContrato(fileId, alunoId):
             status=Veredito.REPROVADO,
             observacoes=justificativa_completa
         )
+    else:
+        # Contrato passou em todas as validações do sistema
+        secretaria_sistema = Secretaria.objects.first()
+        if secretaria_sistema:
+            HistoricoAvaliacaoContrato.objects.update_or_create(
+                contrato_id=contrato,
+                defaults={
+                    'observacoes': "Validação Automática pelo Sistema: Contrato aprovado em todas as verificações.",
+                    'veredito': Veredito.APROVADO,
+                    'avaliador': secretaria_sistema,
+                    'justificativa': "Nenhuma irregularidade detectada nas regras de negócio."
+                }
+            )
 
 @shared_task
 def processarRelatorioComIa(relatorio_id):
+    from core.services.AI.lerRelatorio import lerRelatorio
+
     relatorio = Relatorio.objects.get(id=relatorio_id)
     if not relatorio.arquivo:
         return
         
     string_relatorio = ler_pdf_modo_layout(relatorio.arquivo)
     
-    # Simulação da IA extraindo título e corpo
-    relatorio.titulo = "Relatório Extraído por IA"
-    relatorio.corpo = string_relatorio[:1000] if string_relatorio else ""
+    dados = lerRelatorio(string_relatorio)
+    relatorio.titulo = dados.get("titulo") or ""
+    relatorio.corpo = dados.get("corpo") or ""
     relatorio.save()
     
     if FeatureFlag.objects.is_active("report_evaluation_ai"):
@@ -161,19 +176,70 @@ def processarRelatorioComIa(relatorio_id):
 
 @shared_task
 def avaliarRelatorioComIa(relatorio_id):
-    relatorio = Relatorio.objects.get(id=relatorio_id)
+    from core.services.AI.lerRelatorio import avaliarRelatorio
+    from core.services.email_service import EmailNotificationService
+
+    relatorio = Relatorio.objects.select_related(
+        'processo_id__aluno__curso'
+    ).get(id=relatorio_id)
     curso = relatorio.processo_id.aluno.curso
     
     if not curso.ementa_md:
         return
-        
-    # TODO: Implementar a chamada real ao modelo (ex: ai_client) para validar
-    # a compatibilidade do relatório (relatorio.corpo) com a ementa do curso.
-    # Por hora, se a IA decidisse reprovar, o fluxo seria:
-    # relatorio.status = StatusRelatorio.REPROVADO
-    # relatorio.save()
-    # processo = relatorio.processo_id
-    # processo.status = StatusProcesso.CANCELADO
-    # processo.save()
-    # HistoricoAvaliacaoRelatorio.objects.create(...)
-    pass
+
+    # Lê o conteúdo do arquivo .md de ementa
+    ementa_texto = curso.ementa_md.read().decode("utf-8")
+
+    resultado = avaliarRelatorio(relatorio.corpo or "", ementa_texto)
+    justificativa = resultado.get("justificativa", "")
+    coordenador = Coordenador.objects.first()
+
+    if resultado.get("compativel", True):
+        relatorio.status = StatusRelatorio.APROVADO
+        relatorio.save()
+
+        processo = relatorio.processo_id
+        processo.status = StatusProcesso.CONCLUIDO
+        processo.save()
+
+        if coordenador:
+            HistoricoAvaliacaoRelatorio.objects.create(
+                observacoes=f"Avaliação Automática por IA: {justificativa}",
+                veredito=Veredito.APROVADO,
+                avaliador=coordenador,
+                relatorio_id=relatorio,
+                justificativa=justificativa,
+            )
+
+        aluno = relatorio.processo_id.aluno
+        EmailNotificationService.notificar_avaliacao(
+            email_destino=aluno.email,
+            nome_aluno=aluno.nome,
+            status=Veredito.APROVADO,
+            observacoes=f"Relatório aprovado automaticamente: {justificativa}",
+        )
+    else:
+        relatorio.status = StatusRelatorio.REPROVADO
+        relatorio.save()
+
+        processo = relatorio.processo_id
+        processo.status = StatusProcesso.CANCELADO
+        processo.save()
+
+        if coordenador:
+            HistoricoAvaliacaoRelatorio.objects.create(
+                observacoes=f"Avaliação Automática por IA: {justificativa}",
+                veredito=Veredito.REPROVADO,
+                avaliador=coordenador,
+                relatorio_id=relatorio,
+                justificativa=justificativa or "Atividades incompatíveis com o curso.",
+            )
+
+        aluno = relatorio.processo_id.aluno
+        EmailNotificationService.notificar_avaliacao(
+            email_destino=aluno.email,
+            nome_aluno=aluno.nome,
+            status=Veredito.REPROVADO,
+            observacoes=f"Relatório reprovado automaticamente: {justificativa}",
+        )
+
