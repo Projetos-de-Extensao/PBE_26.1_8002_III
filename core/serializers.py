@@ -15,7 +15,7 @@ from django.shortcuts import get_object_or_404
 class NestedContratoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contrato
-        fields = ['nome_empresa', 'data_upload', 'status'] 
+        fields = ['nome_empresa', 'data_upload', 'status', 'conflito_grade'] 
 
 class NestedRelatorioSerializer(serializers.ModelSerializer):
     class Meta:
@@ -31,10 +31,12 @@ class NestedAlunoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Aluno
         fields = ["nome", "matricula"]
+
 class NestedCoordenacaoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coordenador
         fields = ["nome", "matricula", "area", "unidade"]
+
 class NestedSecretariaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Secretaria
@@ -79,7 +81,6 @@ class AlunoSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-
 class CursoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Curso
@@ -87,13 +88,11 @@ class CursoSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
         exclude = ["areaId"]
 
-
 class AreaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Area
         fields = ["nome"]
         read_only_fields = ["id"]
-
 
 class ProcessoSerializer(serializers.ModelSerializer):
     matricula_aluno = serializers.SlugRelatedField(slug_field='matricula', queryset=Aluno.objects.all(), source='aluno')
@@ -132,12 +131,12 @@ class ContratoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contrato
         fields = [
-            "id", "arquivo",'status'
+            "id", "arquivo", 'status', 'conflito_grade'
         ]
         read_only_fields = ["id", "data_upload", "cnpj_empresa", "nome_empresa",
             "data_inicio", "data_termino", "apolice_seguro", "plano_atividade",
             "assinatura_aluno", "assinatura_empresa", "assinatura_faculdade",
-            "processoId"]
+            "processoId", "conflito_grade"]
 
     def create(self, validated_data):
         return Contrato.objects.create(**validated_data)
@@ -153,7 +152,6 @@ class CoordenadorSerializer(serializers.ModelSerializer):
         validated_data['senha'] = make_password(validated_data['senha'])
         return Coordenador.objects.create(**validated_data)
 
-
 class SecretariaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Secretaria
@@ -164,7 +162,6 @@ class SecretariaSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['senha'] = make_password(validated_data['senha'])
         return Secretaria.objects.create(**validated_data)
-
 
 class RelatorioSerializer(serializers.ModelSerializer):
     class Meta:
@@ -197,17 +194,40 @@ class RelatorioSerializer(serializers.ModelSerializer):
             
         return Relatorio.objects.create(**validated_data) 
 
-
-
 class HistoricoAvaliacaoRelatorioSerializer(serializers.ModelSerializer):
     class Meta:
         model = HistoricoAvaliacaoRelatorio
         fields = ['observacoes', 'data_avaliacao', 'veredito', 'avaliador', 'relatorio_id']
         read_only_fields = ['id', 'data_avaliacao']
 
-
 class HistoricoAvaliacaoContratoSerializer(serializers.ModelSerializer):
+    justificativa = serializers.CharField(required=False, allow_blank=True, default="")
+
     class Meta:
         model = HistoricoAvaliacaoContrato
-        fields = ['observacoes', 'data_avaliacao', 'veredito', 'avaliador', 'contrato_id']
+        fields = ['observacoes', 'data_avaliacao', 'veredito', 'avaliador', 'contrato_id', 'justificativa']
         read_only_fields = ['id', 'data_avaliacao']
+
+    def validate(self, attrs):
+        veredito = attrs.get('veredito')
+        justificativa = attrs.get('justificativa', '')
+        contrato = attrs.get('contrato_id')
+        
+        # Validar justificativa obrigatória se veredito for REPROVADO (Issue 168)
+        if veredito == Veredito.REPROVADO:
+            if not justificativa or not str(justificativa).strip():
+                raise serializers.ValidationError(
+                    {"justificativa": "A justificativa é obrigatória em caso de reprovação."}
+                )
+        
+        # Validar duração contratual superior a 24 meses (Issue 174)
+        if veredito == Veredito.APROVADO and contrato:
+            aluno = contrato.processoId.aluno
+            if contrato.data_inicio and contrato.data_termino:
+                from dateutil.relativedelta import relativedelta
+                limite_fim = contrato.data_inicio + relativedelta(months=24)
+                if contrato.data_termino > limite_fim and not getattr(aluno, 'is_pcd', False):
+                    raise serializers.ValidationError(
+                        {"veredito": "O contrato não pode ser aprovado pois a vigência supera 24 meses para alunos não-PCD."}
+                    )
+        return attrs
