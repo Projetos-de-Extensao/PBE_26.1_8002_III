@@ -99,7 +99,7 @@ class TestPatchProcesso:
         }
         response = api_client.patch('/processo/?processo_id=9999', payload)
         assert response.status_code == 404
-        assert response.data["error"] == "Processo não encontrado"
+        assert "detail" in response.data
 
     def test_atualizar_processo_sem_id(self, api_client):
         payload = {

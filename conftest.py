@@ -207,9 +207,6 @@ def relatorio(processo):
         processo_id=processo,
         arquivo=arquivo_fake,
         data_upload=date(2026, 5, 15),
-        horas_trabalhadas=120,
-        data_inicio=date(2026, 3, 1),
-        data_termino=date(2026, 5, 1),
         status=StatusRelatorio.PENDENTE,
     )
 
