@@ -29,15 +29,32 @@ class TestPostProcesso:
         assert aluno_db is not None
         assert aluno_db.is_ativo == True
 
-    def test_aluno_mais_de_um_processo_ativo(self,api_client,aluno,processo,processo2):
-        resp = api_client.post('/processo/',processo2)
-        matricula_aluno = processo2['matricula_aluno']
-        processos = Processo.objects.all()
-        ultimo_processo = processos.filter(aluno=aluno, status=StatusProcesso.ABERTO)
-
+    def test_aluno_mais_de_um_processo_ativo(self, api_client, secretaria, coordenador):
+        aluno_logado = Aluno.objects.get(matricula="TEST0001")
+        
+        # Cria um processo ativo para o aluno logado
+        Processo.objects.create(
+            nome_empresa="Empresa 1 LTDA",
+            status=StatusProcesso.ABERTO,
+            aluno=aluno_logado,
+            secretaria=secretaria,
+            coordenacao=coordenador
+        )
+        
+        # Tenta criar um segundo processo para o mesmo aluno
+        payload = {
+            "nome_empresa": "Empresa 2 LTDA",
+            "status": StatusProcesso.ABERTO.value,
+            "matricula_aluno": aluno_logado.matricula,
+            "matricula_secretaria": secretaria.matricula,
+            "matricula_coordenacao": coordenador.matricula,
+        }
+        
+        resp = api_client.post('/processo/', payload)
+        
         assert resp.status_code == 400
-        assert ultimo_processo.exists() == True
-        assert ultimo_processo.count() == 1
+        assert "status" in resp.data
+        assert "O aluno já tem processos em aberto" in resp.data["status"]
 
 
 @pytest.mark.django_db
