@@ -5,6 +5,8 @@ from celery import Celery
 # Set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'setup.settings')
 
+# Instância do Celery. Responsável por gerenciar as filas de tarefas em background
+# (como processamento de PDF via IA e envio de emails), melhorando o tempo de resposta da API.
 app = Celery('setup')
 
 # Using a string here means the worker doesn't have to serialize
