@@ -92,18 +92,82 @@ class TestAvaliarContrato:
         assert contrato.status == StatusContrato.APROVADO
 
     def test_reprovar_contrato(self, api_client, contrato, secretaria):
-        """Avaliação com veredito REPROVADO atualiza status do contrato."""
+        """Avaliação com veredito REPROVADO e justificativa atualiza status do contrato."""
         payload = {
             "observacoes": "Faltam assinaturas.",
             "veredito": Veredito.REPROVADO.value,
             "avaliador": secretaria.id,
             "contrato_id": contrato.id,
+            "justificativa": "Documento não assinado.",
         }
         response = api_client.post("/contrato/avaliar/", payload)
         assert response.status_code == status.HTTP_201_CREATED
 
         contrato.refresh_from_db()
         assert contrato.status == StatusContrato.REPROVADO
+
+    def test_reprovar_contrato_sem_justificativa(self, api_client, contrato, secretaria):
+        """Avaliação com veredito REPROVADO sem justificativa deve falhar (HTTP 400)."""
+        payload = {
+            "observacoes": "Faltam assinaturas.",
+            "veredito": Veredito.REPROVADO.value,
+            "avaliador": secretaria.id,
+            "contrato_id": contrato.id,
+            "justificativa": "   ", # em branco
+        }
+        response = api_client.post("/contrato/avaliar/", payload)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_aprovar_contrato_duracao_superior_24_meses_nao_pcd(self, api_client, contrato, secretaria):
+        """Aprovação de contrato com duração superior a 24 meses para aluno não-PCD deve falhar."""
+        from datetime import date
+        contrato.data_inicio = date(2026, 1, 1)
+        contrato.data_termino = date(2028, 1, 2) # 24 meses e 1 dia
+        contrato.processoId.aluno.is_pcd = False
+        contrato.processoId.aluno.save()
+        contrato.save()
+
+        payload = {
+            "observacoes": "Aprovando contrato longo.",
+            "veredito": Veredito.APROVADO.value,
+            "avaliador": secretaria.id,
+            "contrato_id": contrato.id,
+        }
+        response = api_client.post("/contrato/avaliar/", payload)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_aprovar_contrato_duracao_superior_24_meses_pcd(self, api_client, contrato, secretaria):
+        """Aprovação de contrato com duração superior a 24 meses para aluno PCD deve passar."""
+        from datetime import date
+        contrato.data_inicio = date(2026, 1, 1)
+        contrato.data_termino = date(2028, 1, 2) # 24 meses e 1 dia
+        contrato.processoId.aluno.is_pcd = True
+        contrato.processoId.aluno.save()
+        contrato.save()
+
+        payload = {
+            "observacoes": "Aprovando contrato longo PCD.",
+            "veredito": Veredito.APROVADO.value,
+            "avaliador": secretaria.id,
+            "contrato_id": contrato.id,
+        }
+        response = api_client.post("/contrato/avaliar/", payload)
+        assert response.status_code == status.HTTP_201_CREATED
+
+    def test_conflito_grade_sinalizacao(self, api_client, contrato, aluno, horario_segunda_manha):
+        """Verifica se a flag conflito_grade é setada ao associar horário conflitante com a grade do aluno."""
+        # Configura aluno com a segunda de manhã na grade
+        aluno.grade.add(horario_segunda_manha)
+        
+        # O contrato inicialmente não deve ter conflito
+        assert not contrato.conflito_grade
+        
+        # Associa o mesmo horário ao contrato
+        contrato.horarios_atividade.add(horario_segunda_manha)
+        
+        # Deve detectar o conflito através do sinal m2m_changed
+        contrato.refresh_from_db()
+        assert contrato.conflito_grade
 
     def test_avaliar_contrato_sem_dados(self, api_client):
         """Avaliação sem dados obrigatórios retorna 400."""
