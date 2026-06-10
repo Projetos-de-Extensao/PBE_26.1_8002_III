@@ -94,10 +94,11 @@ A API gerencia toda a burocracia na relação **IES ↔ Aluno** para validação
 
 | # | Task | Detalhes |
 |---|------|----------|
-| 6.1 | **Criar modelo `Relatorio`** | Campos: `horasTrabalhadas`, `periodoReferencia`, `status` (string), `arquivoUrl`, FK para `Processo`. |
-| 6.2 | **Endpoint `POST /processos/:id/relatorios`** | Aluno envia relatório com período, horas e PDF assinado. |
-| 6.3 | **Pré-condição: processo "Em Andamento"** | Validar que o processo está ativo antes de permitir envio. |
-| 6.4 | **Validar horas vs. TCE** | Total de horas reportadas não pode exceder o estipulado no contrato. |
+| 6.1 | ✅ **Criar modelo `Relatorio`** | Atualizado: Campos `titulo` e `corpo` inseridos por IA. Campos de `horas` e `datas` foram removidos pois os relatórios variam por curso. |
+| 6.2 | ✅ **Endpoint `POST /processo/:id/relatorio/`** | Aluno envia arquivo PDF do relatório e IA analisa. |
+| 6.3 | ✅ **Pré-condição: processo "Em Andamento"** | Validado: processo deve estar em `EM_ANDAMENTO`. |
+| 6.4 | ❌ **Validar horas vs. TCE** | Removido: validação agora é feita semanticamente por IA comparando o `corpo` com a ementa do curso em `ementa_md`. |
+| 6.7 | ✅ **Endpoint `PATCH /processo/:id/relatorio/atualizar/`** | Edição manual do relatório pela coordenação. |
 | 6.5 | **Flag de envio fora do prazo** | Marcar relatórios atrasados com flag, mas permitir envio com alerta. |
 | 6.6 | **Status do relatório = "Aguardando Validação"** | Setar automaticamente ao criar. |
 
@@ -143,10 +144,12 @@ A API gerencia toda a burocracia na relação **IES ↔ Aluno** para validação
 | # | Task | Detalhes |
 |---|------|----------|
 | 10.1 | **Endpoint `GET /processos?status=pendente`** | Listar fila de contratos pendentes de análise. |
-| 10.2 | **Endpoint `PATCH /processos/:id/aprovar`** | Secretaria aprova o contrato → status = `APROVADO`. |
-| 10.3 | **Registrar avaliador e timestamp** | Gravar quem avaliou e quando no histórico do processo. |
-| 10.4 | **Notificar Aluno na aprovação** | Disparar notificação ao aluno quando contrato for aprovado. |
-| 10.5 | **Restrição de perfil** | Apenas Secretaria ou superior podem alterar status. |
+| 10.2 | ✅ **Endpoint `PATCH /contrato/avaliar/`** | Secretaria aprova o contrato → status = `APROVADO`. |
+| 10.3 | ✅ **Registrar avaliador e timestamp** | Gravar quem avaliou e quando no histórico do processo. |
+| 10.4 | ✅ **Notificar Aluno na aprovação** | Disparar notificação ao aluno quando contrato for aprovado. |
+| 10.5 | ✅ **Restrição de perfil** | Apenas Secretaria ou superior podem alterar status. |
+| 10.6 | ✅ **Atualização de Status do Processo** | Quando contrato é aprovado, o status do processo muda para `EM_ANDAMENTO`. |
+| 10.7 | ✅ **Endpoint `PATCH /processo/:id/contrato/atualizar/`** | Edição manual dos dados do contrato pela secretaria. |
 
 ---
 
