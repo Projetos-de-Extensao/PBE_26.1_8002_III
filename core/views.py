@@ -1,5 +1,7 @@
+import os
 from django.shortcuts import get_object_or_404
 from django.db import IntegrityError
+from django.http import FileResponse, Http404
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import status, serializers
@@ -7,6 +9,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
+from drf_spectacular.types import OpenApiTypes
 from .serializers import *
 from .models import Aluno, Processo, Secretaria, Coordenador, Contrato, HistoricoAvaliacaoContrato, Horarios
 from .permissions import IsSecretaria, IsAluno, IsCoordenador
@@ -140,7 +143,19 @@ class ProcessoAPIView(APIView):
         responses={201: ProcessoSerializer}
     )
     def post(self, request, *args, **kwargs):
-        parsed_data = request.data
+        parsed_data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
+        
+        # UC-08: iniciar_processo (Regras de Negócio)
+        try:
+            aluno_logado = Aluno.objects.get(email=request.user.email)
+            parsed_data['matricula_aluno'] = aluno_logado.matricula
+        except Aluno.DoesNotExist:
+            if 'matricula_aluno' not in parsed_data:
+                return Response(
+                    {"matricula_aluno": "Secretaria/Coordenação deve selecionar a matrícula do aluno."}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
         serializer = ProcessoSerializer(data=parsed_data)
         serializer.is_valid(raise_exception=True)
 
@@ -398,3 +413,33 @@ class HorariosAPIView(APIView):
         horarios = Horarios.objects.all()
         serializer = HorariosSerializer(horarios, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class DownloadContratoAPIView(APIView):
+    # UC-06: fazer_download
+    permission_classes = [IsAluno | IsSecretaria | IsCoordenador]
+
+    @extend_schema(
+        summary="Download de Contrato de Estágio",
+        description="Retorna o arquivo PDF do contrato. Acesso protegido para o dono do processo, secretaria ou coordenação.",
+        responses={200: OpenApiTypes.BINARY}
+    )
+    def get(self, request, id, *args, **kwargs):
+        contrato = get_object_or_404(Contrato, id=id)
+        processo = contrato.processoId
+        
+        # Validação de permissão (Aluno só baixa o dele)
+        is_staff = Secretaria.objects.filter(email=request.user.email).exists() or \
+                   Coordenador.objects.filter(email=request.user.email).exists()
+        
+        if not is_staff:
+            try:
+                aluno = Aluno.objects.get(email=request.user.email)
+                if processo.aluno != aluno:
+                    return Response({"error": "Você não tem permissão para baixar este contrato."}, status=status.HTTP_403_FORBIDDEN)
+            except Aluno.DoesNotExist:
+                return Response({"error": "Usuário não autorizado."}, status=status.HTTP_403_FORBIDDEN)
+                
+        if not contrato.arquivo:
+            raise Http404("Arquivo não encontrado.")
+            
+        return FileResponse(contrato.arquivo.open('rb'), as_attachment=True, filename=os.path.basename(contrato.arquivo.name))

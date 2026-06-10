@@ -1,4 +1,4 @@
-from django.db import ProtectedError
+from django.db.models import ProtectedError
 from core.enums import StatusRelatorio
 from django.template.defaultfilters import default
 from core.services.upload_contrato import upload_contrato_path
