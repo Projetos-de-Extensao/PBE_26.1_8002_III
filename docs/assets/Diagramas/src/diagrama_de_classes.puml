@@ -51,6 +51,21 @@ enum Veredito {
     REPROVADO
 }
 
+enum DiasDaSemana {
+    SEGUNDA
+    TERCA
+    QUARTA
+    QUINTA
+    SEXTA
+    SABADO
+}
+
+enum Turno {
+    MANHA
+    TARDE
+    NOITE
+}
+
 ' --- Classes Principais ---
 
 abstract class Usuario {
@@ -59,20 +74,21 @@ abstract class Usuario {
     # email : string
     # senha : string
     # unidade : Unidade
+    # precisa_redefinir_senha : bool
 }
 
 class Aluno extends Usuario {
     - cpf : string
     - is_ativo : bool
     - periodo : Periodo
-    - cursoId : int
+    - curso : FK<Curso>
+    - grade : M2M<Horarios>
 }
 
 class Secretaria extends Usuario {
 }
 
 class Coordenador extends Usuario {
-    - areaId : int
 }
 
 class Processo {
@@ -80,7 +96,10 @@ class Processo {
     - nome_empresa : string
     - data_criacao : Date
     - status : StatusProcesso
-    - matricula_aluno : FK<Aluno>
+    - aluno : FK<Aluno>
+    - coordenacao : FK<Coordenador>
+    - secretaria : FK<Secretaria>
+    - criado_por : string
     + nome_processo() : string
 }
 
@@ -94,17 +113,18 @@ class Contrato {
     - data_termino : Date
     - apolice_seguro : string
     - plano_atividade : bool
+    - horarios_atividade : M2M<Horarios>
     - assinatura_aluno : bool
     - assinatura_empresa : bool
     - assinatura_faculdade : bool
-    - processoId : int
+    - processoId : FK<Processo>
     - status : StatusContrato
     + nome_contrato() : string
 }
 
 class Relatorio {
     - id : int
-    - processo_id : int
+    - processo_id : FK<Processo>
     - arquivo : string
     - data_upload : Date
     - horas_trabalhadas : int
@@ -121,24 +141,32 @@ abstract class HistoricoAvaliacao {
 }
 
 class HistoricoAvaliacaoRelatorio extends HistoricoAvaliacao {
-    - avaliador : int
-    - relatorio_id : int
+    - avaliador : FK<Coordenador>
+    - relatorio_id : FK<Relatorio>
 }
 
 class HistoricoAvaliacaoContrato extends HistoricoAvaliacao {
-    - avaliador : int
-    - contrato_id : int
+    - avaliador : FK<Secretaria>
+    - contrato_id : FK<Contrato>
+    - justificativa : string
 }
 
 class Curso {
     - id : int
     - nome : string
-    - areaId : int
+    - areaId : FK<Area>
 }
 
 class Area {
     - id : int
     - nome : string
+    - coordenador : FK<Coordenador>
+}
+
+class Horarios {
+    - id : int
+    - turno : Turno
+    - dia : DiasDaSemana
 }
 
 ' --- Relacionamentos ---
@@ -147,9 +175,12 @@ class Area {
 Aluno "0..*" -- "1" Curso
 Aluno "0..*" -- "1" Periodo
 
+' Grade horária do aluno
+Aluno "0..*" -- "0..*" Horarios : grade >
+
 ' Hierarquia de Curso e Área
 Area "1" -- "0..*" Curso
-Coordenador "1" -- "1" Area
+Area "1" -- "1" Coordenador : coordenador >
 
 ' Relacionamento de Processo
 Aluno "1" -- "0..1" Processo : possui >
@@ -159,6 +190,9 @@ Coordenador "1" -- "0..*" Processo : valida >
 Processo "1" *-- "1..*" Contrato : contém >
 Processo "1" *-- "0..*" Relatorio : contém >
 Processo "0..*" -- "1" StatusProcesso : possui >
+
+' Horários do contrato
+Contrato "0..*" -- "0..*" Horarios : horarios_atividade >
 
 Coordenador "1" -- "0..*" HistoricoAvaliacaoRelatorio : avalia >
 Relatorio "1" -- "0..1" HistoricoAvaliacaoRelatorio : possui >

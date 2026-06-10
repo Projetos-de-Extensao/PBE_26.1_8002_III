@@ -19,7 +19,10 @@ Os Enums garantem a integridade dos atributos de controle no sistema, evitando e
 | **`StatusContrato`** | Define a situação atual do contrato. | `PENDENTE`, `EM_ANALISE_SECRETARIA`, `APROVADO`, `REPROVADO` |
 | **`StatusRelatorio`** | Define a situação atual do relatório. | `PENDENTE`, `EM_ANALISE_COORDENACAO`, `APROVADO`, `REPROVADO` |
 | **`Unidade`** | Define o campus do usuário. | `BARRA`, `BOTAFOGO` |
-| **`Periodo`** | Representa o semestre atual do aluno. | `P1` ao `P10` |
+| **`Periodo`** | Representa o semestre atual do aluno. | `PRIMEIRO` ao `DECIMO` |
+| **`Veredito`** | Define o resultado de uma avaliação. | `APROVADO`, `REPROVADO` |
+| **`DiasDaSemana`** | Define os dias da semana para grade horária. | `SEGUNDA`, `TERCA`, `QUARTA`, `QUINTA`, `SEXTA`, `SABADO` |
+| **`Turno`** | Define o turno de atividade. | `MANHA`, `TARDE`, `NOITE` |
 
 ---
 
@@ -28,14 +31,14 @@ Os Enums garantem a integridade dos atributos de controle no sistema, evitando e
 ![Diagrama de Usuários](../assets/Diagramas/out/diagrama_classes_usuarios.svg)
 
 > [!NOTE]
-> Todos os perfis do sistema herdam da classe abstrata **`Usuario`**, compartilhando credenciais essenciais como `matricula`, `nome`, `email`, `senha`, `unidade` e centralizando o método `login()`.
+> Todos os perfis do sistema herdam da classe abstrata **`Usuario`**, compartilhando credenciais essenciais como `matricula`, `nome`, `email`, `senha`, `unidade` e `precisa_redefinir_senha`, centralizando o método `login()`.
 
 ### 👨‍🎓 Aluno
 O ator principal. Inicia o processo de estágio e faz o intermédio entre empresa e secretaria.
 
 ![Diagrama de Classes - Aluno](../assets/Diagramas/out/diagrama_classes_aluno.svg)
 
-- **Relacionamentos:** Pertence a 1 `Curso` e 1 `Periodo`. Possui *apenas um* `processoAtual`.
+- **Relacionamentos:** Pertence a 1 `Curso` e 1 `Periodo`. Possui *apenas um* `processoAtual`. Possui uma `grade` horária (ManyToMany com `Horarios`).
 - **Ações Principais:** `iniciarProcesso()`, `anexarContrato()`, `anexarRelatorio()`.
 
 ### 👩‍💼 Secretaria
@@ -50,7 +53,7 @@ Decisor acadêmico. Avalia se o estágio está alinhado às diretrizes do curso 
 
 ![Diagrama de Classes - Coordenação](../assets/Diagramas/out/diagrama_classes_coordenacao.svg)
 
-- **Relacionamentos:** Supervisiona toda a sua `Area` específica.
+- **Relacionamentos:** Está vinculado a uma `Area` específica (a FK `coordenador` pertence ao model `Area`).
 - **Ações Principais:** `validarEstagio()`.
 
 ---
@@ -61,19 +64,19 @@ Decisor acadêmico. Avalia se o estágio está alinhado às diretrizes do curso 
 
 ### 🔄 Processo
 O coração do sistema. Ele encapsula o ciclo do estágio conectando `Aluno`, `Secretaria` e `Coordenacao`.
-- **Atributos:** `id`, `data_criacao`, `status`.
+- **Atributos:** `id`, `nome_empresa`, `data_criacao`, `status`, `aluno` (FK), `coordenacao` (FK), `secretaria` (FK), `criado_por`.
 - **Composições:** Contém instâncias de `Contrato` (1..*) e `Relatorio` (0..*). Se o processo é extinto, os documentos associados também perdem o vínculo estrutural.
 - **Transições:** Gerenciado internamente pelos métodos de validação e por `atualizarStatus()`.
 
 ### 📝 Contrato
 O termo de compromisso formal de início.
-- **Dados Relevantes:** Vigência (`data_inicio`, `data_termino`), dados do prestador (`cnpj_empresa`, `nome_empresa`).
+- **Dados Relevantes:** Vigência (`data_inicio`, `data_termino`), dados do prestador (`cnpj_empresa`, `nome_empresa`), e `horarios_atividade` (ManyToMany com `Horarios`).
 - **Validações:** Requer `apolice_seguro`, `plano_atividade` válidos e verificação boolean de todas as assinaturas (`assinatura_aluno`, `assinatura_empresa`, `assinatura_faculdade`).
 - **Status:** Utiliza o enum `StatusContrato`.
 
 ### 📊 Relatório
-Submissão periódica para contabilização de atividades e horasDocumento produzido pela empresa ao final do período de estágio para informar o que foi feito pelo estudante.
-- **Dados Relevantes:** `horasTrabalhadas`, `periodoReferencia`.
+Documento produzido pela empresa ao final do período de estágio para informar o que foi feito pelo estudante.
+- **Dados Relevantes:** `horas_trabalhadas`, `data_inicio`, `data_termino`.
 - **Validação:** Necessita do marcador de triagem externa `status` que utiliza o enum `StatusRelatorio`.
 
 ---
@@ -85,7 +88,8 @@ Submissão periódica para contabilização de atividades e horasDocumento produ
 | Classe | Descrição | Relacionamentos |
 | :--- | :--- | :--- |
 | **`Curso`** | Identificação do programa de graduação do aluno. | Um aluno possui **1** Curso. Múltiplos cursos compõem **1** Área. |
-| **`Area`** | Agrupamento taxonômico de cursos correlatos. | Possui de **0 a Muitos** Cursos, provendo os alunos daquela gestão para referenciar **1** Coordenação. |
+| **`Area`** | Agrupamento taxonômico de cursos correlatos. | Possui de **0 a Muitos** Cursos e **1** `coordenador` (OneToOne FK para `Coordenador`). |
+| **`Horarios`** | Grade horária com turno e dia da semana. | Vinculado a `Aluno` (ManyToMany via `grade`) e a `Contrato` (ManyToMany via `horarios_atividade`). Usa enums `Turno` e `DiasDaSemana`. |
 
 ---
 

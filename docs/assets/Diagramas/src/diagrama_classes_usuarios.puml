@@ -31,20 +31,21 @@ abstract class Usuario {
     # email : string
     # senha : string
     # unidade : Unidade
+    # precisa_redefinir_senha : bool
 }
 
 class Aluno extends Usuario {
     - cpf : string
     - is_ativo : bool
     - periodo : Periodo
-    - cursoId : int
+    - curso : FK<Curso>
+    - grade : M2M<Horarios>
 }
 
 class Secretaria extends Usuario {
 }
 
 class Coordenador extends Usuario {
-    - areaId : int
 }
 
 @enduml

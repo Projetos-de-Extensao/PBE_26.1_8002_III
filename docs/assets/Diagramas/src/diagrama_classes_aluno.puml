@@ -14,19 +14,21 @@ abstract class Usuario {
     # email : string
     # senha : string
     # unidade : Unidade
+    # precisa_redefinir_senha : bool
 }
 
 class Aluno extends Usuario {
     - cpf : string
     - is_ativo : bool
     - periodo : Periodo
-    - cursoId : int
+    - curso : FK<Curso>
+    - grade : M2M<Horarios>
 }
 
 class Curso {
     - id : int
     - nome : string
-    - areaId : int
+    - areaId : FK<Area>
 }
 
 enum Periodo {
@@ -38,7 +40,10 @@ class Processo {
     - nome_empresa : string
     - data_criacao : Date
     - status : StatusProcesso
-    - matricula_aluno : FK<Aluno>
+    - aluno : FK<Aluno>
+    - coordenacao : FK<Coordenador>
+    - secretaria : FK<Secretaria>
+    - criado_por : string
     + nome_processo() : string
 }
 
@@ -52,17 +57,18 @@ class Contrato {
     - data_termino : Date
     - apolice_seguro : string
     - plano_atividade : bool
+    - horarios_atividade : M2M<Horarios>
     - assinatura_aluno : bool
     - assinatura_empresa : bool
     - assinatura_faculdade : bool
-    - processoId : int
+    - processoId : FK<Processo>
     - status : StatusContrato
     + nome_contrato() : string
 }
 
 class Relatorio {
     - id : int
-    - processo_id : int
+    - processo_id : FK<Processo>
     - arquivo : string
     - data_upload : Date
     - horas_trabalhadas : int
@@ -71,11 +77,19 @@ class Relatorio {
     - status : StatusRelatorio
 }
 
+class Horarios {
+    - id : int
+    - turno : Turno
+    - dia : DiasDaSemana
+}
+
 ' --- Relacionamentos ---
 Aluno "0..*" -- "1" Curso
 Aluno "0..*" -- "1" Periodo
+Aluno "0..*" -- "0..*" Horarios : grade >
 Aluno "1" -- "0..1" Processo : possui >
 Processo "1" *-- "1..*" Contrato : contém >
 Processo "1" *-- "0..*" Relatorio : contém >
+Contrato "0..*" -- "0..*" Horarios : horarios_atividade >
 
 @enduml
