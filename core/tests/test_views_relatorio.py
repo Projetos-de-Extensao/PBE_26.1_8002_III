@@ -59,6 +59,29 @@ class TestUploadRelatorio:
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
+    def test_upload_relatorio_processo_inativo(self, api_client, processo, contrato):
+        """Upload de relatório para processo com status inativo (ex: REPROVADO) deve falhar (HTTP 400)."""
+        from core.enums import StatusProcesso
+        processo.status = StatusProcesso.REPROVADO
+        processo.save()
+
+        arquivo = SimpleUploadedFile(
+            "relatorio.pdf",
+            b"%PDF-1.4 fake relatorio content",
+            content_type="application/pdf"
+        )
+        response = api_client.post(
+            f"/processo/{processo.id}/relatorio/",
+            {
+                "arquivo": arquivo,
+                "horas_trabalhadas": 120,
+                "data_inicio": "2026-06-01",
+                "data_termino": "2026-11-30",
+            },
+            format="multipart"
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
 
 # ── Avaliação de Relatório ───────────────────────────────────────────
 
