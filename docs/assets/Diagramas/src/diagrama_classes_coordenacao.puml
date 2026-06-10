@@ -20,15 +20,16 @@ abstract class Usuario {
     # email : string
     # senha : string
     # unidade : Unidade
+    # precisa_redefinir_senha : bool
 }
 
 class Coordenador extends Usuario {
-    - areaId : int
 }
 
 class Area {
     - id : int
     - nome : string
+    - coordenador : FK<Coordenador>
 }
 
 class Processo {
@@ -36,7 +37,10 @@ class Processo {
     - nome_empresa : string
     - data_criacao : Date
     - status : StatusProcesso
-    - matricula_aluno : FK<Aluno>
+    - aluno : FK<Aluno>
+    - coordenacao : FK<Coordenador>
+    - secretaria : FK<Secretaria>
+    - criado_por : string
     + nome_processo() : string
 }
 
@@ -51,12 +55,12 @@ abstract class HistoricoAvaliacao {
 }
 
 class HistoricoAvaliacaoRelatorio extends HistoricoAvaliacao {
-    - avaliador : int
-    - relatorio_id : int
+    - avaliador : FK<Coordenador>
+    - relatorio_id : FK<Relatorio>
 }
 
 ' --- Relacionamentos ---
-Coordenador "1" -- "1" Area
+Area "1" -- "1" Coordenador : coordenador >
 Coordenador "1" -- "0..*" Processo : valida >
 Coordenador "1" -- "0..*" HistoricoAvaliacaoRelatorio : avalia >
 Relatorio "1" -- "0..1" HistoricoAvaliacaoRelatorio : possui >

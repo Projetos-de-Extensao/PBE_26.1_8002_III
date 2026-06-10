@@ -35,13 +35,31 @@ enum Veredito {
     REPROVADO
 }
 
+enum Turno {
+    MANHA
+    TARDE
+    NOITE
+}
+
+enum DiasDaSemana {
+    SEGUNDA
+    TERCA
+    QUARTA
+    QUINTA
+    SEXTA
+    SABADO
+}
+
 ' --- Classes de Processo e Documentação ---
 class Processo {
     - id : int
     - nome_empresa : string
     - data_criacao : Date
     - status : StatusProcesso
-    - matricula_aluno : FK<Aluno>
+    - aluno : FK<Aluno>
+    - coordenacao : FK<Coordenador>
+    - secretaria : FK<Secretaria>
+    - criado_por : string
     + nome_processo() : string
 }
 
@@ -55,17 +73,18 @@ class Contrato {
     - data_termino : Date
     - apolice_seguro : string
     - plano_atividade : bool
+    - horarios_atividade : M2M<Horarios>
     - assinatura_aluno : bool
     - assinatura_empresa : bool
     - assinatura_faculdade : bool
-    - processoId : int
+    - processoId : FK<Processo>
     - status : StatusContrato
     + nome_contrato() : string
 }
 
 class Relatorio {
     - id : int
-    - processo_id : int
+    - processo_id : FK<Processo>
     - arquivo : string
     - data_upload : Date
     - horas_trabalhadas : int
@@ -82,19 +101,28 @@ abstract class HistoricoAvaliacao {
 }
 
 class HistoricoAvaliacaoRelatorio extends HistoricoAvaliacao {
-    - avaliador : int
-    - relatorio_id : int
+    - avaliador : FK<Coordenador>
+    - relatorio_id : FK<Relatorio>
 }
 
 class HistoricoAvaliacaoContrato extends HistoricoAvaliacao {
-    - avaliador : int
-    - contrato_id : int
+    - avaliador : FK<Secretaria>
+    - contrato_id : FK<Contrato>
+    - justificativa : string
+}
+
+class Horarios {
+    - id : int
+    - turno : Turno
+    - dia : DiasDaSemana
 }
 
 ' --- Relacionamentos de Processo ---
 Processo "1" *-- "1..*" Contrato : contém >
 Processo "1" *-- "0..*" Relatorio : contém >
 Processo "0..*" -- "1" StatusProcesso : possui >
+
+Contrato "0..*" -- "0..*" Horarios : horarios_atividade >
 
 Relatorio "1" -- "0..1" HistoricoAvaliacaoRelatorio : possui >
 Contrato "1" -- "0..1" HistoricoAvaliacaoContrato : possui >

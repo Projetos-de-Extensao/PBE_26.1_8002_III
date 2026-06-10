@@ -12,6 +12,21 @@ enum Periodo {
     PRIMEIRO, SEGUNDO, TERCEIRO, QUARTO, QUINTO, SEXTO, SETIMO, OITAVO, NONO, DECIMO
 }
 
+enum DiasDaSemana {
+    SEGUNDA
+    TERCA
+    QUARTA
+    QUINTA
+    SEXTA
+    SABADO
+}
+
+enum Turno {
+    MANHA
+    TARDE
+    NOITE
+}
+
 ' --- Classes da Estrutura Acadêmica ---
 class Aluno {
     - matricula : string
@@ -19,21 +34,24 @@ class Aluno {
     - email : string
     - senha : string
     - unidade : Unidade
+    - precisa_redefinir_senha : bool
     - cpf : string
     - is_ativo : bool
     - periodo : Periodo
-    - cursoId : int
+    - curso : FK<Curso>
+    - grade : M2M<Horarios>
 }
 
 class Curso {
     - id : int
     - nome : string
-    - areaId : int
+    - areaId : FK<Area>
 }
 
 class Area {
     - id : int
     - nome : string
+    - coordenador : FK<Coordenador>
 }
 
 class Coordenador {
@@ -42,16 +60,23 @@ class Coordenador {
     - email : string
     - senha : string
     - unidade : Unidade
-    - areaId : int
+    - precisa_redefinir_senha : bool
+}
+
+class Horarios {
+    - id : int
+    - turno : Turno
+    - dia : DiasDaSemana
 }
 
 ' --- Relacionamentos ---
 ' Um aluno pertence a um curso e período
 Aluno "0..*" -- "1" Curso
 Aluno "0..*" -- "1" Periodo
+Aluno "0..*" -- "0..*" Horarios : grade >
 
 ' Hierarquia de Curso e Área
 Area "1" -- "0..*" Curso
-Coordenador "1" -- "1" Area
+Area "1" -- "1" Coordenador : coordenador >
 
 @enduml
