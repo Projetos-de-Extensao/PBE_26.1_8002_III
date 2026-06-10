@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 from drf_spectacular.types import OpenApiTypes
 from .serializers import *
-from .models import Aluno, Processo, Secretaria, Coordenador, Contrato, HistoricoAvaliacaoContrato, Horarios
+from .models import Aluno, Processo, Secretaria, Coordenador, Contrato, HistoricoAvaliacaoContrato, Horarios, FeatureFlag
 from .permissions import IsSecretaria, IsAluno, IsCoordenador
 from .services.email_service import EmailNotificationService
 from core.enums import Veredito, StatusContrato, StatusRelatorio, StatusProcesso
@@ -239,9 +239,9 @@ class UploadContrato(APIView):
             nome_documento="Contrato de Estágio"
         )
 
-        # Dispara o processamento com IA em background se não estiver executando testes
+        # Dispara o processamento com IA em background se a feature flag estiver ativa e não for execução de testes
         import sys
-        if 'pytest' not in sys.modules:
+        if 'pytest' not in sys.modules and FeatureFlag.objects.is_active("async_contract_ai"):
             from core.tasks import processarContratoComIa
             processarContratoComIa.delay(contrato.id)
         

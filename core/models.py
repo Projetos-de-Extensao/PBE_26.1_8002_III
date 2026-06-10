@@ -8,6 +8,8 @@ from core.enums import StatusProcesso
 from django.db.models import CASCADE
 from django.db.models import ForeignKey
 from django.db import models
+from django.conf import settings
+from django.core.validators import RegexValidator
 from .enums import *
 from core.services.upload_relatorio import upload_relatorio_path
 from .validators import validar_email_institucional, validar_cpf
@@ -193,4 +195,81 @@ def verificar_conflito_grade(sender, instance, action, **kwargs):
         if instance.conflito_grade != conflito:
             instance.conflito_grade = conflito
             Contrato.objects.filter(id=instance.id).update(conflito_grade=conflito)
+
+
+class FeatureFlagManager(models.Manager):
+    """
+    Manager customizado para o model FeatureFlag.
+    """
+    def is_active(self, flag_name: str) -> bool:
+        """
+        Retorna se a feature flag informada está ativa.
+        """
+        return self.model.is_active(flag_name)
+
+
+class FeatureFlag(models.Model):
+    """
+    Representa uma Feature Flag do sistema, gerenciada pelo Django Admin
+    e cacheada no Redis para alta performance.
+    """
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+        db_index=True,
+        validators=[
+            RegexValidator(
+                regex=r'^[a-z0-9_]+$',
+                message="O nome da feature flag deve conter apenas letras minúsculas, números e sublinhados (underscores)."
+            )
+        ],
+        help_text="Nome identificador único da feature flag usado no código (ex: 'async_contract_ai')."
+    )
+    is_enabled = models.BooleanField(default=False, verbose_name="Habilitado")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        verbose_name="Atualizado por",
+        related_name="updated_feature_flags"
+    )
+
+    objects = FeatureFlagManager()
+
+    class Meta:
+        verbose_name = "Feature Flag"
+        verbose_name_plural = "Feature Flags"
+
+    def __str__(self) -> str:
+        return f"{self.name} ({'Ativa' if self.is_enabled else 'Inativa'})"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        from django.core.cache import cache
+        cache.set(f"feature_flag:{self.name}", self.is_enabled, timeout=None)
+
+    @classmethod
+    def is_active(cls, flag_name: str) -> bool:
+        """
+        Implementação do Cache-Aside:
+        1. Tenta ler do Redis (Django Cache).
+        2. Se der cache miss, busca no banco de dados.
+        3. Se encontrar no banco, salva no cache por 24h e retorna o valor.
+        4. Se não encontrar, retorna False.
+        """
+        from django.core.cache import cache
+        cache_key = f"feature_flag:{flag_name}"
+        cached_val = cache.get(cache_key)
+        if cached_val is not None:
+            return bool(cached_val)
+
+        try:
+            flag = cls.objects.get(name=flag_name)
+            # Salva no Redis (Django Cache) por 24 horas (86400 segundos)
+            cache.set(cache_key, flag.is_enabled, timeout=86400)
+            return flag.is_enabled
+        except cls.DoesNotExist:
+            return False
 
