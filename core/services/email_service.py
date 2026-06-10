@@ -1,34 +1,40 @@
-from django.core.mail import send_mail
-from django.conf import settings 
+"""
+Serviço de notificação por email.
+
+Delega o envio real para tasks Celery assíncronas,
+garantindo que as views retornem imediatamente sem bloqueio.
+"""
+
 
 class EmailNotificationService:
 
     @staticmethod
     def notificar_novo_envio(email_destino, nome_aluno, nome_documento):
-        assunto = f"Ibmec - Novo documento recebido: {nome_documento}"
-        mensagem = f"Olá,\n\nO aluno {nome_aluno} enviou um novo documento: {nome_documento}.\n\nPor favor, acesse o painel da Secretaria para revisar o documento e tomar as ações necessárias.\n\nAtenciosamente,\nEquipe Ibmec."
+        """
+        Notifica a secretaria/coordenação sobre um novo documento recebido.
+        O envio é assíncrono via Celery.
 
-        send_mail(
-            subject=assunto,
-            message=mensagem,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email_destino],
-            fail_silently=False,
-        )
+        Args:
+            email_destino: Email do destinatário (secretaria/coordenação).
+            nome_aluno: Nome do aluno que enviou o documento.
+            nome_documento: Tipo do documento (ex: 'Contrato de Estágio').
+        """
+        from core.email_tasks import enviar_email_novo_envio
+        enviar_email_novo_envio.delay(email_destino, nome_aluno, nome_documento)
 
     @staticmethod
     def notificar_avaliacao(email_destino, nome_aluno, status, observacoes=""):
-        assunto = f"Ibmec - Atualizacao do seu processo: {status}"
+        """
+        Notifica o aluno sobre o resultado da avaliação do processo.
+        O envio é assíncrono via Celery.
 
-        if status.upper() == "APROVADO":
-            mensagem = f"Olá {nome_aluno},\n\nParabéns! Seu processo foi aprovado.\n\nAtenciosamente,\nEquipe Ibmec."
-        else:
-            mensagem = f"Olá {nome_aluno},\n\nInfelizmente, seu processo foi reprovado.\n\nObservações do avaliador: {observacoes}\n\nAtenciosamente,\nEquipe Ibmec."
-        
-        send_mail(
-            subject=assunto,
-            message=mensagem,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email_destino],
-            fail_silently=False,
+        Args:
+            email_destino: Email do aluno.
+            nome_aluno: Nome do aluno.
+            status: Veredito da avaliação ('aprovado' ou 'reprovado').
+            observacoes: Observações do avaliador (opcional).
+        """
+        from core.email_tasks import enviar_email_avaliacao
+        enviar_email_avaliacao.delay(
+            email_destino, nome_aluno, str(status), observacoes
         )

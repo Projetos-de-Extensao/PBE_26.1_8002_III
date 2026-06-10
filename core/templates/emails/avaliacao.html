@@ -1,0 +1,49 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}Atualização do Processo — IbIntern{% endblock %}
+
+{% block body %}
+<p class="greeting">Olá, {{ nome_aluno }}!</p>
+
+{% if status_avaliacao == "aprovado" or status_avaliacao == "APROVADO" %}
+<p class="content">
+  Temos uma ótima notícia! Seu processo foi avaliado e o resultado é:
+</p>
+
+<p style="text-align: center; margin: 24px 0;">
+  <span class="status-badge status-aprovado">✅ Aprovado</span>
+</p>
+
+<p class="content">
+  Parabéns! Seu documento foi aprovado com sucesso. Continue acompanhando o andamento do seu estágio pelo sistema.
+</p>
+
+{% else %}
+<p class="content">
+  Seu processo foi avaliado e o resultado é:
+</p>
+
+<p style="text-align: center; margin: 24px 0;">
+  <span class="status-badge status-reprovado">❌ Reprovado</span>
+</p>
+
+{% if observacoes %}
+<div class="info-box" style="border-left-color: #c62828;">
+  <p>
+    <span class="label">📝 Observações do avaliador</span>
+    {{ observacoes }}
+  </p>
+</div>
+{% endif %}
+
+<p class="content">
+  Caso tenha dúvidas sobre o resultado, entre em contato com a secretaria ou coordenação do seu curso.
+</p>
+{% endif %}
+
+<hr class="divider">
+
+<p class="content" style="font-size: 13px; color: #78909c;">
+  Acesse o sistema IbIntern para visualizar os detalhes completos do seu processo.
+</p>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}Novo Documento Recebido — IbIntern{% endblock %}
+
+{% block body %}
+<p class="greeting">Olá!</p>
+
+<p class="content">
+  Informamos que o aluno <strong>{{ nome_aluno }}</strong> enviou um novo documento para análise.
+</p>
+
+<div class="info-box">
+  <p>
+    <span class="label">📄 Documento</span>
+    {{ nome_documento }}
+  </p>
+</div>
+
+<p class="content">
+  Por favor, acesse o painel do sistema <strong>IbIntern</strong> para revisar o documento e tomar as ações necessárias.
+</p>
+
+<hr class="divider">
+
+<p class="content" style="font-size: 13px; color: #78909c;">
+  Este email foi enviado automaticamente porque um novo documento foi submetido ao sistema.
+</p>
+{% endblock %}

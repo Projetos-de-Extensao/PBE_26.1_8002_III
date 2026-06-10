@@ -15,12 +15,20 @@ from core.models import (
     Area, Curso, Aluno, Coordenador, Secretaria,
     Processo, Contrato, Relatorio,
     HistoricoAvaliacaoRelatorio, HistoricoAvaliacaoContrato,
-    Horarios,
+    Horarios, EmailLog,
 )
 from core.enums import (
     Unidade, Periodo, StatusProcesso, StatusContrato,
     StatusRelatorio, Veredito, Turno, DiasDaSemana,
 )
+
+
+# ── Email backend para testes (evita conexão SMTP real) ───────────────
+
+@pytest.fixture(autouse=True)
+def _use_locmem_email_backend(settings):
+    """Força o uso do backend in-memory em todos os testes."""
+    settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 
 
 # ── Cliente HTTP (autenticado com todas as permissões) ────────────────
