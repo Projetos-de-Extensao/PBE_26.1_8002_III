@@ -15,6 +15,7 @@ from core.enums import Veredito, StatusContrato, StatusRelatorio, StatusProcesso
 
 class AlunoAPIView(APIView):
     permission_classes = [IsSecretaria | IsCoordenador]
+    filterset_fields = ['matricula', 'cpf', 'nome']
 
     @extend_schema(
         parameters=[
@@ -40,16 +41,6 @@ class AlunoAPIView(APIView):
             termos_da_busca = nome.split() 
             for termo in termos_da_busca:
                 data = data.filter(nome__icontains=termo)
-
-        if not data.exists():
-            return Response(
-                {
-                    "mensagem": "Nenhum aluno encontrado com os dados informados.",
-                    "sugestao": "Tente buscar apenas pelo primeiro nome ou limpe os filtros e tente novamente.",
-                    "resultados": []
-                }, 
-                status=status.HTTP_200_OK
-            )
 
         paginator = PageNumberPagination()
         paginated_data = paginator.paginate_queryset(data, request)
@@ -92,6 +83,7 @@ class AlunoAPIView(APIView):
 
 class ProcessoAPIView(APIView):
     permission_classes = [IsAluno | IsSecretaria | IsCoordenador]
+    filterset_fields = ['status', 'nome_empresa']
 
     @extend_schema(
         parameters=[
@@ -151,14 +143,6 @@ class ProcessoAPIView(APIView):
         username = request.user.username
         criado_por_string = (cargo + nome_completo + username)[:100]
 
-        if not serializer.is_valid():
-            erros = {
-                "erro": "Falha na validação dos dados.",
-                "campos_com_erro": {
-                    campo: mensagens for campo, mensagens in serializer.errors.items()
-                }
-            }
-            return Response(erros, status=status.HTTP_400_BAD_REQUEST)
         try:    
             serializer.save(criado_por=criado_por_string)
             return Response({"criado": "Processo criado com sucesso"}, status=status.HTTP_201_CREATED)
