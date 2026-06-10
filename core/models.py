@@ -33,6 +33,7 @@ class Aluno(Usuario):
     curso = models.ForeignKey("Curso", on_delete=models.CASCADE)
     unidade = models.CharField(max_length=15, choices=Unidade)
     grade = models.ManyToManyField('Horarios',db_table='grade_horaria')
+    is_pcd = models.BooleanField(default=False, verbose_name="PCD")
 
     class Meta:
         verbose_name = "Aluno"
@@ -121,6 +122,7 @@ class Contrato(models.Model):
     assinatura_faculdade = models.BooleanField(default=False, verbose_name="Assinatura da Faculdade",null=True,blank=True)
     processoId = models.ForeignKey(Processo, on_delete=models.CASCADE, verbose_name="Processo")
     status = models.CharField(max_length = 15, choices=StatusContrato, default = StatusContrato.PENDENTE )
+    conflito_grade = models.BooleanField(default=False, verbose_name="Conflito de Grade")
 
     @property
     def nome_contrato(self):
@@ -147,7 +149,7 @@ class Relatorio(models.Model):
 
 class HistoricoAvaliacao(models.Model):
     observacoes = models.TextField(verbose_name="Observações")
-    data_avaliacao = models.DateField(verbose_name="Data de avaliação",default=timezone.now)
+    data_avaliacao = models.DateTimeField(verbose_name="Data de avaliação",default=timezone.now)
     veredito = models.CharField(max_length=20,choices=Veredito,verbose_name="Veredito")
 
     class Meta:
@@ -163,7 +165,7 @@ class HistoricoAvaliacaoRelatorio(HistoricoAvaliacao):
 class HistoricoAvaliacaoContrato(HistoricoAvaliacao):
     avaliador = models.ForeignKey(Secretaria, on_delete=models.PROTECT)
     contrato_id = models.OneToOneField(Contrato, on_delete=models.CASCADE)
-    justificativa = models.CharField(max_length=200,verbose_name="Justificativa")
+    justificativa = models.CharField(max_length=200,verbose_name="Justificativa", blank=True, default="")
 
     def delete(self,*args,**kwargs):
         raise ProtectedError("Histórico de Justificativas não pode ser alterado ou deletado.")
@@ -178,3 +180,26 @@ class Horarios(models.Model):
     
     def __str__(self):
         return f"{self.aluno} - {self.dia} - {self.periodo}"
+
+
+# Sinais para regras de negócio automatizadas
+from django.db.models.signals import m2m_changed
+from django.dispatch import receiver
+
+@receiver(m2m_changed, sender=Contrato.horarios_atividade.through)
+def verificar_conflito_grade(sender, instance, action, **kwargs):
+    if action in ["post_add", "post_remove", "post_clear"]:
+        aluno = instance.processoId.aluno
+        horarios_contrato = instance.horarios_atividade.all()
+        grade_aluno = aluno.grade.all()
+        
+        conflito = False
+        for horario in horarios_contrato:
+            if horario in grade_aluno:
+                conflito = True
+                break
+        
+        if instance.conflito_grade != conflito:
+            instance.conflito_grade = conflito
+            Contrato.objects.filter(id=instance.id).update(conflito_grade=conflito)
+
