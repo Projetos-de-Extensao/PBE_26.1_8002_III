@@ -20,7 +20,7 @@ title: Validar Contrato
     4. Sistema exibe os detalhes do aluno, da empresa e o PDF do contrato (Ação: Analisar Contrato).
     5. Secretaria verifica as assinaturas, datas e apólices.
     6. Secretaria clica no botão "Aprovar".
-    7. Sistema atualiza o status para "Aprovado" e notifica o Aluno.
+    7. Sistema atualiza o status do contrato para "Aprovado", do processo associado para "Em Andamento" e notifica o Aluno.
 
 - **Fluxos Alternativos:**
     - **5a. Documento possui erros burocráticos (Ação: Reprovar com Justificativa)**
@@ -30,7 +30,7 @@ title: Validar Contrato
         - 5a4. Sistema atualiza o status para "Reprovado" e notifica o Aluno com a justificativa.
 
 - **Pós-condições:**
-    - O status do contrato é alterado para "Aprovado" ou "Reprovado".
+    - O status do contrato é alterado para "Aprovado" ou "Reprovado" e o Processo transita para o status correspondente (ex: Em Andamento).
     - O registro da avaliação (quem avaliou e quando) é salvo no histórico do processo.
 
 - **Regras de Negócio:**

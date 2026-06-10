@@ -18,6 +18,7 @@ class TipoUsuario(models.TextChoices):
 class StatusProcesso(models.TextChoices):
     ABERTO = 'aberto', 'Aberto'
     PENDENTE = 'pendente', 'Pendente'
+    EM_ANDAMENTO = 'em_andamento', 'Em Andamento'
     REPROVADO ='reprovado','Reprovado'
     CONCLUIDO = 'concluido','Concluido'
     CANCELADO ='cancelado','Cancelado'

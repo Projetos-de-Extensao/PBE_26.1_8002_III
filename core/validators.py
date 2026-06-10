@@ -68,25 +68,5 @@ def validar_cpf(value):
 
 
 
-def valida_periodo_relatorio(relatorio, contrato):
-        data_inicio_prevista = contrato.data_inicio
-        data_termino_prevista = contrato.data_termino
-        
-        data_inicio_relatorio = relatorio.data_inicio
-        data_termino_relatorio = relatorio.data_termino
 
-        if data_inicio_prevista is None or data_termino_prevista is None:
-            return False
-        if data_inicio_relatorio is None or data_termino_relatorio is None:
-            return False
-        
-        comecou_antes = data_inicio_relatorio < data_inicio_prevista
-        terminou_depois = data_termino_relatorio > data_termino_prevista
-      
-        
-
-        if comecou_antes or terminou_depois:
-            return False
-        else:
-            return True
 

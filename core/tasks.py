@@ -143,3 +143,37 @@ def validarContrato(fileId, alunoId):
             observacoes=justificativa_completa
         )
 
+@shared_task
+def processarRelatorioComIa(relatorio_id):
+    relatorio = Relatorio.objects.get(id=relatorio_id)
+    if not relatorio.arquivo:
+        return
+        
+    string_relatorio = ler_pdf_modo_layout(relatorio.arquivo)
+    
+    # Simulação da IA extraindo título e corpo
+    relatorio.titulo = "Relatório Extraído por IA"
+    relatorio.corpo = string_relatorio[:1000] if string_relatorio else ""
+    relatorio.save()
+    
+    if FeatureFlag.objects.is_active("report_evaluation_ai"):
+        avaliarRelatorioComIa.delay(relatorio.id)
+
+@shared_task
+def avaliarRelatorioComIa(relatorio_id):
+    relatorio = Relatorio.objects.get(id=relatorio_id)
+    curso = relatorio.processo_id.aluno.curso
+    
+    if not curso.ementa_md:
+        return
+        
+    # TODO: Implementar a chamada real ao modelo (ex: ai_client) para validar
+    # a compatibilidade do relatório (relatorio.corpo) com a ementa do curso.
+    # Por hora, se a IA decidisse reprovar, o fluxo seria:
+    # relatorio.status = StatusRelatorio.REPROVADO
+    # relatorio.save()
+    # processo = relatorio.processo_id
+    # processo.status = StatusProcesso.CANCELADO
+    # processo.save()
+    # HistoricoAvaliacaoRelatorio.objects.create(...)
+    pass

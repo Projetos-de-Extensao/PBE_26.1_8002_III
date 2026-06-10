@@ -268,6 +268,9 @@ class AvaliarContratoAPIView(APIView):
 
         if avaliacao.veredito == Veredito.APROVADO:
             contrato.status = StatusContrato.APROVADO
+            processo = contrato.processoId
+            processo.status = StatusProcesso.EM_ANDAMENTO
+            processo.save()
         elif avaliacao.veredito == Veredito.REPROVADO:
             contrato.status = StatusContrato.REPROVADO
         
@@ -301,7 +304,7 @@ class UploadRelatorio(APIView):
         processo = get_object_or_404(Processo, id=processo_id)
         
         # Validar se o processo está ativo (Em Andamento) - Issue 148
-        if processo.status not in [StatusProcesso.ABERTO, StatusProcesso.PENDENTE]:
+        if processo.status != StatusProcesso.EM_ANDAMENTO:
             return Response(
                 {"error": "Não é permitido enviar relatórios para processos que não estão ativos/em andamento."},
                 status=status.HTTP_400_BAD_REQUEST
@@ -319,7 +322,11 @@ class UploadRelatorio(APIView):
             nome_aluno=aluno.nome, 
             nome_documento="Relatório de Estágio"
         )
-        
+        import sys
+        if 'pytest' not in sys.modules and FeatureFlag.objects.is_active("async_report_ai"):
+            from core.tasks import processarRelatorioComIa
+            processarRelatorioComIa.delay(relatorio.id)
+            
         return Response({"message": "Relatório enviado e coordenação notificada."}, status=status.HTTP_201_CREATED)
 
 class AvaliarRelatorioAPIView(APIView):
@@ -340,8 +347,14 @@ class AvaliarRelatorioAPIView(APIView):
         
         if avaliacao.veredito == Veredito.APROVADO:
             relatorio.status = StatusRelatorio.APROVADO 
+            processo = relatorio.processo_id
+            processo.status = StatusProcesso.CONCLUIDO
+            processo.save()
         elif avaliacao.veredito == Veredito.REPROVADO:
             relatorio.status = StatusRelatorio.REPROVADO
+            processo = relatorio.processo_id
+            processo.status = StatusProcesso.CANCELADO
+            processo.save()
         relatorio.save()
         
         aluno = relatorio.processo_id.aluno
@@ -454,3 +467,48 @@ class DownloadContratoAPIView(APIView):
             raise Http404("Arquivo físico não encontrado no servidor.")
             
         return FileResponse(arquivo_open, as_attachment=True, filename=os.path.basename(contrato.arquivo.name))
+
+class AtualizarContratoAPIView(APIView):
+    permission_classes = [IsSecretaria]
+
+    @extend_schema(
+        request=AtualizarContratoSerializer,
+        responses={200: AtualizarContratoSerializer}
+    )
+    def patch(self, request, id, *args, **kwargs):
+        processo = get_object_or_404(Processo, id=id)
+        contrato = processo.contrato_set.last()
+        if not contrato:
+            return Response({"error": "Contrato não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = AtualizarContratoSerializer(contrato, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        from core.tasks import validarContrato
+        validarContrato.delay(contrato.id, processo.aluno.id)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class AtualizarRelatorioAPIView(APIView):
+    permission_classes = [IsCoordenador]
+
+    @extend_schema(
+        request=AtualizarRelatorioSerializer,
+        responses={200: AtualizarRelatorioSerializer}
+    )
+    def patch(self, request, id, *args, **kwargs):
+        processo = get_object_or_404(Processo, id=id)
+        relatorio = processo.relatorio_set.last()
+        if not relatorio:
+            return Response({"error": "Relatório não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = AtualizarRelatorioSerializer(relatorio, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        if FeatureFlag.objects.is_active("report_evaluation_ai"):
+            from core.tasks import avaliarRelatorioComIa
+            avaliarRelatorioComIa.delay(relatorio.id)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)

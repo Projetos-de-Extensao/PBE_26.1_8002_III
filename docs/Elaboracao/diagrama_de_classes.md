@@ -15,7 +15,7 @@ Os Enums garantem a integridade dos atributos de controle no sistema, evitando e
 
 | Enum | Propósito | Valores Aceitos |
 | :--- | :--- | :--- |
-| **`StatusProcesso`** | Regula o ciclo de vida do estágio. | `ABERTO`, `PENDENTE`, `REPROVADO`, `CONCLUIDO`, `CANCELADO` |
+| **`StatusProcesso`** | Regula o ciclo de vida do estágio. | `ABERTO`, `PENDENTE`, `EM_ANDAMENTO`, `REPROVADO`, `CONCLUIDO`, `CANCELADO` |
 | **`StatusContrato`** | Define a situação atual do contrato. | `PENDENTE`, `EM_ANALISE_SECRETARIA`, `APROVADO`, `REPROVADO` |
 | **`StatusRelatorio`** | Define a situação atual do relatório. | `PENDENTE`, `EM_ANALISE_COORDENACAO`, `APROVADO`, `REPROVADO` |
 | **`Unidade`** | Define o campus do usuário. | `BARRA`, `BOTAFOGO` |
@@ -76,8 +76,8 @@ O termo de compromisso formal de início.
 
 ### 📊 Relatório
 Documento produzido pela empresa ao final do período de estágio para informar o que foi feito pelo estudante.
-- **Dados Relevantes:** `horas_trabalhadas`, `data_inicio`, `data_termino`.
-- **Validação:** Necessita do marcador de triagem externa `status` que utiliza o enum `StatusRelatorio`.
+- **Dados Relevantes:** `titulo`, `corpo` (extraídos automaticamente por Inteligência Artificial).
+- **Validação:** Necessita do marcador de triagem externa `status` (enum `StatusRelatorio`) e passa por validação semântica com a ementa do curso via IA.
 
 ---
 
