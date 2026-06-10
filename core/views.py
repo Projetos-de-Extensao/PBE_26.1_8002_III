@@ -1,5 +1,7 @@
+import os
 from django.shortcuts import get_object_or_404
 from django.db import IntegrityError
+from django.http import FileResponse, Http404
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import status, serializers
@@ -7,18 +9,15 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
+from drf_spectacular.types import OpenApiTypes
 from .serializers import *
-from .models import Aluno, Processo, Secretaria, Coordenador
+from .models import Aluno, Processo, Secretaria, Coordenador, Contrato, HistoricoAvaliacaoContrato, Horarios
 from .permissions import IsSecretaria, IsAluno, IsCoordenador
 from .services.email_service import EmailNotificationService
 from core.enums import Veredito, StatusContrato, StatusRelatorio, StatusProcesso
-from django.http import FileResponse, Http404
-from drf_spectacular.types import OpenApiTypes
-import os
 
 class AlunoAPIView(APIView):
     permission_classes = [IsSecretaria | IsCoordenador]
-    filterset_fields = ['matricula', 'cpf', 'nome']
 
     @extend_schema(
         parameters=[
@@ -44,6 +43,16 @@ class AlunoAPIView(APIView):
             termos_da_busca = nome.split() 
             for termo in termos_da_busca:
                 data = data.filter(nome__icontains=termo)
+
+        if not data.exists():
+            return Response(
+                {
+                    "mensagem": "Nenhum aluno encontrado com os dados informados.",
+                    "sugestao": "Tente buscar apenas pelo primeiro nome ou limpe os filtros e tente novamente.",
+                    "resultados": []
+                }, 
+                status=status.HTTP_200_OK
+            )
 
         paginator = PageNumberPagination()
         paginated_data = paginator.paginate_queryset(data, request)
@@ -86,7 +95,6 @@ class AlunoAPIView(APIView):
 
 class ProcessoAPIView(APIView):
     permission_classes = [IsAluno | IsSecretaria | IsCoordenador]
-    filterset_fields = ['status', 'nome_empresa']
 
     @extend_schema(
         parameters=[
@@ -97,7 +105,6 @@ class ProcessoAPIView(APIView):
         responses={200: ProcessoSerializer(many=True)}
     )
     def get(self, request, *args, **kwargs):
-        # Verifica se o usuário logado é Secretaria ou Coordenador (acesso total)
         is_staff = Secretaria.objects.filter(email=request.user.email).exists() or \
                    Coordenador.objects.filter(email=request.user.email).exists()
 
@@ -395,6 +402,18 @@ class ReprovarContratoAPIView(APIView):
         serializer = ProcessoSerializer(processo)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+class HorariosAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="Lista todos os horários disponíveis",
+        responses={200: HorariosSerializer(many=True)}
+    )
+    def get(self, request, *args, **kwargs):
+        horarios = Horarios.objects.all()
+        serializer = HorariosSerializer(horarios, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 class DownloadContratoAPIView(APIView):
     # UC-06: fazer_download
     permission_classes = [IsAluno | IsSecretaria | IsCoordenador]
@@ -423,4 +442,4 @@ class DownloadContratoAPIView(APIView):
         if not contrato.arquivo:
             raise Http404("Arquivo não encontrado.")
             
-        return FileResponse(contrato.arquivo.open('rb'), as_attachment=True, filename=os.path.basename(contrato.arquivo.name))
+        return FileResponse(contrato.arquivo.open('rb'), as_attachment=True, filename=os.path.basename(contrato.arquivo.name))
