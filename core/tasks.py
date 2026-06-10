@@ -37,12 +37,18 @@ def processarContratoComIa(fileId):
             contrato.horarios_atividade.add(horario)
     
 @shared_task
-def validarContrato(fileId,alunoId):
-    contrato = Contrato.objects.get(id = fileId)
-    aluno = Aluno.objects.get(id = alunoId)
+def validarContrato(fileId, alunoId):
+    contrato = Contrato.objects.get(id=fileId)
+    aluno = Aluno.objects.get(id=alunoId)
     
-    try:
-        validarGradeContrato(alunoId,fileId)
-    except gradeHorariaIncompativelException:
-        contrato.status = StatusContrato.REPROVADO
-        contrato.save()
+    horarios_contrato = contrato.horarios_atividade.all()
+    grade_aluno = aluno.grade.all()
+    
+    conflito = False
+    for horario in horarios_contrato:
+        if horario in grade_aluno:
+            conflito = True
+            break
+            
+    contrato.conflito_grade = conflito
+    contrato.save()

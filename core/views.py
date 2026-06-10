@@ -279,6 +279,13 @@ class UploadRelatorio(APIView):
         processo_id = kwargs.get('id')
         processo = get_object_or_404(Processo, id=processo_id)
         
+        # Validar se o processo está ativo (Em Andamento) - Issue 148
+        if processo.status not in [StatusProcesso.ABERTO, StatusProcesso.PENDENTE]:
+            return Response(
+                {"error": "Não é permitido enviar relatórios para processos que não estão ativos/em andamento."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         serializer = RelatorioSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         relatorio = serializer.save(processo_id=processo)
