@@ -73,6 +73,7 @@ class Secretaria(Usuario):
 class Curso(models.Model):
     nome = models.CharField(max_length=40, verbose_name="Nome")
     areaId = models.ForeignKey(Area, on_delete=models.CASCADE)
+    ementa_md = models.FileField(upload_to="ementas/", verbose_name="Ementa do Curso (MD)", null=True, blank=True)
 
     class Meta:
         verbose_name = "Curso"
@@ -134,9 +135,8 @@ class Relatorio(models.Model):
     processo_id = models.ForeignKey(Processo, on_delete=models.CASCADE)
     arquivo = models.FileField(upload_to=upload_relatorio_path, verbose_name="url do arquivo", null=True, blank=True)
     data_upload = models.DateField(verbose_name="Data de upload", default=timezone.now)
-    horas_trabalhadas = models.IntegerField(verbose_name="Horas trabalhadas", null=True, blank=True)
-    data_inicio = models.DateField(verbose_name="Data de início do relatório", null=True, blank=True)
-    data_termino = models.DateField(verbose_name="Data de término do relatório", null=True, blank=True)
+    titulo = models.CharField(max_length=255, verbose_name="Título", null=True, blank=True)
+    corpo = models.TextField(verbose_name="Corpo", null=True, blank=True)
     status = models.CharField(max_length=20, choices=StatusRelatorio, default=StatusRelatorio.AGUARDANDO_VALIDACAO)
     fora_do_prazo = models.BooleanField(default=False, verbose_name="Fora do Prazo")
 
@@ -151,6 +151,7 @@ class HistoricoAvaliacao(models.Model):
 class HistoricoAvaliacaoRelatorio(HistoricoAvaliacao):
     avaliador = models.ForeignKey(Coordenador, on_delete=models.PROTECT)
     relatorio_id = models.OneToOneField(Relatorio, on_delete=models.CASCADE)
+    justificativa = models.CharField(max_length=200, verbose_name="Justificativa", blank=True, default="")
 
     def delete(self, *args, **kwargs):
         raise ProtectedError("Histórico de Justificativas não pode ser alterado ou deletado.")
