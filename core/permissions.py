@@ -3,6 +3,12 @@ from .models import Aluno, Secretaria, Coordenador
 
 
 class IsAluno(BasePermission):
+    """
+    Verifica se o usuário autenticado via JWT pertence ao grupo 'Aluno'.
+    Como essa validação é chamada a cada request, utilizamos cache na própria
+    instância do request (`_cached_is_aluno`) para não sobrecarregar o banco
+    quando a mesma permissão for chamada mais de uma vez durante o fluxo.
+    """
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
@@ -12,6 +18,10 @@ class IsAluno(BasePermission):
         return request._cached_is_aluno
     
 class IsCoordenador(BasePermission):
+    """
+    Garante que o endpoint só será acessível por Coordenadores (ex: Avaliar Relatórios).
+    Também possui mecanismo de cache por request para performance.
+    """
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
@@ -20,6 +30,10 @@ class IsCoordenador(BasePermission):
         return request._cached_is_coordenador
     
 class IsSecretaria(BasePermission):
+    """
+    Garante que o endpoint só será acessível pela Secretaria (ex: Validar Contratos).
+    Utiliza cache no nível de requisição para evitar latência desnecessária.
+    """
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False

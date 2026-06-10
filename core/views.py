@@ -18,7 +18,11 @@ from core.enums import Veredito, StatusContrato, StatusRelatorio, StatusProcesso
 from rest_framework.exceptions import PermissionDenied
 
 def is_user_staff(user):
-    """Verifica se o usuário é Secretaria ou Coordenador."""
+    """
+    Verifica se o usuário pertence à camada administrativa (Secretaria ou Coordenador).
+    Utiliza um mecanismo de "cache" na requisição (adicionando '_cached_is_staff' ao user)
+    para evitar bater no banco de dados múltiplas vezes na mesma view.
+    """
     if hasattr(user, '_cached_is_staff'):
         return user._cached_is_staff
     is_staff = Secretaria.objects.filter(email=user.email).exists() or \
@@ -28,8 +32,11 @@ def is_user_staff(user):
 
 def get_processo_seguro(processo_id, user, prefetch=None, select=None):
     """
-    Busca um processo e valida se o usuário tem permissão para acessá-lo.
-    Alunos só podem acessar seus próprios processos.
+    PREVENÇÃO DE VULNERABILIDADE BOLA (Broken Object Level Authorization / IDOR):
+    Busca um processo e garante que o usuário possui o nível de acesso correto.
+    - Se for aluno: Verifica se ele é o "dono" do Processo. Retorna 403 caso tente 
+      acessar dados de outro aluno forçando o ID na URL.
+    - Se for staff: Passa livre.
     """
     queryset = Processo.objects.all()
     if select:
@@ -61,6 +68,13 @@ class AlunoAPIView(APIView):
         responses={200: AlunoSerializer(many=True)}
     )
     def get(self, request, *args, **kwargs):
+        """
+        Lista alunos do sistema.
+        O uso de `select_related('curso')` e `prefetch_related('aluno')` 
+        resolve um problema grave de performance conhecido como N+1 Queries.
+        Ele força o banco a carregar os dados aninhados em uma única query 
+        em vez de dezenas.
+        """
         data = Aluno.objects.select_related('curso').prefetch_related('aluno').all()
         matricula = request.query_params.get('matricula', None)
         cpf = request.query_params.get('cpf', None)
