@@ -58,4 +58,5 @@ dependencies = [
     "thefuzz>=0.22.1",
     "google-genai>=2.8.0",
     "celery>=5.4.0",
+    "django-cors-headers>=4.7.0",
 ]
