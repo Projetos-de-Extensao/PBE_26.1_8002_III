@@ -173,3 +173,14 @@ class TestAvaliarContrato:
         """Avaliação sem dados obrigatórios retorna 400."""
         response = api_client.post("/contrato/avaliar/", {})
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+class TestDownloadContrato:
+    def test_download_contrato_arquivo_nao_encontrado(self, api_client, contrato):
+        """Tentativa de download de um contrato cujo arquivo não existe no disco deve retornar 404."""
+        contrato.arquivo.name = "caminho/inexistente.pdf"
+        contrato.save()
+
+        response = api_client.get(f"/contrato/{contrato.id}/download/")
+        assert response.status_code == status.HTTP_404_NOT_FOUND

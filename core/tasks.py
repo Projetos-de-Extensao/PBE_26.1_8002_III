@@ -35,6 +35,9 @@ def processarContratoComIa(fileId):
                 turno=h["turno"],
             )
             contrato.horarios_atividade.add(horario)
+            
+    # Dispara a validação do contrato
+    validarContrato.delay(contrato.id, contrato.processoId.aluno.id)
     
 @shared_task
 def validarContrato(fileId, alunoId):
@@ -57,6 +60,7 @@ def validarContrato(fileId, alunoId):
     motivos_reprovacao = []
     
     from dateutil.relativedelta import relativedelta
+    from django.utils import timezone
     if contrato.data_inicio and contrato.data_termino:
         # Limite legal de 24 meses
         limite_fim = contrato.data_inicio + relativedelta(months=24)
@@ -68,6 +72,28 @@ def validarContrato(fileId, alunoId):
         limite_formatura = contrato.data_inicio + relativedelta(months=meses_restantes_curso)
         if contrato.data_termino > limite_formatura:
             motivos_reprovacao.append("- A data de término ultrapassa a previsão de formatura do aluno.")
+            
+        # Retroatividade: data_upload - data_inicio > 30 dias
+        data_ref = contrato.data_upload or timezone.now().date()
+        if (data_ref - contrato.data_inicio).days > 30:
+            motivos_reprovacao.append("- O contrato foi iniciado há mais de 30 dias (retroatividade não permitida).")
+            
+    # Carga Horária: horas_diarias > 6 OU horas_semanais > 30
+    horas_por_dia = {}
+    total_semanal = 0
+    for h in horarios_contrato:
+        duracao = 4.0  # Cada turno/período dura cerca de 4 horas
+        horas_por_dia[h.dia] = horas_por_dia.get(h.dia, 0) + duracao
+        total_semanal += duracao
+        
+    excedeu_diario = False
+    for dia, horas in horas_por_dia.items():
+        if horas > 6:
+            excedeu_diario = True
+            
+    dias_unicos = len(horas_por_dia.keys())
+    if excedeu_diario or (dias_unicos * 6 > 30) or total_semanal > 30:
+        motivos_reprovacao.append("- Carga horária semanal excede 30 horas ou diária excede 6 horas (violação da Lei 11.788).")
             
     if not contrato.apolice_seguro or not str(contrato.apolice_seguro).strip():
         motivos_reprovacao.append("- Apólice de seguros ausente ou inválida (Obrigatório).")
@@ -95,15 +121,17 @@ def validarContrato(fileId, alunoId):
         
         justificativa_completa = "Reprovação Automática pelo Sistema:\n" + "\n".join(motivos_reprovacao)
         
-        # Cria o histórico usando uma secretaria padrão/sistema
+        # Cria ou atualiza o histórico usando uma secretaria padrão/sistema
         secretaria_sistema = Secretaria.objects.first()
         if secretaria_sistema:
-            HistoricoAvaliacaoContrato.objects.create(
-                observacoes=justificativa_completa,
-                veredito=Veredito.REPROVADO,
-                avaliador=secretaria_sistema,
+            HistoricoAvaliacaoContrato.objects.update_or_create(
                 contrato_id=contrato,
-                justificativa=justificativa_completa
+                defaults={
+                    'observacoes': justificativa_completa,
+                    'veredito': Veredito.REPROVADO,
+                    'avaliador': secretaria_sistema,
+                    'justificativa': justificativa_completa
+                }
             )
         
         # Notifica o aluno

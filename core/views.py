@@ -238,6 +238,12 @@ class UploadContrato(APIView):
             nome_aluno=aluno.nome, 
             nome_documento="Contrato de Estágio"
         )
+
+        # Dispara o processamento com IA em background se não estiver executando testes
+        import sys
+        if 'pytest' not in sys.modules:
+            from core.tasks import processarContratoComIa
+            processarContratoComIa.delay(contrato.id)
         
         return Response(
             {
@@ -442,4 +448,9 @@ class DownloadContratoAPIView(APIView):
         if not contrato.arquivo:
             raise Http404("Arquivo não encontrado.")
             
-        return FileResponse(contrato.arquivo.open('rb'), as_attachment=True, filename=os.path.basename(contrato.arquivo.name))
+        try:
+            arquivo_open = contrato.arquivo.open('rb')
+        except (FileNotFoundError, ValueError):
+            raise Http404("Arquivo físico não encontrado no servidor.")
+            
+        return FileResponse(arquivo_open, as_attachment=True, filename=os.path.basename(contrato.arquivo.name))
