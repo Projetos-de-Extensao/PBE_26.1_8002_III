@@ -45,10 +45,18 @@ class AlunoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Aluno
-        fields = ['nome', 'email', 'matricula', 'senha', 'cpf', 'is_ativo', 'unidade', 'periodo', 'curso', 'processos']
+        fields = ['nome', 'email', 'matricula', 'senha', 'cpf', 'is_ativo', 'unidade', 'periodo', 'curso', 'processos', 'aceite_lgpd']
         read_only_fields = ['id']
         extra_kwargs = {'senha': {'write_only': True}}
     
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if 'cpf' in data and data['cpf']:
+            cpf_original = data['cpf']
+            if len(cpf_original) >= 11:
+                data['cpf'] = f"***.***.{cpf_original[-5:]}"
+        return data
+
     def create(self, validated_data):
         validated_data['senha'] = make_password(validated_data['senha'])
         validated_data['nome'] = validated_data['nome'].lower().capitalize().strip()
@@ -57,7 +65,6 @@ class AlunoSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         if 'senha' in validated_data:
             validated_data['senha'] = make_password(validated_data['senha'])
-        
         if 'nome' in validated_data:
             validated_data['nome'] = validated_data['nome'].lower().capitalize().strip()
 
@@ -68,6 +75,7 @@ class AlunoSerializer(serializers.ModelSerializer):
         instance.cpf = validated_data.get("cpf", instance.cpf)
         instance.is_ativo = validated_data.get("is_ativo", instance.is_ativo)
         instance.unidade = validated_data.get("unidade", instance.unidade)
+        instance.aceite_lgpd = validated_data.get("aceite_lgpd", instance.aceite_lgpd)
         instance.save()
         return instance
 
@@ -178,6 +186,11 @@ class RelatorioSerializer(serializers.ModelSerializer):
             # Valida o período e altera o status se estiver incorreto
             if not valida_periodo_relatorio(relatorio, contrato):
                 validated_data['status'] = StatusRelatorio.REPROVADO
+            else:
+                validated_data['status'] = StatusRelatorio.AGUARDANDO_VALIDACAO
+                
+            if relatorio.data_termino and datetime.today().date() > relatorio.data_termino:
+                validated_data['fora_do_prazo'] = True
         else:
             # Se não houver contrato ativo, o relatório é reprovado
             validated_data['status'] = StatusRelatorio.REPROVADO

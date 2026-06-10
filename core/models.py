@@ -24,6 +24,7 @@ class Usuario(models.Model):
     senha = models.CharField(max_length=255, verbose_name="Senha")
     unidade = models.CharField(max_length=15, choices=Unidade)
     precisa_redefinir_senha = models.BooleanField(default=True, verbose_name="Precisa redefinir senha?")
+    aceite_lgpd = models.BooleanField(default=False, verbose_name="Aceite dos Termos de Uso e LGPD")
 
     class Meta:
         abstract = True 
@@ -143,8 +144,10 @@ class Relatorio(models.Model):
     horas_trabalhadas = models.IntegerField(verbose_name="Horas trabalhadas",null=True,blank=True)
     data_inicio = models.DateField(verbose_name="Data de início do relatório",null=True,blank=True)
     data_termino = models.DateField(verbose_name="Data de término do relatório",null=True,blank=True)
-    status = models.CharField(max_length = 15, choices=StatusRelatorio, default = StatusRelatorio.PENDENTE )
-    
+    status = models.CharField(max_length = 20, choices=StatusRelatorio, default = StatusRelatorio.AGUARDANDO_VALIDACAO )
+    fora_do_prazo = models.BooleanField(default=False, verbose_name="Fora do Prazo")
+
+
 class HistoricoAvaliacao(models.Model):
     observacoes = models.TextField(verbose_name="Observações")
     data_avaliacao = models.DateField(verbose_name="Data de avaliação",default=timezone.now)
