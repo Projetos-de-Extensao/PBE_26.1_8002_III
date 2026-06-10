@@ -41,7 +41,7 @@ def get_processo_seguro(processo_id, user, prefetch=None, select=None):
     
     if not is_user_staff(user):
         try:
-            aluno = Aluno.objects.get(email=user.email)
+            aluno = user.aluno
             if processo.aluno != aluno:
                 raise PermissionDenied("Você não tem permissão para acessar este processo.")
         except Aluno.DoesNotExist:
@@ -142,7 +142,7 @@ class ProcessoAPIView(APIView):
             data = Processo.objects.select_related('aluno', 'secretaria', 'coordenacao').all()
         else:
             try:
-                aluno = Aluno.objects.get(email=request.user.email)
+                aluno = request.user.aluno
                 data = Processo.objects.filter(aluno=aluno)
             except Aluno.DoesNotExist:
                 data = Processo.objects.none()  
@@ -177,7 +177,7 @@ class ProcessoAPIView(APIView):
         
         # UC-08: iniciar_processo (Regras de Negócio)
         try:
-            aluno_logado = Aluno.objects.get(email=request.user.email)
+            aluno_logado = request.user.aluno
             parsed_data['matricula_aluno'] = aluno_logado.matricula
         except Aluno.DoesNotExist:
             if 'matricula_aluno' not in parsed_data:
@@ -430,7 +430,7 @@ class ReprovarContratoAPIView(APIView):
         processo.status = StatusProcesso.REPROVADO
         processo.save()
 
-        secretaria = get_object_or_404(Secretaria, email=request.user.email)
+        secretaria = request.user.secretaria
         HistoricoAvaliacaoContrato.objects.create(
             observacoes=justificativa,
             veredito=Veredito.REPROVADO,
@@ -476,7 +476,7 @@ class DownloadContratoAPIView(APIView):
         # Validação de permissão (Aluno só baixa o dele)
         if not is_user_staff(request.user):
             try:
-                aluno = Aluno.objects.get(email=request.user.email)
+                aluno = request.user.aluno
                 if processo.aluno != aluno:
                     return Response({"error": "Você não tem permissão para baixar este contrato."}, status=status.HTTP_403_FORBIDDEN)
             except Aluno.DoesNotExist:

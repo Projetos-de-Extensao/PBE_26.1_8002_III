@@ -1,5 +1,4 @@
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -14,17 +13,6 @@ from .serializers import (
     PrimeiroAcessoRequestSerializer,
     MessageResponseSerializer,
 )
-
-
-def _buscar_usuario_dominio(email: str):
-    """Retorna o model de domínio correspondente ao email do User Django."""
-    for Model in (Aluno, Coordenador, Secretaria):
-        try:
-            return Model.objects.get(email=email)
-        except Model.DoesNotExist:
-            continue
-    return None
-
 
 class LoginAPIView(APIView):
     permission_classes = [AllowAny]
@@ -49,8 +37,7 @@ class LoginAPIView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
-        usuario_dominio = _buscar_usuario_dominio(user.email)
-        if usuario_dominio and getattr(usuario_dominio, "precisa_redefinir_senha", False):
+        if user.precisa_redefinir_senha:
             return Response(
                 {
                     "error": "primeiro_acesso",
@@ -98,14 +85,8 @@ class PrimeiroAcessoAPIView(APIView):
             )
 
         user.set_password(new_password)
-        user.save()
-
-        usuario_dominio = _buscar_usuario_dominio(user.email)
-        if usuario_dominio:
-            from django.contrib.auth.hashers import make_password
-            usuario_dominio.senha = make_password(new_password)
-            usuario_dominio.precisa_redefinir_senha = False
-            usuario_dominio.save(update_fields=["senha", "precisa_redefinir_senha"])
+        user.precisa_redefinir_senha = False
+        user.save(update_fields=["password", "precisa_redefinir_senha"])
 
         return Response(
             {"message": "Senha redefinida com sucesso. Faça login para continuar."},
