@@ -136,11 +136,13 @@ class ProcessoSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "data_criacao"]
 
     def validate(self, attrs):
-        aluno = attrs.get('aluno')
-        status_atual = attrs.get('status')
+        aluno = attrs.get('aluno') or (self.instance.aluno if self.instance else None)
+        status_atual = attrs.get('status') or (self.instance.status if self.instance else None)
         if status_atual == StatusProcesso.ABERTO:
-            existe_processo = Processo.objects.filter(aluno=aluno, status=StatusProcesso.ABERTO).exists()
-            if existe_processo:
+            query = Processo.objects.filter(aluno=aluno, status=StatusProcesso.ABERTO)
+            if self.instance:
+                query = query.exclude(id=self.instance.id)
+            if query.exists():
                 raise serializers.ValidationError({"status": "O aluno já tem processos em aberto"})
         return attrs
 
@@ -217,9 +219,9 @@ class RelatorioSerializer(serializers.ModelSerializer):
         model = Relatorio
         fields = [
             'processo_id', 'arquivo', 'data_upload',
-            'horas_trabalhadas', 'data_inicio', 'data_termino', 'status'
+            'horas_trabalhadas', 'data_inicio', 'data_termino', 'status', 'fora_do_prazo'
         ]
-        read_only_fields = ['id', 'data_upload', 'processo_id']
+        read_only_fields = ['id', 'data_upload', 'processo_id', 'fora_do_prazo']
 
     def validate(self, attrs):
         horas = attrs.get('horas_trabalhadas')
