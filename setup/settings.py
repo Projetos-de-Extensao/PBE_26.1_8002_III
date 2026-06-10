@@ -66,6 +66,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'setup.wsgi.application'
 
+AUTH_USER_MODEL = 'core.Usuario'
+
 if os.environ.get('DATABASE_URL'):
     import dj_database_url
     DATABASES = {
@@ -153,6 +155,9 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'sandbox.smtp.mailtrap.io')
