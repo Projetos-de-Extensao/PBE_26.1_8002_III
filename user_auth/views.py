@@ -1,15 +1,13 @@
-from rest_framework.views import APIView
 from django.contrib.auth import authenticate
-from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.models import User
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.core.cache import cache
-from rest_framework.request import Request
-import logging
-from django.contrib.auth.hashers import make_password
+from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.tokens import RefreshToken
 from drf_spectacular.utils import extend_schema
+from core.models import Aluno, Coordenador, Secretaria
 
-from core.models import Aluno
 from .serializers import (
     LoginRequestSerializer,
     LoginResponseSerializer,
@@ -17,124 +15,125 @@ from .serializers import (
     MessageResponseSerializer,
 )
 
-def get_client_ip(request: Request):
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
+
+def _buscar_usuario_dominio(email: str):
+    """Retorna o model de domínio correspondente ao email do User Django."""
+    for Model in (Aluno, Coordenador, Secretaria):
+        try:
+            return Model.objects.get(email=email)
+        except Model.DoesNotExist:
+            continue
+    return None
+
 
 class LoginAPIView(APIView):
-    authentication_classes = []
-    permission_classes = []
-    
+    permission_classes = [AllowAny]
+
     @extend_schema(
-        summary="Login de Usuário",
-        description="Autentica um usuário e retorna os tokens JWT de acesso e refresh.",
+        summary="Login",
+        description="Autentica com matrícula e senha. Retorna tokens JWT.",
         request=LoginRequestSerializer,
-        responses={
-            200: LoginResponseSerializer,
-            401: MessageResponseSerializer,
-            403: MessageResponseSerializer,
-            429: MessageResponseSerializer
-        }
+        responses={200: LoginResponseSerializer},
     )
-    def post(self, request: Request):
-        usuario = request.data.get('username')
-        senha = request.data.get('password')
-        ip = get_client_ip(request)
+    def post(self, request):
+        serializer = LoginRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        cache_key = f"login_attempts_{ip}_{usuario}"
-        attempts = cache.get(cache_key, 0)
+        username = serializer.validated_data["username"]
+        password = serializer.validated_data["password"]
 
-        if attempts >= 5:
+        user = authenticate(request, username=username, password=password)
+        if user is None:
             return Response(
-                {"message": "Muitas tentativas falhas. Conta bloqueada temporariamente por 15 minutos."}, 
-                status=status.HTTP_429_TOO_MANY_REQUESTS
+                {"error": "Matrícula ou senha inválidos."},
+                status=status.HTTP_401_UNAUTHORIZED,
             )
 
-        user = authenticate(request, username=usuario, password=senha)
-        
-        if user is not None:
-            cache.delete(cache_key)
-
-            try:
-                aluno = Aluno.objects.get(matricula=usuario)
-                if not aluno.is_ativo:
-                    return Response(
-                        {"message": "Conta desativada. Por favor, entre em contato com a secretaria."}, 
-                        status=status.HTTP_403_FORBIDDEN
-                    )
-                if aluno.precisa_redefinir_senha:
-                    return Response(
-                        {"message": "Você precisa redefinir sua senha antes de continuar."}, 
-                        status=status.HTTP_403_FORBIDDEN
-                    )
-            except Aluno.DoesNotExist:
-                pass
-        
-            refresh = RefreshToken.for_user(user)
-            
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            }, status=status.HTTP_200_OK)
-            
-        else:
-            attempts += 1
-            cache.set(cache_key, attempts, timeout=900)
-            
+        usuario_dominio = _buscar_usuario_dominio(user.email)
+        if usuario_dominio and getattr(usuario_dominio, "precisa_redefinir_senha", False):
             return Response(
-                {"message": f"Credenciais inválidas. Tentativa {attempts}/5."}, 
-                status=status.HTTP_401_UNAUTHORIZED
+                {
+                    "error": "primeiro_acesso",
+                    "message": "Você precisa redefinir sua senha antes de continuar.",
+                },
+                status=status.HTTP_403_FORBIDDEN,
             )
 
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+            },
+            status=status.HTTP_200_OK,
+        )
 
-logger = logging.getLogger(__name__)
 
 class PrimeiroAcessoAPIView(APIView):
-    
-    authentication_classes = []
-    permission_classes = []
+    permission_classes = [AllowAny]
 
     @extend_schema(
-        summary="Primeiro Acesso / Redefinição de Senha",
-        description="Permite que o aluno altere a senha temporária no primeiro acesso ao sistema.",
+        summary="Primeiro acesso — redefinição de senha",
+        description=(
+            "Troca a senha temporária pela senha definitiva. "
+            "Após isso, `precisa_redefinir_senha` é marcado como False "
+            "e o usuário pode fazer login normalmente."
+        ),
         request=PrimeiroAcessoRequestSerializer,
-        responses={
-            200: MessageResponseSerializer,
-            400: MessageResponseSerializer,
-            401: MessageResponseSerializer,
-            404: MessageResponseSerializer
-        }
+        responses={200: MessageResponseSerializer},
     )
-    def post(self, request: Request):
-        usuario = request.data.get('username')
-        senha_atual = request.data.get('old_password')
-        nova_senha = request.data.get('new_password')
+    def post(self, request):
+        serializer = PrimeiroAcessoRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        user = authenticate(request, username=usuario, password=senha_atual)
-        
-        if user is not None:
-            try:
-                aluno = Aluno.objects.get(matricula=usuario)
-                
-                if not aluno.precisa_redefinir_senha:
-                    return Response({"message": "Sua conta já realizou o primeiro acesso."}, status=status.HTTP_400_BAD_REQUEST)
+        username = serializer.validated_data["username"]
+        old_password = serializer.validated_data["old_password"]
+        new_password = serializer.validated_data["new_password"]
 
-                aluno.senha = make_password(nova_senha)
-                aluno.precisa_redefinir_senha = False
-                aluno.save()
+        user = authenticate(request, username=username, password=old_password)
+        if user is None:
+            return Response(
+                {"error": "Matrícula ou senha temporária inválidos."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
 
-                user.set_password(nova_senha)
-                user.save()
+        user.set_password(new_password)
+        user.save()
 
-                logger.info(f"[SEGURANÇA] O aluno com matrícula {usuario} concluiu a redefinição de senha do primeiro acesso.")
+        usuario_dominio = _buscar_usuario_dominio(user.email)
+        if usuario_dominio:
+            from django.contrib.auth.hashers import make_password
+            usuario_dominio.senha = make_password(new_password)
+            usuario_dominio.precisa_redefinir_senha = False
+            usuario_dominio.save(update_fields=["senha", "precisa_redefinir_senha"])
 
-                return Response({"message": "Senha redefinida com sucesso! Agora você pode fazer o login normalmente."}, status=status.HTTP_200_OK)
+        return Response(
+            {"message": "Senha redefinida com sucesso. Faça login para continuar."},
+            status=status.HTTP_200_OK,
+        )
 
-            except Aluno.DoesNotExist:
-                return Response({"message": "Usuário não encontrado."}, status=status.HTTP_404_NOT_FOUND)
-        else:
-            return Response({"message": "Credenciais atuais inválidas."}, status=status.HTTP_401_UNAUTHORIZED)
+
+class LogoutAPIView(APIView):
+    """Invalida o refresh token (blacklist)."""
+
+    @extend_schema(
+        summary="Logout",
+        description="Invalida o refresh token. Requer `refresh` no body.",
+        responses={204: None},
+    )
+    def post(self, request):
+        refresh_token = request.data.get("refresh")
+        if not refresh_token:
+            return Response(
+                {"error": "Token de refresh não informado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except Exception:
+            return Response(
+                {"error": "Token inválido ou já expirado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(status=status.HTTP_204_NO_CONTENT)
