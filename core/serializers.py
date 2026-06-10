@@ -8,7 +8,7 @@ from .enums import *
 from .validators import validar_email_institucional
 from .enums import StatusProcesso
 from .services.ler_extrair_infos_pdf import ler_pdf_modo_layout
-from .validators import valida_periodo_relatorio
+
 from datetime import datetime
 from django.shortcuts import get_object_or_404
 
@@ -219,48 +219,48 @@ class RelatorioSerializer(serializers.ModelSerializer):
         model = Relatorio
         fields = [
             'processo_id', 'arquivo', 'data_upload',
-            'horas_trabalhadas', 'data_inicio', 'data_termino', 'status', 'fora_do_prazo'
+            'status', 'fora_do_prazo'
         ]
         read_only_fields = ['id', 'data_upload', 'processo_id', 'fora_do_prazo']
 
     def validate(self, attrs):
-        horas = attrs.get('horas_trabalhadas')
-        dt_inicio = attrs.get('data_inicio')
-        dt_termino = attrs.get('data_termino')
-        if horas and dt_inicio and dt_termino:
-            dias = (dt_termino - dt_inicio).days + 1
-            # Limite legal de 6h/dia útil -> aproximação de 6h por dia corrido para cobrir a carga horária do TCE
-            if dias > 0 and horas > (dias * 6):
-                # UC-05: Regra de negócio limitando as horas
-                raise serializers.ValidationError({
-                    "horas_trabalhadas": "O total de horas não pode exceder a carga horária máxima permitida para o período."
-                })
         return attrs
 
     def create(self, validated_data):
-        processo = validated_data['processo_id']
-        contrato = Contrato.objects.filter(processoId=processo, status=StatusContrato.APROVADO).first()
-        
-        relatorio = Relatorio(**validated_data)
-        
-        if contrato:
-            if not valida_periodo_relatorio(relatorio, contrato):
-                validated_data['status'] = StatusRelatorio.REPROVADO
-            else:
-                validated_data['status'] = StatusRelatorio.AGUARDANDO_VALIDACAO
-                
-            if relatorio.data_termino and datetime.today().date() > relatorio.data_termino:
-                validated_data['fora_do_prazo'] = True
-        else:
-            validated_data['status'] = StatusRelatorio.REPROVADO
-            
+        validated_data['status'] = StatusRelatorio.AGUARDANDO_VALIDACAO
         return Relatorio.objects.create(**validated_data) 
 
+class AtualizarContratoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contrato
+        fields = [
+            'cnpj_empresa', 'nome_empresa', 'data_inicio', 'data_termino',
+            'apolice_seguro', 'plano_atividade', 'assinatura_aluno',
+            'assinatura_empresa', 'assinatura_faculdade'
+        ]
+
+class AtualizarRelatorioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Relatorio
+        fields = ['titulo', 'corpo']
+
 class HistoricoAvaliacaoRelatorioSerializer(serializers.ModelSerializer):
+    justificativa = serializers.CharField(required=False, allow_blank=True, default="")
+
     class Meta:
         model = HistoricoAvaliacaoRelatorio
-        fields = ['observacoes', 'data_avaliacao', 'veredito', 'avaliador', 'relatorio_id']
+        fields = ['observacoes', 'data_avaliacao', 'veredito', 'avaliador', 'relatorio_id', 'justificativa']
         read_only_fields = ['id', 'data_avaliacao']
+
+    def validate(self, attrs):
+        veredito = attrs.get('veredito')
+        justificativa = attrs.get('justificativa', '')
+        if veredito == Veredito.REPROVADO:
+            if not justificativa or not str(justificativa).strip():
+                raise serializers.ValidationError(
+                    {"justificativa": "A justificativa é obrigatória em caso de reprovação."}
+                )
+        return attrs
 
 class HistoricoAvaliacaoContratoSerializer(serializers.ModelSerializer):
     justificativa = serializers.CharField(required=False, allow_blank=True, default="")
