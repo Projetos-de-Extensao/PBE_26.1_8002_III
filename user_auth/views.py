@@ -17,7 +17,12 @@ from .serializers import (
 
 
 def _buscar_usuario_dominio(email: str):
-    """Retorna o model de domínio correspondente ao email do User Django."""
+    """
+    Retorna o model de domínio correspondente ao email do User Django.
+    Como a autenticação é unificada na tabela nativa `auth_user` do Django, 
+    essa função é vital para encontrar a entidade de negócio (Aluno, Secretaria, Coordenador)
+    que possui permissões e dados adicionais.
+    """
     for Model in (Aluno, Coordenador, Secretaria):
         try:
             return Model.objects.get(email=email)
@@ -50,6 +55,8 @@ class LoginAPIView(APIView):
             )
 
         usuario_dominio = _buscar_usuario_dominio(user.email)
+        # Regra de Segurança: Força o usuário a trocar a senha (que possivelmente
+        # era default/insegura) no primeiro acesso antes de gerar qualquer token.
         if usuario_dominio and getattr(usuario_dominio, "precisa_redefinir_senha", False):
             return Response(
                 {
@@ -100,6 +107,8 @@ class PrimeiroAcessoAPIView(APIView):
         user.set_password(new_password)
         user.save()
 
+        # Sincroniza a senha hasheada com a tabela de domínio (Aluno/etc)
+        # para manter consistência nos dois lados da aplicação.
         usuario_dominio = _buscar_usuario_dominio(user.email)
         if usuario_dominio:
             from django.contrib.auth.hashers import make_password

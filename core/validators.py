@@ -11,8 +11,9 @@ DOMINIOS_PERMITIDOS = [
 
 def validar_email_institucional(value):
     """
-    Valida que o email possui formato válido e pertence
-    a um domínio institucional autorizado.
+    Regra de Negócio: Restringe o acesso do sistema apenas a e-mails
+    pertencentes ao Ibmec (ou domínios autorizados).
+    Isso previne o cadastro de e-mails pessoais e aumenta a segurança do ambiente acadêmico.
 
     Raises:
         ValidationError: Se o email não for válido ou não pertencer
@@ -38,7 +39,9 @@ def validar_email_institucional(value):
 
 def validar_cpf(value):
     """
-    Valida um CPF utilizando o algoritmo da Receita Federal.
+    Regra de Negócio: Impede a entrada de CPFs fictícios simples (ex: 12345678909)
+    aplicando o algoritmo oficial de cálculo de dígitos verificadores da Receita Federal.
+    Essencial para garantir a integridade dos dados contratuais.
     """
     # Remove qualquer caractere que não seja número (pontos, traços)
     cpf = re.sub(r'[^0-9]', '', str(value))
