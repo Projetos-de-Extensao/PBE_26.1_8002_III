@@ -88,7 +88,7 @@ class TestPostAluno:
         }
         response = api_client.post('/aluno/', payload)
         assert response.status_code == 201
-        assert response.data["message"] == "Aluno criado com sucesso!"
+        assert response.data["detail"] == "Aluno criado com sucesso!"
         assert Aluno.objects.filter(matricula="20260002").exists()
 
 
@@ -101,7 +101,7 @@ class TestPatchAluno:
         }
         response = api_client.patch(f'/aluno/?matricula_aluno={aluno.matricula}', payload)
         assert response.status_code == 200
-        assert response.data["message"] == "updated"
+        assert response.data["detail"] == "updated"
         aluno.refresh_from_db()
         assert aluno.nome == "João santos atualizado"
 
@@ -111,7 +111,7 @@ class TestPatchAluno:
         }
         response = api_client.patch('/aluno/?matricula_aluno=inexistente', payload)
         assert response.status_code == 404
-        assert response.data["error"] == "Aluno não encontrado"
+        assert response.data["detail"] == "Aluno não encontrado"
 
     def test_atualizar_aluno_sem_matricula(self, api_client):
         payload = {
@@ -119,7 +119,7 @@ class TestPatchAluno:
         }
         response = api_client.patch('/aluno/', payload)
         assert response.status_code == 400
-        assert response.data["error"] == "Matrícula não informada"
+        assert response.data["detail"] == "Matrícula não informada"
       
          
         
