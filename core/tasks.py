@@ -8,6 +8,11 @@ from .exceptions import gradeHorariaIncompativelException
 
 @shared_task
 def processarContratoComIa(fileId):
+    """
+    Tarefa assíncrona (Celery) para extrair dados do contrato via IA.
+    Executada em background pois chamadas a APIs de LLMs podem demorar 
+    (timeout), o que bloquearia a resposta do endpoint de upload.
+    """
     contrato = Contrato.objects.get(id=fileId)
     arquivoPath = contrato.arquivo
     string_contrato = ler_pdf_modo_layout(arquivoPath)
@@ -41,6 +46,12 @@ def processarContratoComIa(fileId):
     
 @shared_task
 def validarContrato(fileId, alunoId):
+    """
+    Tarefa acionada logo após o processamento da IA. 
+    Aplica as regras rígidas da Lei do Estágio (Lei 11.788) e políticas do Ibmec.
+    Se alguma infração for detectada (ex: carga horária > 30h semanais, 
+    sem apólice, contrato retroativo), reprova o contrato automaticamente.
+    """
     contrato = Contrato.objects.get(id=fileId)
     aluno = Aluno.objects.get(id=alunoId)
     
