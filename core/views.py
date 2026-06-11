@@ -64,7 +64,6 @@ def get_processo_seguro(processo_id, user, prefetch=None, select=None):
                 raise PermissionDenied("Você não tem permissão para acessar processos de alunos de outra área/curso.")
             
     return processo
-
 class AlunoAPIView(APIView):
     permission_classes = [IsAluno | IsSecretaria | IsCoordenador]
 
@@ -225,7 +224,7 @@ class ProcessoAPIView(APIView):
         grupo = request.user.groups.first()
         cargo = grupo.name if grupo else ""
         nome_completo = f"{request.user.first_name} {request.user.last_name}"
-        username = request.user.username
+        username = request.user.matricula or ""
         criado_por_string = (cargo + nome_completo + username)[:100]
 
         try:    
@@ -286,6 +285,13 @@ class UploadContrato(APIView):
     def post(self, request, *args, **kwargs):
         processo_id = kwargs.get('id')
         processo = get_processo_seguro(processo_id, request.user)
+        
+        # Validar se o processo está aberto — não permitir envio em processos já concluídos/cancelados
+        if processo.status not in [StatusProcesso.ABERTO, StatusProcesso.REPROVADO]:
+            return Response(
+                {"detail": "Não é permitido enviar contratos para processos que não estão abertos."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         serializer = ContratoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -376,6 +382,15 @@ class UploadRelatorio(APIView):
         serializer.is_valid(raise_exception=True)
         relatorio = serializer.save(processo_id=processo)
         
+        # DIV-05: Verificar se o relatório está fora do prazo (>30 dias após aprovação do contrato)
+        from django.utils import timezone
+        contrato_aprovado = processo.contrato_set.filter(status=StatusContrato.APROVADO).order_by('-data_upload').first()
+        if contrato_aprovado and contrato_aprovado.data_upload:
+            dias_desde_aprovacao = (timezone.now().date() - contrato_aprovado.data_upload).days
+            if dias_desde_aprovacao > 30:
+                relatorio.fora_do_prazo = True
+                relatorio.save(update_fields=['fora_do_prazo'])
+
         aluno = relatorio.processo_id.aluno
         email_coordenacao = "coordenacao@ibmec.edu.br" 
         
@@ -443,7 +458,7 @@ class ReprovarContratoAPIView(APIView):
         responses={200: ProcessoSerializer}
     )
     def patch(self, request, id, *args, **kwargs):
-        processo = get_object_or_404(Processo, id=id)
+        processo = get_processo_seguro(id, request.user)
 
         justificativa = request.data.get('justificativa')
         if not justificativa or not str(justificativa).strip():
