@@ -176,7 +176,10 @@ class HistoricoAvaliacaoRelatorio(HistoricoAvaliacao):
     justificativa = models.CharField(max_length=200, verbose_name="Justificativa", blank=True, default="")
 
     def delete(self, *args, **kwargs):
-        raise ProtectedError("Histórico de Justificativas não pode ser alterado ou deletado.")
+        raise ProtectedError(
+            "Histórico de Justificativas não pode ser alterado ou deletado.",
+            set()
+        )
 
 class HistoricoAvaliacaoContrato(HistoricoAvaliacao):
     """
@@ -188,7 +191,10 @@ class HistoricoAvaliacaoContrato(HistoricoAvaliacao):
     justificativa = models.CharField(max_length=200,verbose_name="Justificativa", blank=True, default="")
 
     def delete(self, *args, **kwargs):
-        raise ProtectedError("Histórico de Justificativas não pode ser alterado ou deletado.")
+        raise ProtectedError(
+            "Histórico de Justificativas não pode ser alterado ou deletado.",
+            set()
+        )
 
 class Horarios(models.Model):
     turno = models.CharField(max_length=12, choices=Turno)
@@ -199,7 +205,7 @@ class Horarios(models.Model):
         verbose_name_plural = "Grades Horárias"
     
     def __str__(self):
-        return f"{self.aluno} - {self.dia} - {self.periodo}"
+        return f"{self.dia} - {self.turno}"
 
 
 # Sinais para regras de negócio automatizadas

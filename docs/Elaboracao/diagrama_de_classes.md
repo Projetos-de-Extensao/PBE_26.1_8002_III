@@ -17,7 +17,7 @@ Os Enums garantem a integridade dos atributos de controle no sistema, evitando e
 | :--- | :--- | :--- |
 | **`StatusProcesso`** | Regula o ciclo de vida do estágio. | `ABERTO`, `PENDENTE`, `EM_ANDAMENTO`, `REPROVADO`, `CONCLUIDO`, `CANCELADO` |
 | **`StatusContrato`** | Define a situação atual do contrato. | `PENDENTE`, `EM_ANALISE_SECRETARIA`, `APROVADO`, `REPROVADO` |
-| **`StatusRelatorio`** | Define a situação atual do relatório. | `PENDENTE`, `EM_ANALISE_COORDENACAO`, `APROVADO`, `REPROVADO` |
+| **`StatusRelatorio`** | Define a situação atual do relatório. | `AGUARDANDO_VALIDACAO`, `PENDENTE`, `EM_ANALISE_COORDENACAO`, `APROVADO`, `REPROVADO` |
 | **`Unidade`** | Define o campus do usuário. | `BARRA`, `BOTAFOGO` |
 | **`Periodo`** | Representa o semestre atual do aluno. | `PRIMEIRO` ao `DECIMO` |
 | **`Veredito`** | Define o resultado de uma avaliação. | `APROVADO`, `REPROVADO` |

@@ -6,7 +6,7 @@ title: Acompanhar Status do Processo
 ### Acompanhar Status do Processo
 
 - **Atores:**
-    - Aluno / Secretaria
+    - Aluno / Secretaria / Coordenação
     - Sistema
 
 - **Pré-Condições:**

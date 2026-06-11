@@ -4,6 +4,7 @@ from unittest.mock import patch
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
 User = get_user_model()
 from django.contrib.admin import AdminSite
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -96,8 +97,7 @@ class TestFeatureFlagAdmin:
             def __init__(self, user):
                 self.user = user
 
-        from django.contrib.auth.hashers import make_password
-        user = User.objects.create(matricula="admin_user", email="admin@ibmec.edu.br", password=make_password("test"))
+        user = User.objects.create(matricula="admin_user", nome="Admin User", email="admin@ibmec.edu.br", password=make_password("admin_pass"))
         request = MockRequest(user)
         
         flag = FeatureFlag(name="admin_flag", is_enabled=True)

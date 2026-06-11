@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import UploadContrato, AvaliarContratoAPIView, AvaliarRelatorioAPIView, UploadRelatorio, ReprovarContratoAPIView, DownloadContratoAPIView, AtualizarContratoAPIView, AtualizarRelatorioAPIView
+from .views import UploadContrato, AvaliarContratoAPIView, AvaliarRelatorioAPIView, UploadRelatorio, ReprovarContratoAPIView, DownloadContratoAPIView, AtualizarContratoAPIView, AtualizarRelatorioAPIView, HorariosAPIView
 
 urlpatterns = [
     path('aluno/', views.AlunoAPIView.as_view()),
@@ -17,4 +17,5 @@ urlpatterns = [
     path('processo/<int:id>/relatorio/atualizar/', AtualizarRelatorioAPIView.as_view(), name='atualizar_relatorio'),
     path('relatorio/avaliar/', AvaliarRelatorioAPIView.as_view(), name='avaliar_relatorio'),
     path('relatorio/<int:id>/download/', views.DownloadRelatorioAPIView.as_view(), name='download_relatorio'),
+    path('horarios/', HorariosAPIView.as_view(), name='listar_horarios'),
 ]

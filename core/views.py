@@ -59,12 +59,12 @@ def get_processo_seguro(processo_id, user, prefetch=None, select=None):
         is_coordenador = hasattr(user, 'coordenador')
         is_secretaria = hasattr(user, 'secretaria')
         
+        # Se for Coordenador (e não Secretaria), restringe acesso apenas a processos de alunos da sua própria área/curso
         if is_coordenador and not is_secretaria:
             if processo.aluno.curso.areaId.coordenador != user.coordenador:
                 raise PermissionDenied("Você não tem permissão para acessar processos de alunos de outra área/curso.")
             
     return processo
-
 class AlunoAPIView(APIView):
     permission_classes = [IsAluno | IsSecretaria | IsCoordenador]
 
@@ -294,6 +294,13 @@ class UploadContrato(APIView):
         processo_id = kwargs.get('id')
         processo = get_processo_seguro(processo_id, request.user)
         
+        # Validar se o processo está aberto — não permitir envio em processos já concluídos/cancelados
+        if processo.status not in [StatusProcesso.ABERTO, StatusProcesso.REPROVADO]:
+            return Response(
+                {"detail": "Não é permitido enviar contratos para processos que não estão abertos."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         serializer = ContratoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
@@ -383,6 +390,15 @@ class UploadRelatorio(APIView):
         serializer.is_valid(raise_exception=True)
         relatorio = serializer.save(processo_id=processo)
         
+        # DIV-05: Verificar se o relatório está fora do prazo (>30 dias após aprovação do contrato)
+        from django.utils import timezone
+        contrato_aprovado = processo.contrato_set.filter(status=StatusContrato.APROVADO).order_by('-data_upload').first()
+        if contrato_aprovado and contrato_aprovado.data_upload:
+            dias_desde_aprovacao = (timezone.now().date() - contrato_aprovado.data_upload).days
+            if dias_desde_aprovacao > 30:
+                relatorio.fora_do_prazo = True
+                relatorio.save(update_fields=['fora_do_prazo'])
+
         aluno = relatorio.processo_id.aluno
         email_coordenacao = "coordenacao@ibmec.edu.br" 
         
@@ -438,6 +454,10 @@ class AvaliarRelatorioAPIView(APIView):
         return Response({"detail": f"Relatório {avaliacao.veredito} e aluno notificado."}, status=status.HTTP_201_CREATED)
     
 class ReprovarContratoAPIView(APIView):
+    """
+    Endpoint para a Secretaria reprovar um contrato de estágio associado a um processo.
+    Altera o status do contrato e do processo para REPROVADO mediante justificativa obrigatória.
+    """
     permission_classes = [IsSecretaria]
 
     @extend_schema(
@@ -450,7 +470,7 @@ class ReprovarContratoAPIView(APIView):
         responses={200: ProcessoSerializer}
     )
     def patch(self, request, id, *args, **kwargs):
-        processo = get_object_or_404(Processo, id=id)
+        processo = get_processo_seguro(id, request.user)
 
         justificativa = request.data.get('justificativa')
         if not justificativa or not str(justificativa).strip():
@@ -491,6 +511,10 @@ class ReprovarContratoAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class HorariosAPIView(APIView):
+    """
+    Endpoint para listar todos os horários de turnos e dias cadastrados no sistema.
+    Acessível por qualquer usuário autenticado.
+    """
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
@@ -537,6 +561,10 @@ class DownloadContratoAPIView(APIView):
         return FileResponse(arquivo_open, as_attachment=True, filename=os.path.basename(contrato.arquivo.name))
 
 class AtualizarContratoAPIView(APIView):
+    """
+    Endpoint para a Secretaria atualizar dados de um contrato de estágio já enviado.
+    Dispara a validação assíncrona do contrato após a alteração.
+    """
     permission_classes = [IsSecretaria]
 
     @extend_schema(
@@ -559,6 +587,10 @@ class AtualizarContratoAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class AtualizarRelatorioAPIView(APIView):
+    """
+    Endpoint para o Coordenador atualizar dados de um relatório de estágio já enviado.
+    Dispara o processamento com inteligência artificial para avaliar o relatório após a alteração.
+    """
     permission_classes = [IsCoordenador]
 
     @extend_schema(

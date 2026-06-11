@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'django_filters',
     'corsheaders',
     'rest_framework_simplejwt.token_blacklist',
+    'axes',
 ]
 
 SPECTACULAR_SETTINGS = {
@@ -45,6 +46,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware',
 ]
 
 ROOT_URLCONF = 'setup.urls'
@@ -190,3 +192,18 @@ if 'pytest' in sys.modules or 'test' in sys.argv:
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://localhost:8080,http://localhost:8081,http://localhost:5173').split(',')
+
+# Autenticação: Backend do django-axes DEVE vir antes do backend padrão
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# UC-01 (Fazer Login): Bloqueio após 5 tentativas consecutivas incorretas
+# Regra de Negócio documentada no caso de uso.
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = 1  # Desbloqueia após 1 hora
+AXES_LOCKOUT_PARAMETERS = ['username']  # Bloqueia por matrícula (USERNAME_FIELD)
+AXES_RESET_ON_SUCCESS = True  # Reseta o contador quando o login é bem-sucedido
+AXES_VERBOSE = True
+

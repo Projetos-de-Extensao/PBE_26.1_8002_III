@@ -6,7 +6,7 @@ title: Fazer Download do Contrato
 ### Fazer Download do Contrato (Extend)
 
 - **Atores:**
-    - Aluno / Secretaria
+    - Aluno / Secretaria / Coordenação
     - Sistema
 
 - **Pré-Condições:**

@@ -26,6 +26,7 @@ def usuario_sem_perfil():
     """User do Django sem nenhum perfil (Aluno/Secretaria/Coordenador)."""
     user = User.objects.create(
         matricula="sem_perfil",
+        nome="Sem Perfil",
         email="ninguem@ibmec.edu.br",
         password=make_password("test1234"),
     )
@@ -39,6 +40,7 @@ def usuario_aluno_only():
     """User do Django com perfil APENAS de Aluno."""
     user = User.objects.create(
         matricula="aluno_only",
+        nome="Aluno Only",
         email="aluno_only@ibmec.edu.br",
         password=make_password("test1234"),
     )
@@ -73,6 +75,7 @@ def usuario_secretaria_only():
     """User do Django com perfil APENAS de Secretaria."""
     user = User.objects.create(
         matricula="sec_only",
+        nome="Sec Only",
         email="sec_only@ibmec.edu.br",
         password=make_password("test1234"),
     )
