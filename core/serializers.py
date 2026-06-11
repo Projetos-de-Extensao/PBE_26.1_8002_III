@@ -2,7 +2,6 @@ from django.core.exceptions import ValidationError
 from rest_framework import status
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth.models import User
 from .models import *
 from .enums import *
 from .validators import validar_email_institucional
@@ -73,50 +72,27 @@ class AlunoSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        validated_data['senha'] = make_password(validated_data['senha'])
-        validated_data['nome'] = validated_data['nome'].lower().capitalize().strip()
+        validated_data['password'] = make_password(validated_data.pop('senha'))
+        validated_data['nome'] = validated_data['nome'].title().strip()
         aluno = Aluno.objects.create(**validated_data)
-
-        User.objects.get_or_create(
-            username=aluno.matricula,
-            defaults={
-                "email": aluno.email,
-                "password": aluno.senha,
-            }
-        )
         return aluno
 
     def update(self, instance, validated_data):
         if 'senha' in validated_data:
-            validated_data['senha'] = make_password(validated_data['senha'])
+            validated_data['password'] = make_password(validated_data.pop('senha'))
         if 'nome' in validated_data:
             validated_data['nome'] = validated_data['nome'].lower().capitalize().strip()
 
         instance.nome = validated_data.get("nome", instance.nome)
         instance.email = validated_data.get("email", instance.email)
         instance.matricula = validated_data.get("matricula", instance.matricula)
-        instance.senha = validated_data.get("senha", instance.senha)
+        if 'password' in validated_data:
+            instance.password = validated_data['password']
         instance.cpf = validated_data.get("cpf", instance.cpf)
         instance.is_ativo = validated_data.get("is_ativo", instance.is_ativo)
         instance.unidade = validated_data.get("unidade", instance.unidade)
         instance.aceite_lgpd = validated_data.get("aceite_lgpd", instance.aceite_lgpd)
         instance.save()
-
-        try:
-            user = User.objects.get(username=instance.matricula)
-            if 'email' in validated_data:
-                user.email = instance.email
-            if 'senha' in validated_data:
-                user.password = instance.senha
-            if 'matricula' in validated_data:
-                user.username = instance.matricula
-            user.save()
-        except User.DoesNotExist:
-            User.objects.create(
-                username=instance.matricula,
-                email=instance.email,
-                password=instance.senha,
-            )
 
         return instance
 
@@ -194,16 +170,8 @@ class CoordenadorSerializer(serializers.ModelSerializer):
         extra_kwargs = {'senha': {'write_only': True}}
 
     def create(self, validated_data):
-        validated_data['senha'] = make_password(validated_data['senha'])
+        validated_data['password'] = make_password(validated_data.pop('senha'))
         coordenador = Coordenador.objects.create(**validated_data)
-
-        User.objects.get_or_create(
-            username=coordenador.matricula,
-            defaults={
-                "email": coordenador.email,
-                "password": coordenador.senha,
-            }
-        )
         return coordenador
 
 class SecretariaSerializer(serializers.ModelSerializer):
@@ -214,16 +182,8 @@ class SecretariaSerializer(serializers.ModelSerializer):
         extra_kwargs = {'senha': {'write_only': True}}
 
     def create(self, validated_data):
-        validated_data['senha'] = make_password(validated_data['senha'])
+        validated_data['password'] = make_password(validated_data.pop('senha'))
         secretaria = Secretaria.objects.create(**validated_data)
-
-        User.objects.get_or_create(
-            username=secretaria.matricula,
-            defaults={
-                "email": secretaria.email,
-                "password": secretaria.senha,
-            }
-        )
         return secretaria
 
 class RelatorioSerializer(serializers.ModelSerializer):

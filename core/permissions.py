@@ -14,7 +14,7 @@ class IsAluno(BasePermission):
             return False
         # Cache para evitar queries repetidas no mesmo request
         if not hasattr(request, '_cached_is_aluno'):
-            request._cached_is_aluno = Aluno.objects.filter(email=request.user.email).exists()
+            request._cached_is_aluno = hasattr(request.user, 'aluno')
         return request._cached_is_aluno
     
 class IsCoordenador(BasePermission):
@@ -26,7 +26,7 @@ class IsCoordenador(BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
         if not hasattr(request, '_cached_is_coordenador'):
-            request._cached_is_coordenador = Coordenador.objects.filter(email=request.user.email).exists()
+            request._cached_is_coordenador = hasattr(request.user, 'coordenador')
         return request._cached_is_coordenador
     
 class IsSecretaria(BasePermission):
@@ -38,5 +38,5 @@ class IsSecretaria(BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
         if not hasattr(request, '_cached_is_secretaria'):
-            request._cached_is_secretaria = Secretaria.objects.filter(email=request.user.email).exists()
+            request._cached_is_secretaria = hasattr(request.user, 'secretaria')
         return request._cached_is_secretaria
