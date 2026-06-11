@@ -50,6 +50,7 @@ class AlunoSerializer(serializers.ModelSerializer):
     Sincroniza automaticamente a criação/edição do Aluno com o model `User` nativo do Django
     para manter a compatibilidade com a autenticação JWT.
     """
+    senha = serializers.CharField(write_only=True, required=False)
     processos = NestedProcessoSerializer(source="aluno", many=True, read_only=True)
 
     class Meta:
@@ -148,6 +149,13 @@ class ProcessoDetailSerializer(serializers.ModelSerializer):
         model = Processo
         fields = ["nome_empresa", "status", "aluno", "secretaria", "coordenacao", "contrato", "relatorio"]
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        if request and hasattr(request.user, 'coordenador') and not hasattr(request.user, 'secretaria'):
+            data.pop('contrato', None)
+        return data
+
 class ContratoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contrato
@@ -163,6 +171,8 @@ class ContratoSerializer(serializers.ModelSerializer):
         return Contrato.objects.create(**validated_data)
 
 class CoordenadorSerializer(serializers.ModelSerializer):
+    senha = serializers.CharField(write_only=True, required=False)
+
     class Meta:
         model = Coordenador
         fields = ['nome', 'email', 'matricula', 'senha', 'unidade', 'areaId']
@@ -175,6 +185,8 @@ class CoordenadorSerializer(serializers.ModelSerializer):
         return coordenador
 
 class SecretariaSerializer(serializers.ModelSerializer):
+    senha = serializers.CharField(write_only=True, required=False)
+
     class Meta:
         model = Secretaria
         fields = ['nome', 'email', 'matricula', 'senha', 'unidade']
