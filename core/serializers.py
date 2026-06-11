@@ -12,15 +12,57 @@ from datetime import datetime
 from django.shortcuts import get_object_or_404
 
 
+import os
+
 class NestedContratoSerializer(serializers.ModelSerializer):
+    observacoes = serializers.SerializerMethodField()
+    nome_arquivo = serializers.SerializerMethodField()
+    data_envio = serializers.SerializerMethodField()
+
     class Meta:
         model = Contrato
-        fields = ['nome_empresa', 'data_upload', 'status', 'conflito_grade'] 
+        fields = [
+            'id', 'nome_empresa', 'data_upload', 'status', 'conflito_grade', 
+            'arquivo', 'observacoes', 'nome_arquivo', 'data_envio', 
+            'data_inicio', 'apolice_seguro'
+        ]
+
+    def get_observacoes(self, obj):
+        if hasattr(obj, 'historicoavaliacaocontrato'):
+            return obj.historicoavaliacaocontrato.observacoes or obj.historicoavaliacaocontrato.justificativa
+        return None
+
+    def get_nome_arquivo(self, obj):
+        if obj.arquivo:
+            return os.path.basename(obj.arquivo.name)
+        return ""
+
+    def get_data_envio(self, obj):
+        if obj.data_upload:
+            return obj.data_upload.strftime("%Y-%m-%d")
+        return ""
 
 class NestedRelatorioSerializer(serializers.ModelSerializer):
+    nome_arquivo = serializers.SerializerMethodField()
+    data_envio = serializers.SerializerMethodField()
+    atraso = serializers.SerializerMethodField()
+
     class Meta:
         model = Relatorio
-        fields = ['data_upload', 'status']
+        fields = ['id', 'titulo', 'corpo', 'data_upload', 'status', 'arquivo', 'nome_arquivo', 'data_envio', 'atraso']
+
+    def get_nome_arquivo(self, obj):
+        if obj.arquivo:
+            return os.path.basename(obj.arquivo.name)
+        return ""
+
+    def get_data_envio(self, obj):
+        if obj.data_upload:
+            return obj.data_upload.strftime("%Y-%m-%d")
+        return ""
+
+    def get_atraso(self, obj):
+        return obj.fora_do_prazo
 
 class NestedProcessoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -110,21 +152,68 @@ class AreaSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 class ProcessoSerializer(serializers.ModelSerializer):
-    matricula_aluno = serializers.SlugRelatedField(slug_field='matricula', queryset=Aluno.objects.all(), source='aluno')
-    matricula_secretaria = serializers.SlugRelatedField(slug_field='matricula', queryset=Secretaria.objects.all(), source='secretaria')
-    matricula_coordenacao = serializers.SlugRelatedField(slug_field='matricula', queryset=Coordenador.objects.all(), source='coordenacao')
+    matricula_aluno = serializers.SlugRelatedField(slug_field='matricula', queryset=Aluno.objects.all(), source='aluno', required=False)
+    matricula_secretaria = serializers.SlugRelatedField(slug_field='matricula', queryset=Secretaria.objects.all(), source='secretaria', required=False)
+    matricula_coordenacao = serializers.SlugRelatedField(slug_field='matricula', queryset=Coordenador.objects.all(), source='coordenacao', required=False)
+
+    aluno_id = serializers.CharField(source='aluno.id', read_only=True)
+    aluno_nome = serializers.CharField(source='aluno.nome', read_only=True)
+    matricula = serializers.CharField(source='aluno.matricula', read_only=True)
+    curso = serializers.CharField(source='aluno.curso.nome', read_only=True)
+    empresa = serializers.CharField(source='nome_empresa', read_only=True)
+    criado_em = serializers.SerializerMethodField()
+    contrato = serializers.SerializerMethodField()
+    relatorios = NestedRelatorioSerializer(source='relatorio_set', many=True, read_only=True)
+    historico = serializers.SerializerMethodField()
 
     class Meta:
         model = Processo
-        fields = ["nome_empresa", "status", "matricula_aluno", "matricula_secretaria", "matricula_coordenacao"]
-        read_only_fields = ["id", "data_criacao"]
+        fields = [
+            "id", "nome_empresa", "empresa", "status", "matricula_aluno", 
+            "matricula_secretaria", "matricula_coordenacao", "aluno_id", 
+            "aluno_nome", "matricula", "curso", "criado_em", "contrato", 
+            "relatorios", "historico"
+        ]
+        read_only_fields = ["id", "criado_em"]
+
+    def get_criado_em(self, obj):
+        if obj.data_criacao:
+            return obj.data_criacao.strftime("%Y-%m-%d")
+        return ""
+
+    def get_contrato(self, obj):
+        c = obj.contrato_set.last()
+        if c:
+            return NestedContratoSerializer(c).data
+        return None
+
+    def get_historico(self, obj):
+        eventos = []
+        if obj.data_criacao:
+            eventos.append({"data": obj.data_criacao.strftime("%Y-%m-%d"), "evento": "Processo iniciado"})
+        
+        for c in obj.contrato_set.all():
+            if c.data_upload:
+                eventos.append({"data": c.data_upload.strftime("%Y-%m-%d"), "evento": "Contrato enviado para análise"})
+            if hasattr(c, 'historicoavaliacaocontrato'):
+                h = c.historicoavaliacaocontrato
+                evento_nome = "Contrato aprovado" if h.veredito == Veredito.APROVADO else f"Contrato reprovado: {h.justificativa or 'sem justificativa'}"
+                if h.data_avaliacao:
+                    eventos.append({"data": h.data_avaliacao.strftime("%Y-%m-%d"), "evento": evento_nome})
+
+        for r in obj.relatorio_set.all():
+            if r.data_upload:
+                eventos.append({"data": r.data_upload.strftime("%Y-%m-%d"), "evento": f"Relatório '{r.titulo or 'Sem Título'}' enviado"})
+            if hasattr(r, 'historicoavaliacaorelatorio'):
+                h = r.historicoavaliacaorelatorio
+                evento_nome = f"Relatório avaliado: {h.veredito} — {h.justificativa}" if h.justificativa else f"Relatório avaliado: {h.veredito}"
+                if h.data_avaliacao:
+                    eventos.append({"data": h.data_avaliacao.strftime("%Y-%m-%d"), "evento": evento_nome})
+        
+        eventos.sort(key=lambda x: x["data"])
+        return eventos
 
     def validate(self, attrs):
-        """
-        Garante a regra de negócio central: um aluno só pode ter 
-        UM processo em aberto por vez. Impede que o usuário crie/atualize 
-        novos processos sem finalizar os anteriores.
-        """
         aluno = attrs.get('aluno') or (self.instance.aluno if self.instance else None)
         status_atual = attrs.get('status') or (self.instance.status if self.instance else None)
         if status_atual == StatusProcesso.ABERTO:
@@ -144,10 +233,37 @@ class ProcessoDetailSerializer(serializers.ModelSerializer):
     coordenacao = NestedCoordenacaoSerializer(read_only=True)
     contrato = NestedContratoSerializer(source='contrato_set', many=True, read_only=True)
     relatorio = NestedRelatorioSerializer(source='relatorio_set', many=True, read_only=True)
+    historico = serializers.SerializerMethodField()
 
     class Meta:
         model = Processo
-        fields = ["nome_empresa", "status", "aluno", "secretaria", "coordenacao", "contrato", "relatorio"]
+        fields = ["nome_empresa", "status", "aluno", "secretaria", "coordenacao", "contrato", "relatorio", "historico"]
+
+    def get_historico(self, obj):
+        eventos = []
+        if obj.data_criacao:
+            eventos.append({"data": obj.data_criacao.strftime("%Y-%m-%d"), "evento": "Processo iniciado"})
+        
+        for c in obj.contrato_set.all():
+            if c.data_upload:
+                eventos.append({"data": c.data_upload.strftime("%Y-%m-%d"), "evento": "Contrato enviado para análise"})
+            if hasattr(c, 'historicoavaliacaocontrato'):
+                h = c.historicoavaliacaocontrato
+                evento_nome = "Contrato aprovado" if h.veredito == Veredito.APROVADO else f"Contrato reprovado: {h.justificativa or 'sem justificativa'}"
+                if h.data_avaliacao:
+                    eventos.append({"data": h.data_avaliacao.strftime("%Y-%m-%d"), "evento": evento_nome})
+
+        for r in obj.relatorio_set.all():
+            if r.data_upload:
+                eventos.append({"data": r.data_upload.strftime("%Y-%m-%d"), "evento": f"Relatório '{r.titulo or 'Sem Título'}' enviado"})
+            if hasattr(r, 'historicoavaliacaorelatorio'):
+                h = r.historicoavaliacaorelatorio
+                evento_nome = f"Relatório avaliado: {h.veredito} — {h.justificativa}" if h.justificativa else f"Relatório avaliado: {h.veredito}"
+                if h.data_avaliacao:
+                    eventos.append({"data": h.data_avaliacao.strftime("%Y-%m-%d"), "evento": evento_nome})
+        
+        eventos.sort(key=lambda x: x["data"])
+        return eventos
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

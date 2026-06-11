@@ -210,9 +210,12 @@ class ProcessoAPIView(APIView):
         
         # UC-08: iniciar_processo (Regras de Negócio)
         try:
-            aluno_logado = request.user.aluno
+            if hasattr(request.user, 'cpf'):
+                aluno_logado = request.user
+            else:
+                aluno_logado = request.user.aluno
             parsed_data['matricula_aluno'] = aluno_logado.matricula
-        except Aluno.DoesNotExist:
+        except (Aluno.DoesNotExist, AttributeError):
             if 'matricula_aluno' not in parsed_data:
                 return Response(
                     {"detail": "Secretaria/Coordenação deve selecionar a matrícula do aluno."}, 
@@ -224,9 +227,13 @@ class ProcessoAPIView(APIView):
 
         grupo = request.user.groups.first()
         cargo = grupo.name if grupo else ""
-        nome_completo = f"{request.user.first_name} {request.user.last_name}"
-        username = request.user.username
-        criado_por_string = (cargo + nome_completo + username)[:100]
+        first_name = request.user.first_name or ""
+        last_name = request.user.last_name or ""
+        nome_completo = f"{first_name} {last_name}".strip()
+        if not nome_completo:
+            nome_completo = getattr(request.user, 'nome', '') or ""
+        username = getattr(request.user, 'matricula', '') or getattr(request.user, 'username', '') or ""
+        criado_por_string = f"{cargo} {nome_completo} ({username})".strip()[:100]
 
         try:    
             serializer.save(criado_por=criado_por_string)
@@ -573,3 +580,61 @@ class AtualizarRelatorioAPIView(APIView):
             avaliarRelatorioComIa.delay(relatorio.id)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class CoordenadorMeAPIView(APIView):
+    permission_classes = [IsCoordenador]
+
+    @extend_schema(
+        summary="Meu Perfil (Coordenador)",
+        responses={200: CoordenadorSerializer}
+    )
+    def get(self, request, *args, **kwargs):
+        coordenador = request.user.coordenador
+        serializer = CoordenadorSerializer(coordenador)
+        return Response(serializer.data)
+
+class SecretariaMeAPIView(APIView):
+    permission_classes = [IsSecretaria]
+
+    @extend_schema(
+        summary="Meu Perfil (Secretaria)",
+        responses={200: SecretariaSerializer}
+    )
+    def get(self, request, *args, **kwargs):
+        secretaria = request.user.secretaria
+        serializer = SecretariaSerializer(secretaria)
+        return Response(serializer.data)
+
+class DownloadRelatorioAPIView(APIView):
+    permission_classes = [IsAluno | IsCoordenador]
+
+    @extend_schema(
+        summary="Download de Relatório de Estágio",
+        description="Retorna o arquivo PDF do relatório. Acesso protegido para o dono do processo ou coordenação.",
+        responses={200: OpenApiTypes.BINARY}
+    )
+    def get(self, request, id, *args, **kwargs):
+        if hasattr(request.user, 'secretaria') and not hasattr(request.user, 'coordenador'):
+            return Response({"detail": "Secretaria não tem permissão para baixar relatórios."}, status=status.HTTP_403_FORBIDDEN)
+        relatorio = get_object_or_404(Relatorio.objects.select_related('processo_id__aluno'), id=id)
+        processo = relatorio.processo_id
+        
+        # Validação de permissão (Aluno só baixa o dele)
+        if not is_user_staff(request.user):
+            try:
+                aluno = request.user.aluno
+                if processo.aluno != aluno:
+                    return Response({"detail": "Você não tem permissão para baixar este relatório."}, status=status.HTTP_403_FORBIDDEN)
+            except Aluno.DoesNotExist:
+                return Response({"detail": "Usuário não autorizado."}, status=status.HTTP_403_FORBIDDEN)
+                
+        if not relatorio.arquivo:
+            raise Http404("Arquivo não encontrado.")
+            
+        try:
+            arquivo_open = relatorio.arquivo.open('rb')
+        except (FileNotFoundError, ValueError):
+            raise Http404("Arquivo físico não encontrado no servidor.")
+            
+        return FileResponse(arquivo_open, as_attachment=True, filename=os.path.basename(relatorio.arquivo.name))
+
