@@ -55,7 +55,7 @@ def api_client():
 
     # User do Django (agora é o nosso core.Usuario)
     user = User.objects.create(
-        matricula="TESTUSER",
+        matricula="TEST0001",
         nome="Test User",
         email=EMAIL_TEST,
         password=make_password("test1234"),
@@ -63,7 +63,7 @@ def api_client():
 
     coord_test = Coordenador.objects.create(
         usuario_ptr=user,
-        matricula="TEST0003",
+        matricula="TEST0001",
         nome="Test User",
         email=EMAIL_TEST,
         password=make_password("test"),
@@ -81,7 +81,7 @@ def api_client():
     )
     Secretaria.objects.create(
         usuario_ptr=user,
-        matricula="TEST0002", nome="Test User", email=EMAIL_TEST,
+        matricula="TEST0001", nome="Test User", email=EMAIL_TEST,
         password=make_password("test"), unidade=Unidade.BARRA.value,
     )
 
