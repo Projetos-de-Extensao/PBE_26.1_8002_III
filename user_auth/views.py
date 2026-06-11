@@ -20,7 +20,7 @@ class LoginAPIView(APIView):
 
     @extend_schema(
         summary="Login",
-        description="Autentica com matrícula e senha. Retorna tokens JWT.",
+        description="Autentica com matrícula e senha. Retorna tokens JWT. Bloqueia após 5 tentativas incorretas consecutivas.",
         request=LoginRequestSerializer,
         responses={200: LoginResponseSerializer},
     )
@@ -30,6 +30,17 @@ class LoginAPIView(APIView):
 
         username = serializer.validated_data["username"]
         password = serializer.validated_data["password"]
+
+        # UC-01: Verificar se a conta está bloqueada pelo django-axes antes de autenticar
+        from axes.utils import is_already_locked
+        if is_already_locked(request):
+            return Response(
+                {
+                    "detail": "Conta bloqueada temporariamente após múltiplas tentativas incorretas. Tente novamente em 1 hora.",
+                    "code": "account_locked",
+                },
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
 
         user = authenticate(request, username=username, password=password)
         if user is None:
@@ -119,6 +130,25 @@ class LogoutAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+def _buscar_usuario_dominio(email):
+    """
+    Busca o registro de domínio (Aluno, Secretaria ou Coordenador) pelo email.
+    Retorna a primeira correspondência encontrada ou None.
+    """
+    try:
+        return Aluno.objects.get(email=email)
+    except Aluno.DoesNotExist:
+        pass
+    try:
+        return Secretaria.objects.get(email=email)
+    except Secretaria.DoesNotExist:
+        pass
+    try:
+        return Coordenador.objects.get(email=email)
+    except Coordenador.DoesNotExist:
+        return None
+
 
 class MeAPIView(APIView):
     permission_classes = [IsAuthenticated]
