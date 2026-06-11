@@ -349,6 +349,9 @@ class AvaliarContratoAPIView(APIView):
             processo.save()
         elif avaliacao.veredito == Veredito.REPROVADO:
             contrato.status = StatusContrato.REPROVADO
+            processo = contrato.processoId
+            processo.status = StatusProcesso.REPROVADO
+            processo.save()
         
         contrato.save()
         

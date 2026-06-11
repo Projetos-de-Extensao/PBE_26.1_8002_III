@@ -346,11 +346,18 @@ class AtualizarRelatorioSerializer(serializers.ModelSerializer):
 
 class HistoricoAvaliacaoRelatorioSerializer(serializers.ModelSerializer):
     justificativa = serializers.CharField(required=False, allow_blank=True, default="")
+    observacoes = serializers.CharField(required=False, allow_blank=True, default="")
 
     class Meta:
         model = HistoricoAvaliacaoRelatorio
         fields = ['observacoes', 'data_avaliacao', 'veredito', 'avaliador', 'relatorio_id', 'justificativa']
         read_only_fields = ['id', 'data_avaliacao']
+
+    def to_internal_value(self, data):
+        if 'veredito' in data and isinstance(data['veredito'], str):
+            data = data.copy()
+            data['veredito'] = data['veredito'].lower()
+        return super().to_internal_value(data)
 
     def validate(self, attrs):
         """
@@ -368,11 +375,18 @@ class HistoricoAvaliacaoRelatorioSerializer(serializers.ModelSerializer):
 
 class HistoricoAvaliacaoContratoSerializer(serializers.ModelSerializer):
     justificativa = serializers.CharField(required=False, allow_blank=True, default="")
+    observacoes = serializers.CharField(required=False, allow_blank=True, default="")
 
     class Meta:
         model = HistoricoAvaliacaoContrato
         fields = ['observacoes', 'data_avaliacao', 'veredito', 'avaliador', 'contrato_id', 'justificativa']
         read_only_fields = ['id', 'data_avaliacao']
+
+    def to_internal_value(self, data):
+        if 'veredito' in data and isinstance(data['veredito'], str):
+            data = data.copy()
+            data['veredito'] = data['veredito'].lower()
+        return super().to_internal_value(data)
 
     def validate(self, attrs):
         """
