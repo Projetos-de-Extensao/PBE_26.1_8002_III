@@ -15,7 +15,7 @@ from core.services.email_service import EmailNotificationService
 
 @pytest.fixture
 def email_destino():
-    return "aluno@ibmec.edu.br"
+    return "[EMAIL_ADDRESS]"
 
 
 @pytest.fixture
