@@ -120,6 +120,25 @@ class LogoutAPIView(APIView):
             )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+def _buscar_usuario_dominio(user):
+    if not user:
+        return None
+    if hasattr(user, 'cpf'):
+        return user
+    try:
+        return user.aluno
+    except Exception:
+        pass
+    try:
+        return user.secretaria
+    except Exception:
+        pass
+    try:
+        return user.coordenador
+    except Exception:
+        pass
+    return user
+
 class MeAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -129,7 +148,7 @@ class MeAPIView(APIView):
         responses={200: UserMeSerializer},
     )
     def get(self, request):
-        usuario_dominio = _buscar_usuario_dominio(request.user.email)
+        usuario_dominio = _buscar_usuario_dominio(request.user)
         if not usuario_dominio:
             return Response(
                 {"detail": "Usuário não encontrado.", "code": "user_not_found"},
