@@ -37,6 +37,7 @@ nav:
       - CodeSpace: Construcao/codespace.md
   - Transição:
       - Index: Transicao/index.md
+      - Manual do Usuário: Transicao/manual_usuario.md
 
   - Bibliografia: Disciplina/bibliografia.md
 
