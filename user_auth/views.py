@@ -32,8 +32,8 @@ class LoginAPIView(APIView):
         password = serializer.validated_data["password"]
 
         # UC-01: Verificar se a conta está bloqueada pelo django-axes antes de autenticar
-        from axes.utils import is_already_locked
-        if is_already_locked(request):
+        from axes.utils import AxesProxyHandler
+        if AxesProxyHandler.is_locked(request):
             return Response(
                 {
                     "detail": "Conta bloqueada temporariamente após múltiplas tentativas incorretas. Tente novamente em 1 hora.",
