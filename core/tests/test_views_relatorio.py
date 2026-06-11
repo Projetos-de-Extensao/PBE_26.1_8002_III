@@ -89,6 +89,7 @@ class TestAvaliarRelatorio:
 
     def test_aprovar_relatorio(self, api_client, relatorio, coordenador):
         """Avaliação com veredito APROVADO atualiza status do relatório."""
+        api_client.force_authenticate(user=coordenador)
         payload = {
             "observacoes": "Relatório completo e adequado.",
             "veredito": Veredito.APROVADO.value,
@@ -103,6 +104,7 @@ class TestAvaliarRelatorio:
 
     def test_reprovar_relatorio(self, api_client, relatorio, coordenador):
         """Avaliação com veredito REPROVADO atualiza status do relatório."""
+        api_client.force_authenticate(user=coordenador)
         payload = {
             "observacoes": "Horas insuficientes.",
             "justificativa": "Falta de requisitos",
@@ -116,7 +118,8 @@ class TestAvaliarRelatorio:
         relatorio.refresh_from_db()
         assert relatorio.status == StatusRelatorio.REPROVADO
 
-    def test_avaliar_relatorio_sem_dados(self, api_client):
+    def test_avaliar_relatorio_sem_dados(self, api_client, coordenador):
         """Avaliação sem dados obrigatórios retorna 400."""
+        api_client.force_authenticate(user=coordenador)
         response = api_client.post("/relatorio/avaliar/", {})
         assert response.status_code == status.HTTP_400_BAD_REQUEST

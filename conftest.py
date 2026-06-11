@@ -9,6 +9,7 @@ import pytest
 from datetime import date
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.contrib.auth.hashers import make_password
 from rest_framework.test import APIClient
 
 from core.models import (
@@ -50,21 +51,10 @@ def api_client():
     EMAIL_TEST = "testuser@ibmec.edu.br"
 
     from django.contrib.auth import get_user_model
-    User = get_user_model()
-    from django.contrib.auth.hashers import make_password
-
-    # User do Django (agora é o nosso core.Usuario)
-    user = User.objects.create(
-        matricula="TESTUSER",
-        nome="Test User",
-        email=EMAIL_TEST,
-        password=make_password("test1234"),
-    )
-
+    # 1. Coordenador
     coord_test = Coordenador.objects.create(
-        usuario_ptr=user,
         matricula="TEST0003",
-        nome="Test User",
+        nome="Test Coordenador",
         email=EMAIL_TEST,
         password=make_password("test"),
         unidade=Unidade.BARRA.value,
@@ -73,24 +63,32 @@ def api_client():
     area_test = Area.objects.create(nome="TestArea", coordenador=coord_test)
     curso_test = Curso.objects.create(nome="TestCurso", areaId=area_test)
 
-    Aluno.objects.create(
-        usuario_ptr=user,
-        matricula="TEST0001", nome="Test User", email=EMAIL_TEST,
-        password=make_password("test"), cpf="45678912364", unidade=Unidade.BARRA.value,
+    # 2. Aluno
+    aluno_test = Aluno.objects.create(
+        matricula="TEST0001",
+        nome="Test Aluno",
+        email=EMAIL_TEST,
+        password=make_password("test"),
+        cpf="45678912364",
+        unidade=Unidade.BARRA.value,
         curso=curso_test,
     )
-    Secretaria.objects.create(
-        usuario_ptr=user,
-        matricula="TEST0002", nome="Test User", email=EMAIL_TEST,
-        password=make_password("test"), unidade=Unidade.BARRA.value,
+
+    # 3. Secretaria
+    secretaria_test = Secretaria.objects.create(
+        matricula="TEST0002",
+        nome="Test Secretaria",
+        email=EMAIL_TEST,
+        password=make_password("test"),
+        unidade=Unidade.BARRA.value,
     )
 
     import jwt
     from django.conf import settings
-    token = jwt.encode({'user_id': user.id}, settings.SECRET_KEY, algorithm='HS256')
+    token = jwt.encode({'user_id': aluno_test.id}, settings.SECRET_KEY, algorithm='HS256')
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
-    client.force_authenticate(user=user)
+    client.force_authenticate(user=aluno_test)
     return client
 
 # ── Coordenador (sem FK extra) ───────────────────────────────────────

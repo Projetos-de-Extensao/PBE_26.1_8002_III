@@ -79,6 +79,7 @@ class TestAvaliarContrato:
 
     def test_aprovar_contrato(self, api_client, contrato, secretaria):
         """Avaliação com veredito APROVADO atualiza status do contrato."""
+        api_client.force_authenticate(user=secretaria)
         payload = {
             "observacoes": "Contrato está em conformidade.",
             "veredito": Veredito.APROVADO.value,
@@ -93,6 +94,7 @@ class TestAvaliarContrato:
 
     def test_reprovar_contrato(self, api_client, contrato, secretaria):
         """Avaliação com veredito REPROVADO e justificativa atualiza status do contrato."""
+        api_client.force_authenticate(user=secretaria)
         payload = {
             "observacoes": "Faltam assinaturas.",
             "veredito": Veredito.REPROVADO.value,
@@ -108,6 +110,7 @@ class TestAvaliarContrato:
 
     def test_reprovar_contrato_sem_justificativa(self, api_client, contrato, secretaria):
         """Avaliação com veredito REPROVADO sem justificativa deve falhar (HTTP 400)."""
+        api_client.force_authenticate(user=secretaria)
         payload = {
             "observacoes": "Faltam assinaturas.",
             "veredito": Veredito.REPROVADO.value,
@@ -120,6 +123,7 @@ class TestAvaliarContrato:
 
     def test_aprovar_contrato_duracao_superior_24_meses_nao_pcd(self, api_client, contrato, secretaria):
         """Aprovação de contrato com duração superior a 24 meses para aluno não-PCD deve falhar."""
+        api_client.force_authenticate(user=secretaria)
         from datetime import date
         contrato.data_inicio = date(2026, 1, 1)
         contrato.data_termino = date(2028, 1, 2) # 24 meses e 1 dia
@@ -138,6 +142,7 @@ class TestAvaliarContrato:
 
     def test_aprovar_contrato_duracao_superior_24_meses_pcd(self, api_client, contrato, secretaria):
         """Aprovação de contrato com duração superior a 24 meses para aluno PCD deve passar."""
+        api_client.force_authenticate(user=secretaria)
         from datetime import date
         contrato.data_inicio = date(2026, 1, 1)
         contrato.data_termino = date(2028, 1, 2) # 24 meses e 1 dia
@@ -169,8 +174,9 @@ class TestAvaliarContrato:
         contrato.refresh_from_db()
         assert contrato.conflito_grade
 
-    def test_avaliar_contrato_sem_dados(self, api_client):
+    def test_avaliar_contrato_sem_dados(self, api_client, secretaria):
         """Avaliação sem dados obrigatórios retorna 400."""
+        api_client.force_authenticate(user=secretaria)
         response = api_client.post("/contrato/avaliar/", {})
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
