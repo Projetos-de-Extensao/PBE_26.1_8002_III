@@ -89,7 +89,7 @@ class TestPatchProcesso:
         }
         response = api_client.patch(f'/processo/?processo_id={processo.id}', payload)
         assert response.status_code == 200
-        assert response.data["message"] == "updated"
+        assert response.data["detail"] == "updated"
         processo.refresh_from_db()
         assert processo.nome_empresa == "Empresa Modificada LTDA"
 
@@ -107,7 +107,7 @@ class TestPatchProcesso:
         }
         response = api_client.patch('/processo/', payload)
         assert response.status_code == 400
-        assert response.data["error"] == "Id não informado"
+        assert response.data["detail"] == "Id não informado"
 
     def test_atualizar_processo_mesmo_aluno_e_status_aberto(self, api_client, processo):
         """Verifica se a validação do ProcessoSerializer permite atualizar o processo sem disparar erro de 'processo em aberto' para si mesmo."""
@@ -118,7 +118,7 @@ class TestPatchProcesso:
         }
         response = api_client.patch(f'/processo/?processo_id={processo.id}', payload)
         assert response.status_code == 200
-        assert response.data["message"] == "updated"
+        assert response.data["detail"] == "updated"
 
     
     

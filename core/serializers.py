@@ -43,6 +43,13 @@ class NestedSecretariaSerializer(serializers.ModelSerializer):
         fields = ["nome", "matricula", "unidade"]
 
 class AlunoSerializer(serializers.ModelSerializer):
+    """
+    Serializer responsável pela leitura e escrita de dados de Alunos.
+    Transforma senhas em hash (make_password) e garante que o campo 'senha'
+    nunca seja retornado nas respostas (write_only=True).
+    Sincroniza automaticamente a criação/edição do Aluno com o model `User` nativo do Django
+    para manter a compatibilidade com a autenticação JWT.
+    """
     processos = NestedProcessoSerializer(source="aluno", many=True, read_only=True)
 
     class Meta:
@@ -112,6 +119,11 @@ class ProcessoSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "data_criacao"]
 
     def validate(self, attrs):
+        """
+        Garante a regra de negócio central: um aluno só pode ter 
+        UM processo em aberto por vez. Impede que o usuário crie/atualize 
+        novos processos sem finalizar os anteriores.
+        """
         aluno = attrs.get('aluno') or (self.instance.aluno if self.instance else None)
         status_atual = attrs.get('status') or (self.instance.status if self.instance else None)
         if status_atual == StatusProcesso.ABERTO:
@@ -213,6 +225,10 @@ class HistoricoAvaliacaoRelatorioSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'data_avaliacao']
 
     def validate(self, attrs):
+        """
+        Garante as regras de auditoria: se o coordenador decidir por 'REPROVADO',
+        é estritamente necessário fornecer a justificativa para dar transparência ao aluno.
+        """
         veredito = attrs.get('veredito')
         justificativa = attrs.get('justificativa', '')
         if veredito == Veredito.REPROVADO:
@@ -231,6 +247,12 @@ class HistoricoAvaliacaoContratoSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'data_avaliacao']
 
     def validate(self, attrs):
+        """
+        Validações de auditoria de Contrato:
+        1. Reprovações exigem justificativa.
+        2. Aprovações são vetadas se a duração for maior que 24 meses (para não-PCD),
+           atendendo à Lei do Estágio.
+        """
         veredito = attrs.get('veredito')
         justificativa = attrs.get('justificativa', '')
         contrato = attrs.get('contrato_id')

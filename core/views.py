@@ -18,7 +18,11 @@ from core.enums import Veredito, StatusContrato, StatusRelatorio, StatusProcesso
 from rest_framework.exceptions import PermissionDenied
 
 def is_user_staff(user):
-    """Verifica se o usuário é Secretaria ou Coordenador."""
+    """
+    Verifica se o usuário pertence à camada administrativa (Secretaria ou Coordenador).
+    Utiliza um mecanismo de "cache" na requisição (adicionando '_cached_is_staff' ao user)
+    para evitar bater no banco de dados múltiplas vezes na mesma view.
+    """
     if hasattr(user, '_cached_is_staff'):
         return user._cached_is_staff
     is_staff = Secretaria.objects.filter(email=user.email).exists() or \
@@ -28,8 +32,11 @@ def is_user_staff(user):
 
 def get_processo_seguro(processo_id, user, prefetch=None, select=None):
     """
-    Busca um processo e valida se o usuário tem permissão para acessá-lo.
-    Alunos só podem acessar seus próprios processos.
+    PREVENÇÃO DE VULNERABILIDADE BOLA (Broken Object Level Authorization / IDOR):
+    Busca um processo e garante que o usuário possui o nível de acesso correto.
+    - Se for aluno: Verifica se ele é o "dono" do Processo. Retorna 403 caso tente 
+      acessar dados de outro aluno forçando o ID na URL.
+    - Se for staff: Passa livre.
     """
     queryset = Processo.objects.all()
     if select:
@@ -61,6 +68,13 @@ class AlunoAPIView(APIView):
         responses={200: AlunoSerializer(many=True)}
     )
     def get(self, request, *args, **kwargs):
+        """
+        Lista alunos do sistema.
+        O uso de `select_related('curso')` e `prefetch_related('aluno')` 
+        resolve um problema grave de performance conhecido como N+1 Queries.
+        Ele força o banco a carregar os dados aninhados em uma única query 
+        em vez de dezenas.
+        """
         data = Aluno.objects.select_related('curso').prefetch_related('aluno').all()
         matricula = request.query_params.get('matricula', None)
         cpf = request.query_params.get('cpf', None)
@@ -80,7 +94,7 @@ class AlunoAPIView(APIView):
         if not data.exists():
             return Response(
                 {
-                    "mensagem": "Nenhum aluno encontrado com os dados informados.",
+                    "detail": "Nenhum aluno encontrado com os dados informados.",
                     "sugestao": "Tente buscar apenas pelo primeiro nome ou limpe os filtros e tente novamente.",
                     "resultados": []
                 }, 
@@ -101,7 +115,7 @@ class AlunoAPIView(APIView):
         serializer = AlunoSerializer(data=parsed_data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response({"message": "Aluno criado com sucesso!"}, status=status.HTTP_201_CREATED)
+        return Response({"detail": "Aluno criado com sucesso!"}, status=status.HTTP_201_CREATED)
 
     @extend_schema(
         parameters=[
@@ -117,14 +131,14 @@ class AlunoAPIView(APIView):
             try:
                 old_data = Aluno.objects.get(matricula=matricula)
             except Aluno.DoesNotExist:
-                return Response({"error": "Aluno não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+                return Response({"detail": "Aluno não encontrado"}, status=status.HTTP_404_NOT_FOUND)
             
             serializer = AlunoSerializer(old_data, data=parsed_data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            return Response({"message": "updated"}, status=status.HTTP_200_OK)
+            return Response({"detail": "updated"}, status=status.HTTP_200_OK)
         else:
-            return Response({"error": "Matrícula não informada"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Matrícula não informada"}, status=status.HTTP_400_BAD_REQUEST)
 
 class ProcessoAPIView(APIView):
     permission_classes = [IsAluno | IsSecretaria | IsCoordenador]
@@ -182,7 +196,7 @@ class ProcessoAPIView(APIView):
         except Aluno.DoesNotExist:
             if 'matricula_aluno' not in parsed_data:
                 return Response(
-                    {"matricula_aluno": "Secretaria/Coordenação deve selecionar a matrícula do aluno."}, 
+                    {"detail": "Secretaria/Coordenação deve selecionar a matrícula do aluno."}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
@@ -197,9 +211,9 @@ class ProcessoAPIView(APIView):
 
         try:    
             serializer.save(criado_por=criado_por_string)
-            return Response({"criado": "Processo criado com sucesso"}, status=status.HTTP_201_CREATED)
+            return Response({"detail": "Processo criado com sucesso"}, status=status.HTTP_201_CREATED)
         except IntegrityError:
-            return Response({"falhou": "Esse processo já existe"}, status=status.HTTP_409_CONFLICT)
+            return Response({"detail": "Esse processo já existe"}, status=status.HTTP_409_CONFLICT)
 
     @extend_schema(
         parameters=[
@@ -217,9 +231,9 @@ class ProcessoAPIView(APIView):
             serializer = ProcessoSerializer(old_data, data=parsed_data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            return Response({"message": "updated"}, status=status.HTTP_200_OK)
+            return Response({"detail": "updated"}, status=status.HTTP_200_OK)
         else:
-            return Response({"error": "Id não informado"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Id não informado"}, status=status.HTTP_400_BAD_REQUEST)
 
 class ProcessoDetailAPIView(APIView):
     permission_classes = [IsAluno | IsCoordenador | IsSecretaria]
@@ -274,7 +288,7 @@ class UploadContrato(APIView):
         
         return Response(
             {
-                "message": "Contrato enviado com sucesso e secretaria notificada!",
+                "detail": "Contrato enviado com sucesso e secretaria notificada!",
                 "data": serializer.data
             }, 
             status=status.HTTP_201_CREATED
@@ -313,7 +327,7 @@ class AvaliarContratoAPIView(APIView):
         )
 
         return Response(
-            {"message":f"Contrato avaliado como {avaliacao.veredito} e aluno notificado!"},
+            {"detail":f"Contrato avaliado como {avaliacao.veredito} e aluno notificado!"},
             status=status.HTTP_201_CREATED
         )
 
@@ -333,7 +347,7 @@ class UploadRelatorio(APIView):
         # Validar se o processo está ativo (Em Andamento) - Issue 148
         if processo.status != StatusProcesso.EM_ANDAMENTO:
             return Response(
-                {"error": "Não é permitido enviar relatórios para processos que não estão ativos/em andamento."},
+                {"detail": "Não é permitido enviar relatórios para processos que não estão ativos/em andamento."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -354,7 +368,7 @@ class UploadRelatorio(APIView):
             from core.tasks import processarRelatorioComIa
             processarRelatorioComIa.delay(relatorio.id)
             
-        return Response({"message": "Relatório enviado e coordenação notificada."}, status=status.HTTP_201_CREATED)
+        return Response({"detail": "Relatório enviado e coordenação notificada."}, status=status.HTTP_201_CREATED)
 
 class AvaliarRelatorioAPIView(APIView):
     permission_classes = [IsCoordenador] 
@@ -393,7 +407,7 @@ class AvaliarRelatorioAPIView(APIView):
             observacoes=avaliacao.observacoes
         )
         
-        return Response({"message": f"Relatório {avaliacao.veredito} e aluno notificado."}, status=status.HTTP_201_CREATED)
+        return Response({"detail": f"Relatório {avaliacao.veredito} e aluno notificado."}, status=status.HTTP_201_CREATED)
     
 class ReprovarContratoAPIView(APIView):
     permission_classes = [IsSecretaria]
@@ -413,14 +427,14 @@ class ReprovarContratoAPIView(APIView):
         justificativa = request.data.get('justificativa')
         if not justificativa or not str(justificativa).strip():
             return Response(
-                {"error": "Campo 'justificativa' é obrigatório para reprovação."},
+                {"detail": "Campo 'justificativa' é obrigatório para reprovação."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         contrato = processo.contrato_set.last()
         if not contrato:
             return Response(
-                {"error": "Nenhum contrato encontrado para este processo."},
+                {"detail": "Nenhum contrato encontrado para este processo."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -478,9 +492,9 @@ class DownloadContratoAPIView(APIView):
             try:
                 aluno = request.user.aluno
                 if processo.aluno != aluno:
-                    return Response({"error": "Você não tem permissão para baixar este contrato."}, status=status.HTTP_403_FORBIDDEN)
+                    return Response({"detail": "Você não tem permissão para baixar este contrato."}, status=status.HTTP_403_FORBIDDEN)
             except Aluno.DoesNotExist:
-                return Response({"error": "Usuário não autorizado."}, status=status.HTTP_403_FORBIDDEN)
+                return Response({"detail": "Usuário não autorizado."}, status=status.HTTP_403_FORBIDDEN)
                 
         if not contrato.arquivo:
             raise Http404("Arquivo não encontrado.")
@@ -503,7 +517,7 @@ class AtualizarContratoAPIView(APIView):
         processo = get_object_or_404(Processo, id=id)
         contrato = processo.contrato_set.last()
         if not contrato:
-            return Response({"error": "Contrato não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Contrato não encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = AtualizarContratoSerializer(contrato, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -525,7 +539,7 @@ class AtualizarRelatorioAPIView(APIView):
         processo = get_object_or_404(Processo, id=id)
         relatorio = processo.relatorio_set.last()
         if not relatorio:
-            return Response({"error": "Relatório não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Relatório não encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = AtualizarRelatorioSerializer(relatorio, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)

@@ -130,6 +130,9 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
     ],
+    # Regra de Negócio/Segurança: Rate Limiting (Throttling)
+    # Protege a API contra ataques de força bruta e DDoS.
+    # Anônimos: 20 req/h. Autenticados: 200 req/h.
     'DEFAULT_THROTTLE_RATES': {
         'anon': '20/hour',
         'user': '200/hour',
@@ -137,13 +140,15 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), 
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # Token de curta duração por segurança
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    
     'AUTH_HEADER_TYPES': ('Bearer',),
     'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
+    'BLACKLIST_AFTER_ROTATION': True, # Invalida tokens antigos quando um novo é gerado
 }
 
+# Segurança: O Argon2 é utilizado como hasher primário,
+# pois é resistente a ataques de força bruta usando GPUs.
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.Argon2PasswordHasher',
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',

@@ -29,6 +29,11 @@ class Usuario(AbstractUser):
     REQUIRED_FIELDS = ['nome', 'email']
 
 class Aluno(Usuario):
+    """
+    Representa o estudante que participa de processos de estágio.
+    A grade horária do aluno (ManyToMany com Horarios) é crucial para a regra de negócio
+    que impede a assinatura de contratos cujas atividades conflitem com o horário de aulas.
+    """
     cpf = models.CharField(max_length=14, unique=True, verbose_name="CPF", validators=[validar_cpf])
     is_ativo = models.BooleanField(default=True, verbose_name="Status Ativo")
     periodo = models.IntegerField(choices=Periodo, default=Periodo.PRIMEIRO)
@@ -84,6 +89,11 @@ class Curso(models.Model):
         return self.nome
 
 class Processo(models.Model):
+    """
+    Agrupador lógico de um estágio. Um Processo vincula um Aluno à empresa,
+    e atua como "pasta" que conterá todos os Documentos do estágio (Contrato e Relatórios).
+    Regra: Um aluno geralmente não deve possuir múltiplos processos "ABERTOS" simultaneamente.
+    """
     nome_empresa = models.CharField(max_length=255, verbose_name="Nome da empresa")
     data_criacao = models.DateField(verbose_name="Data de Criação", default=timezone.now)
     status = models.CharField(max_length=20, choices=StatusProcesso, default=StatusProcesso.ABERTO)
@@ -105,6 +115,13 @@ class Processo(models.Model):
         return self.nome_processo
 
 class Contrato(models.Model):
+    """
+    Termo legal e formal do estágio.
+    Regras Críticas:
+    1. A duração não pode exceder 24 meses (validado no Serializer), exceto para alunos PCD.
+    2. Possui um campo flag 'conflito_grade' preenchido automaticamente por um Signal 
+       para alertar os avaliadores se o horário bate com as aulas do aluno.
+    """
     arquivo = models.FileField(upload_to=upload_contrato_path, verbose_name="Arquivo", validators=[validar_pdf_e_tamanho_seguro])
     data_upload = models.DateField(verbose_name="Data de Upload", default=timezone.now)
     cnpj_empresa = models.CharField(max_length=14, verbose_name="CNPJ da empresa", null=True, blank=True)
@@ -150,6 +167,10 @@ class HistoricoAvaliacao(models.Model):
         abstract = True
         
 class HistoricoAvaliacaoRelatorio(HistoricoAvaliacao):
+    """
+    Auditoria inalterável da decisão do Coordenador sobre um relatório.
+    Caso seja reprovado, a justificativa é obrigatória para informar o aluno.
+    """
     avaliador = models.ForeignKey(Coordenador, on_delete=models.PROTECT)
     relatorio_id = models.OneToOneField(Relatorio, on_delete=models.CASCADE)
     justificativa = models.CharField(max_length=200, verbose_name="Justificativa", blank=True, default="")
@@ -158,6 +179,10 @@ class HistoricoAvaliacaoRelatorio(HistoricoAvaliacao):
         raise ProtectedError("Histórico de Justificativas não pode ser alterado ou deletado.")
 
 class HistoricoAvaliacaoContrato(HistoricoAvaliacao):
+    """
+    Auditoria inalterável da avaliação de contratos pela Secretaria.
+    Semelhante ao Relatório, impede exclusões para manter histórico legal das decisões.
+    """
     avaliador = models.ForeignKey(Secretaria, on_delete=models.PROTECT)
     contrato_id = models.OneToOneField(Contrato, on_delete=models.CASCADE)
     justificativa = models.CharField(max_length=200,verbose_name="Justificativa", blank=True, default="")
@@ -183,6 +208,11 @@ from django.dispatch import receiver
 
 @receiver(m2m_changed, sender=Contrato.horarios_atividade.through)
 def verificar_conflito_grade(sender, instance, action, **kwargs):
+    """
+    Signal disparado sempre que os horários de um contrato são alterados.
+    Se cruzar com a grade de estudos do aluno atrelado, sinaliza `conflito_grade=True`.
+    Isso exime o backend de fazer validações custosas nas views de inserção.
+    """
     if action in ["post_add", "post_remove", "post_clear"]:
         aluno = instance.processoId.aluno
         horarios_contrato = instance.horarios_atividade.all()

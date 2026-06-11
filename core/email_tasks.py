@@ -1,8 +1,11 @@
 """
 Tasks Celery para envio assíncrono de emails.
 
-Cada task registra um EmailLog no banco, envia o email via SMTP,
-e atualiza o status com retry automático e backoff exponencial.
+Arquitetura de Resiliência:
+Cada task registra um EmailLog no banco com status PENDENTE ANTES de chamar o SMTP.
+Utilizamos 'acks_late=True' para garantir que, se o Celery worker cair no meio do envio,
+a mensagem retorne para a fila do RabbitMQ/Redis e não seja perdida.
+O 'autoretry_for' aplica backoff exponencial (30s, 60s, 120s) em caso de falha de rede.
 """
 import logging
 from smtplib import SMTPException

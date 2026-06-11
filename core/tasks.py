@@ -49,6 +49,12 @@ def processarContratoComIa(self, fileId):
     
 @shared_task
 def validarContrato(fileId, alunoId):
+    """
+    Tarefa acionada logo após o processamento da IA. 
+    Aplica as regras rígidas da Lei do Estágio (Lei 11.788) e políticas do Ibmec.
+    Se alguma infração for detectada (ex: carga horária > 30h semanais, 
+    sem apólice, contrato retroativo), reprova o contrato automaticamente.
+    """
     contrato = Contrato.objects.get(id=fileId)
     aluno = Aluno.objects.get(id=alunoId)
     
