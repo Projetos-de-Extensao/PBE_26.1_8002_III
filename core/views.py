@@ -59,6 +59,7 @@ def get_processo_seguro(processo_id, user, prefetch=None, select=None):
         is_coordenador = hasattr(user, 'coordenador')
         is_secretaria = hasattr(user, 'secretaria')
         
+        # Se for Coordenador (e não Secretaria), restringe acesso apenas a processos de alunos da sua própria área/curso
         if is_coordenador and not is_secretaria:
             if processo.aluno.curso.areaId.coordenador != user.coordenador:
                 raise PermissionDenied("Você não tem permissão para acessar processos de alunos de outra área/curso.")
@@ -446,6 +447,10 @@ class AvaliarRelatorioAPIView(APIView):
         return Response({"detail": f"Relatório {avaliacao.veredito} e aluno notificado."}, status=status.HTTP_201_CREATED)
     
 class ReprovarContratoAPIView(APIView):
+    """
+    Endpoint para a Secretaria reprovar um contrato de estágio associado a um processo.
+    Altera o status do contrato e do processo para REPROVADO mediante justificativa obrigatória.
+    """
     permission_classes = [IsSecretaria]
 
     @extend_schema(
@@ -499,6 +504,10 @@ class ReprovarContratoAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class HorariosAPIView(APIView):
+    """
+    Endpoint para listar todos os horários de turnos e dias cadastrados no sistema.
+    Acessível por qualquer usuário autenticado.
+    """
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
@@ -545,6 +554,10 @@ class DownloadContratoAPIView(APIView):
         return FileResponse(arquivo_open, as_attachment=True, filename=os.path.basename(contrato.arquivo.name))
 
 class AtualizarContratoAPIView(APIView):
+    """
+    Endpoint para a Secretaria atualizar dados de um contrato de estágio já enviado.
+    Dispara a validação assíncrona do contrato após a alteração.
+    """
     permission_classes = [IsSecretaria]
 
     @extend_schema(
@@ -567,6 +580,10 @@ class AtualizarContratoAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class AtualizarRelatorioAPIView(APIView):
+    """
+    Endpoint para o Coordenador atualizar dados de um relatório de estágio já enviado.
+    Dispara o processamento com inteligência artificial para avaliar o relatório após a alteração.
+    """
     permission_classes = [IsCoordenador]
 
     @extend_schema(
