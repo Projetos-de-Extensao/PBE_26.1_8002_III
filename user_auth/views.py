@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from drf_spectacular.utils import extend_schema
 from core.models import Aluno, Coordenador, Secretaria
@@ -13,6 +13,7 @@ from .serializers import (
     LoginResponseSerializer,
     PrimeiroAcessoRequestSerializer,
     MessageResponseSerializer,
+    UserMeSerializer,
 )
 
 
@@ -50,7 +51,7 @@ class LoginAPIView(APIView):
         user = authenticate(request, username=username, password=password)
         if user is None:
             return Response(
-                {"error": "Matrícula ou senha inválidos."},
+                {"detail": "Matrícula ou senha inválidos.", "code": "invalid_credentials"},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
@@ -60,8 +61,8 @@ class LoginAPIView(APIView):
         if usuario_dominio and getattr(usuario_dominio, "precisa_redefinir_senha", False):
             return Response(
                 {
-                    "error": "primeiro_acesso",
-                    "message": "Você precisa redefinir sua senha antes de continuar.",
+                    "detail": "Você precisa redefinir sua senha antes de continuar.",
+                    "code": "primeiro_acesso",
                 },
                 status=status.HTTP_403_FORBIDDEN,
             )
@@ -100,7 +101,7 @@ class PrimeiroAcessoAPIView(APIView):
         user = authenticate(request, username=username, password=old_password)
         if user is None:
             return Response(
-                {"error": "Matrícula ou senha temporária inválidos."},
+                {"detail": "Matrícula ou senha temporária inválidos.", "code": "invalid_credentials"},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
@@ -117,7 +118,7 @@ class PrimeiroAcessoAPIView(APIView):
             usuario_dominio.save(update_fields=["senha", "precisa_redefinir_senha"])
 
         return Response(
-            {"message": "Senha redefinida com sucesso. Faça login para continuar."},
+            {"detail": "Senha redefinida com sucesso. Faça login para continuar."},
             status=status.HTTP_200_OK,
         )
 
@@ -134,7 +135,7 @@ class LogoutAPIView(APIView):
         refresh_token = request.data.get("refresh")
         if not refresh_token:
             return Response(
-                {"error": "Token de refresh não informado."},
+                {"detail": "Token de refresh não informado.", "code": "missing_token"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
@@ -142,7 +143,40 @@ class LogoutAPIView(APIView):
             token.blacklist()
         except Exception:
             return Response(
-                {"error": "Token inválido ou já expirado."},
+                {"detail": "Token inválido ou já expirado.", "code": "invalid_token"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class MeAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="Dados do Usuário Logado",
+        description="Retorna os dados do usuário autenticado e o seu papel (role).",
+        responses={200: UserMeSerializer},
+    )
+    def get(self, request):
+        usuario_dominio = _buscar_usuario_dominio(request.user.email)
+        if not usuario_dominio:
+            return Response(
+                {"detail": "Usuário não encontrado.", "code": "user_not_found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        role = "DESCONHECIDO"
+        if isinstance(usuario_dominio, Aluno):
+            role = "ALUNO"
+        elif isinstance(usuario_dominio, Secretaria):
+            role = "SECRETARIA"
+        elif isinstance(usuario_dominio, Coordenador):
+            role = "COORDENADOR"
+
+        serializer = UserMeSerializer({
+            "id": usuario_dominio.id,
+            "nome": usuario_dominio.nome,
+            "email": usuario_dominio.email,
+            "matricula": usuario_dominio.matricula,
+            "role": role
+        })
+        return Response(serializer.data, status=status.HTTP_200_OK)
