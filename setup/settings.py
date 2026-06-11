@@ -182,11 +182,9 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 
-# Em ambiente de teste, executa tasks Celery sincronamente (sem broker)
-import sys
-if 'pytest' in sys.modules or 'test' in sys.argv:
-    CELERY_TASK_ALWAYS_EAGER = True
-    CELERY_TASK_EAGER_PROPAGATES = True
+# Executa tasks Celery sincronamente (sem broker) por padrão para facilitar testes locais
+CELERY_TASK_ALWAYS_EAGER = os.environ.get('CELERY_TASK_ALWAYS_EAGER', 'True') == 'True'
+CELERY_TASK_EAGER_PROPAGATES = True
 
 # CORS
 CORS_ALLOW_ALL_ORIGINS = True
