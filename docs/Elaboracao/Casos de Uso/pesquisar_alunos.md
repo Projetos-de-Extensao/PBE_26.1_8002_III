@@ -6,7 +6,7 @@ title: Pesquisar Alunos
 ### Pesquisar Alunos
 
 - **Atores:**
-    - Secretaria
+    - Secretaria / Coordenação
     - Sistema
 
 - **Pré-Condições:**

@@ -10,7 +10,7 @@ Casos de uso são uma forma de representar e detalhar funcionalidades existentes
 ### Índice:
 - [Diagrama do Aluno](#casos_de_uso_aluno)
 - [Diagrama da Secretaria](#casos_de_uso_secretaria)
-- [Diagrama do Aluno](#casos_de_uso_coordenacao)
+- [Diagrama da Coordenação](#casos_de_uso_coordenacao)
 
 
 ## Diagrama de Casos de Uso

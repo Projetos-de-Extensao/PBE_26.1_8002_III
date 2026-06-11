@@ -6,7 +6,7 @@ title: Fazer Login
 ### Fazer Login
 
 - **Atores:**
-    - Aluno / Secretaria 
+    - Aluno / Secretaria / Coordenação
     - Sistema
 
 - **Pré-Condições:**

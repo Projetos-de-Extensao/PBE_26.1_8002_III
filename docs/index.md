@@ -150,16 +150,13 @@ Para espelhar a documentação do projeto localmente:
 ```bash
 # Clone o repositório
 git clone https://github.com/Projetos-de-Extensao/PBE_26.1_8002_III.git
+cd PBE_26.1_8002_III
 
-# Crie e ative o ambiente virtual
-python -m venv .venv
-source .venv/bin/activate
-
-# Instale as dependências
-pip install -r requirements.txt
+# Instale as dependências com uv
+uv sync
 
 # Inicialize o servidor MkDocs localmente
-mkdocs serve
+uv run mkdocs serve
 ```
 
 </section>
