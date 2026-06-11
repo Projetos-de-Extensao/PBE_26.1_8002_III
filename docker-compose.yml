@@ -3,7 +3,10 @@ services:
     build: .
     container_name: pbe-web
     command: >
-      sh -c "echo '------------------------------------------------------------' &&
+      sh -c "uv run python manage.py makemigrations &&
+             uv run python manage.py migrate &&
+             uv run python seed.py &&
+             echo '------------------------------------------------------------' &&
              echo '🚀 API do Django disponível em: http://localhost:8000' &&
              echo '------------------------------------------------------------' &&
              uv run python manage.py runserver 0.0.0.0:8000"
