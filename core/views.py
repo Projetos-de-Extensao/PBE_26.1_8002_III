@@ -269,6 +269,14 @@ class UploadContrato(APIView):
         processo_id = kwargs.get('id')
         processo = get_processo_seguro(processo_id, request.user)
         
+        # Validar se o último contrato está reprovado (ou se não existe nenhum)
+        ultimo_contrato = Contrato.objects.filter(processoId=processo).order_by('id').last()
+        if ultimo_contrato and ultimo_contrato.status != StatusContrato.REPROVADO:
+            return Response(
+                {"detail": "Você só pode enviar um novo contrato caso o anterior tenha sido reprovado/recusado."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
         serializer = ContratoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
@@ -317,6 +325,9 @@ class AvaliarContratoAPIView(APIView):
             processo.save()
         elif avaliacao.veredito == Veredito.REPROVADO:
             contrato.status = StatusContrato.REPROVADO
+            processo = contrato.processoId
+            processo.status = StatusProcesso.REPROVADO
+            processo.save()
         
         contrato.save()
         
