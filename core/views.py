@@ -247,7 +247,10 @@ class ProcessoDetailAPIView(APIView):
         processo = get_processo_seguro(
             id, request.user,
             select=['aluno', 'secretaria', 'coordenacao'],
-            prefetch=['contrato_set', 'relatorio_set']
+            prefetch=[
+                'contrato_set__historicoavaliacaocontrato__avaliador',
+                'relatorio_set__historicoavaliacaorelatorio__avaliador',
+            ]
         )
         serializer = ProcessoDetailSerializer(processo)
         return Response(serializer.data)

@@ -13,15 +13,40 @@ from datetime import datetime
 from django.shortcuts import get_object_or_404
 
 
+class NestedHistoricoContratoSerializer(serializers.ModelSerializer):
+    avaliador_nome = serializers.CharField(source='avaliador.nome', read_only=True)
+
+    class Meta:
+        model = HistoricoAvaliacaoContrato
+        fields = ['id', 'observacoes', 'data_avaliacao', 'veredito', 'avaliador_nome', 'justificativa']
+
+
+class NestedHistoricoRelatorioSerializer(serializers.ModelSerializer):
+    avaliador_nome = serializers.CharField(source='avaliador.nome', read_only=True)
+
+    class Meta:
+        model = HistoricoAvaliacaoRelatorio
+        fields = ['id', 'observacoes', 'data_avaliacao', 'veredito', 'avaliador_nome', 'justificativa']
+
+
 class NestedContratoSerializer(serializers.ModelSerializer):
+    historico = NestedHistoricoContratoSerializer(
+        source='historicoavaliacaocontrato', read_only=True, default=None
+    )
+
     class Meta:
         model = Contrato
-        fields = ['nome_empresa', 'data_upload', 'status', 'conflito_grade'] 
+        fields = ['id', 'nome_empresa', 'data_upload', 'status', 'conflito_grade', 'historico']
+
 
 class NestedRelatorioSerializer(serializers.ModelSerializer):
+    historico = NestedHistoricoRelatorioSerializer(
+        source='historicoavaliacaorelatorio', read_only=True, default=None
+    )
+
     class Meta:
         model = Relatorio
-        fields = ['data_upload', 'status']
+        fields = ['id', 'data_upload', 'status', 'fora_do_prazo', 'titulo', 'corpo', 'historico']
 
 class NestedProcessoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -139,7 +164,7 @@ class ProcessoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Processo
-        fields = ["nome_empresa", "status", "matricula_aluno", "matricula_secretaria", "matricula_coordenacao"]
+        fields = ["id", "nome_empresa", "status", "matricula_aluno", "matricula_secretaria", "matricula_coordenacao"]
         read_only_fields = ["id", "data_criacao"]
 
     def validate(self, attrs):
@@ -170,7 +195,7 @@ class ProcessoDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Processo
-        fields = ["nome_empresa", "status", "aluno", "secretaria", "coordenacao", "contrato", "relatorio"]
+        fields = ["id", "nome_empresa", "status", "aluno", "secretaria", "coordenacao", "contrato", "relatorio"]
 
 class ContratoSerializer(serializers.ModelSerializer):
     class Meta:
