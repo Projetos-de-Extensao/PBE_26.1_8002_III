@@ -141,6 +141,33 @@ class TestAvaliarContrato:
         assert contrato.status == StatusContrato.APROVADO
         assert processo.status == "em_andamento"
 
+    def test_avaliar_contrato_ja_avaliado_manualmente_deve_falhar(self, api_client, contrato, secretaria):
+        """Avaliar um contrato que já foi avaliado manualmente por um membro da secretaria deve falhar."""
+        # Configura o contrato como reprovado
+        contrato.status = StatusContrato.REPROVADO
+        contrato.save()
+        
+        # Cria a avaliação manual anterior
+        HistoricoAvaliacaoContrato.objects.create(
+            contrato_id=contrato,
+            observacoes="Faltou assinar a folha 3.",
+            veredito=Veredito.REPROVADO,
+            avaliador=secretaria,
+            justificativa="Documentação incompleta."
+        )
+        
+        # Agora tenta aprovar de novo (não deve ser permitido)
+        payload = {
+            "observacoes": "Mudança de ideia.",
+            "veredito": Veredito.APROVADO.value,
+            "avaliador": secretaria.id,
+            "contrato_id": contrato.id,
+        }
+        response = api_client.post("/contrato/avaliar/", payload)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "Este contrato já foi avaliado manualmente" in response.data["detail"]
+
+
 
     def test_reprovar_contrato_sem_justificativa(self, api_client, contrato, secretaria):
         """Avaliação com veredito REPROVADO sem justificativa deve falhar (HTTP 400)."""

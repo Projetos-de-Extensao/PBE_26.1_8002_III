@@ -317,6 +317,16 @@ class AvaliarContratoAPIView(APIView):
         contrato_id = request.data.get('contrato_id')
         try:
             existing_avaliacao = HistoricoAvaliacaoContrato.objects.get(contrato_id=contrato_id)
+            # Apenas permite sobrescrever se a avaliação anterior tiver sido gerada automaticamente pelo sistema
+            is_sistema = (
+                existing_avaliacao.observacoes.startswith("Reprovação Automática pelo Sistema:") or
+                existing_avaliacao.observacoes.startswith("Validação Automática pelo Sistema:")
+            )
+            if not is_sistema:
+                return Response(
+                    {"detail": "Este contrato já foi avaliado manualmente por um membro da secretaria e não pode ser reavaliado."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             serializer = HistoricoAvaliacaoContratoSerializer(existing_avaliacao, data=request.data)
         except HistoricoAvaliacaoContrato.DoesNotExist:
             serializer = HistoricoAvaliacaoContratoSerializer(data=request.data)
