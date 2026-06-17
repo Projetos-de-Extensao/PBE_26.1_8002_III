@@ -349,3 +349,21 @@ class HorariosSerializer(serializers.ModelSerializer):
     class Meta:
         model = Horarios
         fields = ['id', 'dia', 'turno']
+
+
+class MeuHistoricoSerializer(serializers.Serializer):
+    """
+    Serializer de leitura para o endpoint /meu-historico/.
+    Unifica registros de HistoricoAvaliacaoContrato e HistoricoAvaliacaoRelatorio
+    num formato plano para exibição em timeline.
+    """
+    id_historico = serializers.IntegerField()
+    tipo_documento = serializers.CharField()
+    documento_id = serializers.IntegerField()
+    nome_aluno = serializers.CharField()
+    nome_empresa = serializers.CharField()
+    data_avaliacao = serializers.DateTimeField()
+    veredito = serializers.CharField()
+    observacoes = serializers.CharField()
+    justificativa = serializers.CharField(allow_blank=True)
+
