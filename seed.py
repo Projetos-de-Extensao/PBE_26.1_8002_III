@@ -75,6 +75,13 @@ for flag_name in flags:
         flag.is_enabled = True
         flag.save()
 
+# 6. Semeando Horários disponíveis (18 combinações: Segunda a Sábado x Manhã/Tarde/Noite)
+from core.models import Horarios
+from core.enums import DiasDaSemana, Turno
+for dia_choice in DiasDaSemana.choices:
+    for turno_choice in Turno.choices:
+        Horarios.objects.get_or_create(dia=dia_choice[0], turno=turno_choice[0])
+
 print("DB Seeded Successfully!")
 print("------------------------------------------------------------")
 print("Credenciais de acesso para testes:")
@@ -83,3 +90,4 @@ print(f"COORDENADOR -> Matricula: {coord.matricula} | Senha: senha123")
 print(f"SECRETARIA  -> Matricula: {sec.matricula}     | Senha: senha123")
 print(f"ALUNO (ex)  -> Matricula: {alunos[0].matricula}   | Senha: senha123")
 print("------------------------------------------------------------")
+

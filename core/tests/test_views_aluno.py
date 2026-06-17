@@ -131,7 +131,7 @@ class TestAlunoGradeAPIView:
         assert response.status_code == 200
         assert response.data == []
 
-    def test_patch_grade_sucesso(self, api_client):
+    def test_patch_grade_sucesso(self, api_client, horario_segunda_manha, horario_terca_noite):
         # Atualiza a grade horária com alguns slots
         payload = [
             {"dia": "segunda", "turno": "manha"},

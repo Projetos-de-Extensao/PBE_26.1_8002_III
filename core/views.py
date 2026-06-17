@@ -618,9 +618,16 @@ class AlunoGradeAPIView(APIView):
                     {"detail": f"Dia '{dia}' ou Turno '{turno}' inválido."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            # Obter ou criar o slot correspondente
-            horario, _ = Horarios.objects.get_or_create(dia=dia, turno=turno)
+            # Obter o slot correspondente (deve já existir na tabela de Horarios)
+            try:
+                horario = Horarios.objects.get(dia=dia, turno=turno)
+            except Horarios.DoesNotExist:
+                return Response(
+                    {"detail": f"O horário '{dia}' - '{turno}' não está disponível no sistema."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             horarios_instancias.append(horario)
+
 
         # Atualiza a relação no M2M
         aluno.grade.set(horarios_instancias)
