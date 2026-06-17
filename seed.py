@@ -5,7 +5,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "setup.settings")
 django.setup()
 
 from django.contrib.auth.models import User
-from core.models import Aluno, Coordenador, Secretaria, Curso, Area, Processo
+from core.models import Aluno, Coordenador, Secretaria, Curso, Area, Processo, FeatureFlag
 from core.enums import Unidade, StatusProcesso
 from django.contrib.auth.hashers import make_password
 
@@ -63,6 +63,17 @@ for i in range(1, 4):
         aluno=aluno, defaults={'nome_empresa': f'Empresa Parceira {i}', 'coordenacao': coord, 'secretaria': sec, 'status': StatusProcesso.ABERTO}
     )
     processos.append(processo)
+
+# 5. Criar Feature Flags padrão ativas
+flags = ["async_contract_ai", "async_report_ai", "report_evaluation_ai"]
+for flag_name in flags:
+    flag, created = FeatureFlag.objects.get_or_create(
+        name=flag_name,
+        defaults={'is_enabled': True}
+    )
+    if not created and not flag.is_enabled:
+        flag.is_enabled = True
+        flag.save()
 
 print("DB Seeded Successfully!")
 print("------------------------------------------------------------")
