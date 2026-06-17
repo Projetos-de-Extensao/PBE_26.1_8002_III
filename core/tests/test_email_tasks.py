@@ -197,3 +197,37 @@ class TestEmailLogModel:
     def test_ordering_por_data(self):
         """Deve ter ordering definido como '-criado_em'."""
         assert EmailLog._meta.ordering == ['-criado_em']
+
+
+# ── Testes: enviar_email_grade_atualizada ───────────────────────────
+
+@pytest.mark.django_db
+class TestEnviarEmailGradeAtualizada:
+
+    @patch("core.email_tasks.EmailMultiAlternatives")
+    def test_grade_atualizada_envia_com_sucesso(self, mock_email_cls):
+        """Deve enviar email de grade atualizada e registrar como ENVIADO."""
+        mock_msg = MagicMock()
+        mock_email_cls.return_value = mock_msg
+
+        grade_slots = [{"dia": "Segunda-feira", "turno": "Manhã"}]
+        from core.email_tasks import enviar_email_grade_atualizada
+        enviar_email_grade_atualizada("secretaria@ibmec.edu.br", "João Santos", "20260001", grade_slots)
+
+        log = EmailLog.objects.first()
+        assert log.status == StatusEmail.ENVIADO
+        assert "grade horária atualizada" in log.assunto.lower()
+        assert "Segunda-feira" in log.corpo_html
+        assert "Manhã" in log.corpo_html
+
+    @patch("core.email_tasks.enviar_email_grade_atualizada.delay")
+    def test_notificar_grade_atualizada_chama_delay(self, mock_delay):
+        """Deve chamar .delay() na task Celery ao notificar grade atualizada."""
+        grade_slots = [{"dia": "Segunda-feira", "turno": "Manhã"}]
+        EmailNotificationService.notificar_grade_atualizada(
+            "secretaria@ibmec.edu.br", "João Santos", "20260001", grade_slots
+        )
+        mock_delay.assert_called_once_with(
+            "secretaria@ibmec.edu.br", "João Santos", "20260001", grade_slots
+        )
+

@@ -120,16 +120,48 @@ class TestPatchAluno:
         response = api_client.patch('/aluno/', payload)
         assert response.status_code == 400
         assert response.data["detail"] == "Matrícula não informada"
-      
-         
+
+
+@pytest.mark.django_db
+class TestAlunoGradeAPIView:
+
+    def test_get_grade_inicial_vazia(self, api_client):
+        # O aluno autenticado pela fixture api_client não tem horários inicialmente
+        response = api_client.get('/aluno/grade/')
+        assert response.status_code == 200
+        assert response.data == []
+
+    def test_patch_grade_sucesso(self, api_client):
+        # Atualiza a grade horária com alguns slots
+        payload = [
+            {"dia": "segunda", "turno": "manha"},
+            {"dia": "terca", "turno": "noite"}
+        ]
+        response = api_client.patch('/aluno/grade/', payload, format='json')
+        assert response.status_code == 200
         
+        # Verifica o retorno serializado
+        assert len(response.data) == 2
+        dias_retornados = [item['dia'] for item in response.data]
+        turnos_retornados = [item['turno'] for item in response.data]
+        assert "segunda" in dias_retornados
+        assert "manha" in turnos_retornados
+        assert "terca" in dias_retornados
+        assert "noite" in turnos_retornados
 
+        # Verifica se persistiu no banco para o Aluno correto
+        from core.models import Aluno
+        aluno_inst = Aluno.objects.get(email="testuser@ibmec.edu.br")
+        assert aluno_inst.grade.count() == 2
 
-
-
-
-
-
+    def test_patch_grade_invalida(self, api_client):
+        # Envia turnos/dias inválidos
+        payload = [
+            {"dia": "domingo", "turno": "manha"},
+        ]
+        response = api_client.patch('/aluno/grade/', payload, format='json')
+        assert response.status_code == 400
+        assert "Dia 'domingo' ou Turno 'manha' inválido." in response.data["detail"]
 
 
 # ╔═══════════════════════════════════════════════════════════════════╗

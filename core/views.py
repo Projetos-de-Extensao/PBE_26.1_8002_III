@@ -283,7 +283,8 @@ class UploadContrato(APIView):
         contrato = serializer.save(processoId=processo)
         
         aluno = contrato.processoId.aluno
-        email_secretaria = "secretaria@ibmec.edu.br" 
+        from django.conf import settings
+        email_secretaria = getattr(settings, 'SECRETARIA_DEFAULT_EMAIL', 'secretaria@ibmec.edu.br') 
 
         EmailNotificationService.notificar_novo_envio(
             email_destino=email_secretaria,
@@ -563,4 +564,91 @@ class AtualizarRelatorioAPIView(APIView):
             from core.tasks import avaliarRelatorioComIa
             avaliarRelatorioComIa.delay(relatorio.id)
 
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class AlunoGradeAPIView(APIView):
+    permission_classes = [IsAluno]
+
+    @extend_schema(
+        responses={200: HorariosSerializer(many=True)}
+    )
+    def get(self, request, *args, **kwargs):
+        """
+        Retorna a grade horária de aulas do aluno logado.
+        """
+        try:
+            aluno = Aluno.objects.get(email=request.user.email)
+        except Aluno.DoesNotExist:
+            return Response({"detail": "Aluno não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+        
+        grade = aluno.grade.all().order_by('id')
+        serializer = HorariosSerializer(grade, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        request=HorariosSerializer(many=True),
+        responses={200: HorariosSerializer(many=True)}
+    )
+    def patch(self, request, *args, **kwargs):
+        """
+        Atualiza a grade horária de aulas do aluno logado.
+        Recebe uma lista de slots contendo {dia, turno}.
+        Exemplo: [{"dia": "segunda", "turno": "manha"}, ...]
+        """
+        try:
+            aluno = Aluno.objects.get(email=request.user.email)
+        except Aluno.DoesNotExist:
+            return Response({"detail": "Aluno não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+        slots = request.data
+        if not isinstance(slots, list):
+            return Response({"detail": "Os dados devem ser uma lista de horários."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validar as escolhas recebidas antes de realizar qualquer alteração
+        from core.enums import DiasDaSemana, Turno
+        valid_dias = [choice[0] for choice in DiasDaSemana.choices]
+        valid_turnos = [choice[0] for choice in Turno.choices]
+
+        horarios_instancias = []
+        for slot in slots:
+            dia = slot.get('dia')
+            turno = slot.get('turno')
+            if dia not in valid_dias or turno not in valid_turnos:
+                return Response(
+                    {"detail": f"Dia '{dia}' ou Turno '{turno}' inválido."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            # Obter ou criar o slot correspondente
+            horario, _ = Horarios.objects.get_or_create(dia=dia, turno=turno)
+            horarios_instancias.append(horario)
+
+        # Atualiza a relação no M2M
+        aluno.grade.set(horarios_instancias)
+        aluno.save()
+
+        # Notificar a secretaria por email utilizando a configuração do settings
+        from django.conf import settings
+        from core.services.email_service import EmailNotificationService
+        from core.enums import DiasDaSemana, Turno
+        dias_map = dict(DiasDaSemana.choices)
+        turnos_map = dict(Turno.choices)
+
+        grade_slots_formatted = [
+            {
+                'dia': dias_map.get(h.dia, h.dia),
+                'turno': turnos_map.get(h.turno, h.turno)
+            }
+            for h in horarios_instancias
+        ]
+
+        dest_email = getattr(settings, 'SECRETARIA_DEFAULT_EMAIL', 'secretaria@ibmec.edu.br')
+
+        EmailNotificationService.notificar_grade_atualizada(
+            email_destino=dest_email,
+            nome_aluno=aluno.nome,
+            matricula_aluno=aluno.matricula,
+            grade_slots=grade_slots_formatted
+        )
+
+        serializer = HorariosSerializer(aluno.grade.all().order_by('id'), many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

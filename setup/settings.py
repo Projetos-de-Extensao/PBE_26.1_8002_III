@@ -167,6 +167,7 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 DEFAULT_FROM_EMAIL = 'notificacoes@ibintern.com.br'
+SECRETARIA_DEFAULT_EMAIL = os.environ.get('SECRETARIA_DEFAULT_EMAIL', 'secretaria@ibmec.edu.br')
 
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'amqp://guest:guest@localhost:5672//')
 CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'rpc://')

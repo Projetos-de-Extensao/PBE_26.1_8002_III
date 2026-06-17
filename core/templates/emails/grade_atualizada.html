@@ -1,0 +1,48 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}Grade Horária Atualizada — IbIntern{% endblock %}
+
+{% block body %}
+<p class="greeting">Olá!</p>
+
+<p class="content">
+  Informamos que o aluno <strong>{{ nome_aluno }}</strong> (Matrícula: {{ matricula_aluno }}) atualizou sua grade horária de aulas no sistema.
+</p>
+
+<p class="content">
+  A nova grade horária cadastrada é a seguinte:
+</p>
+
+<div class="info-box">
+  <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+    <thead>
+      <tr style="border-bottom: 2px solid #3949ab; text-align: left; color: #1a237e;">
+        <th style="padding: 8px 0; width: 60%;">Dia da Semana</th>
+        <th style="padding: 8px 0; width: 40%;">Turno(s) com Aula</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for slot in grade_slots %}
+      <tr style="border-bottom: 1px solid #e8eaed;">
+        <td style="padding: 8px 0; font-weight: 500;">{{ slot.dia }}</td>
+        <td style="padding: 8px 0;">{{ slot.turno }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="2" style="padding: 8px 0; color: #9e9e9e; font-style: italic;">Nenhuma aula cadastrada (grade livre).</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<p class="content">
+  O sistema atualizará automaticamente a verificação de conflitos de grade para quaisquer contratos futuros ou em andamento deste aluno.
+</p>
+
+<hr class="divider">
+
+<p class="content" style="font-size: 13px; color: #78909c;">
+  Este email foi enviado automaticamente pelo sistema IbIntern devido a uma alteração cadastral.
+</p>
+{% endblock %}
