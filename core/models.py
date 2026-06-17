@@ -22,7 +22,7 @@ class Usuario(models.Model):
     """
     matricula = models.CharField(max_length=30, unique=True, db_index=True, verbose_name="Matrícula")    
     nome = models.CharField(max_length=255, verbose_name="Nome")
-    email = models.EmailField(verbose_name="E-mail", validators=[validar_email_institucional])
+    email = models.EmailField(verbose_name="E-mail", validators=[validar_email_institucional], default="")
     senha = models.CharField(max_length=255, verbose_name="Senha")
     unidade = models.CharField(max_length=15, choices=Unidade)
     precisa_redefinir_senha = models.BooleanField(default=True, verbose_name="Precisa redefinir senha?")
