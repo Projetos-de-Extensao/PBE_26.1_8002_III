@@ -41,12 +41,12 @@ services:
         condition: service_healthy
 
   frontend:
-    build: ./interface/ibintern
+    build: ../ibintern
     container_name: pbe-frontend
     ports:
       - "5173:5173"
     volumes:
-      - ./interface/ibintern:/app
+      - ../ibintern:/app
       - /app/node_modules
     environment:
       - NODE_ENV=development
