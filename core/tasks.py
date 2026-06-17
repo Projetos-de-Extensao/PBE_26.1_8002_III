@@ -5,6 +5,7 @@ from .services.ler_extrair_infos_pdf import ler_pdf_modo_layout
 from .models import *
 from .services.validacao_sistema.validaGradeContrato import validarGradeContrato
 from .exceptions import gradeHorariaIncompativelException
+from . import email_tasks
 
 @shared_task
 def processarContratoComIa(fileId):
@@ -29,6 +30,12 @@ def processarContratoComIa(fileId):
     contrato.assinatura_empresa = dados_contrato["assinatura_empresa"]
     contrato.assinatura_faculdade = dados_contrato["assinatura_faculdade"]
     contrato.save()
+
+    # Atualiza o nome da empresa no processo para refletir o valor lido pela IA
+    processo = contrato.processoId
+    if dados_contrato.get("nome_empresa"):
+        processo.nome_empresa = dados_contrato["nome_empresa"]
+        processo.save()
 
     # Associa os horários de atividade extraídos ao contrato
     horarios_data = dados_contrato.get("horarios_atividade", [])
