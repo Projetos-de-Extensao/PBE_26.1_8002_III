@@ -314,7 +314,13 @@ class AvaliarContratoAPIView(APIView):
         responses={201: HistoricoAvaliacaoContratoSerializer}
     )
     def post(self, request, *args, **kwargs):
-        serializer = HistoricoAvaliacaoContratoSerializer(data=request.data)
+        contrato_id = request.data.get('contrato_id')
+        try:
+            existing_avaliacao = HistoricoAvaliacaoContrato.objects.get(contrato_id=contrato_id)
+            serializer = HistoricoAvaliacaoContratoSerializer(existing_avaliacao, data=request.data)
+        except HistoricoAvaliacaoContrato.DoesNotExist:
+            serializer = HistoricoAvaliacaoContratoSerializer(data=request.data)
+
         serializer.is_valid(raise_exception=True)
         avaliacao = serializer.save()
         contrato = avaliacao.contrato_id
