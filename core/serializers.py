@@ -36,7 +36,11 @@ class NestedContratoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contrato
-        fields = ['id', 'nome_empresa', 'data_upload', 'status', 'conflito_grade', 'historico']
+        fields = [
+            'id', 'nome_empresa', 'cnpj_empresa', 'data_upload', 'data_inicio', 'data_termino',
+            'status', 'conflito_grade', 'apolice_seguro', 'plano_atividade',
+            'assinatura_aluno', 'assinatura_empresa', 'assinatura_faculdade', 'historico'
+        ]
 
 
 class NestedRelatorioSerializer(serializers.ModelSerializer):
