@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 from drf_spectacular.types import OpenApiTypes
 from .serializers import *
-from .models import Aluno, Processo, Secretaria, Coordenador, Contrato, HistoricoAvaliacaoContrato, Horarios, FeatureFlag
+from .models import Aluno, Processo, Secretaria, Coordenador, Contrato, Relatorio, HistoricoAvaliacaoContrato, Horarios, FeatureFlag
 from .permissions import IsSecretaria, IsAluno, IsCoordenador
 from .services.email_service import EmailNotificationService
 from core.enums import Veredito, StatusContrato, StatusRelatorio, StatusProcesso
@@ -378,6 +378,14 @@ class UploadRelatorio(APIView):
         if processo.status != StatusProcesso.EM_ANDAMENTO:
             return Response(
                 {"detail": "Não é permitido enviar relatórios para processos que não estão ativos/em andamento."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validar se o último relatório está reprovado (ou se não existe nenhum)
+        ultimo_relatorio = Relatorio.objects.filter(processo_id=processo).order_by('id').last()
+        if ultimo_relatorio and ultimo_relatorio.status != StatusRelatorio.REPROVADO:
+            return Response(
+                {"detail": "Você só pode enviar um novo relatório caso o anterior tenha sido reprovado/recusado."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
