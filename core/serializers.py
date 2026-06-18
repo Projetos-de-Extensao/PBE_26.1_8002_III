@@ -155,8 +155,48 @@ class ProcessoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Processo
-        fields = ["id", "nome_empresa", "status", "matricula_aluno", "matricula_secretaria", "matricula_coordenacao"]
-        read_only_fields = ["id", "data_criacao"]
+        fields = [
+            "id", "nome_empresa", "empresa", "status", "matricula_aluno", 
+            "matricula_secretaria", "matricula_coordenacao", "aluno_id", 
+            "aluno_nome", "matricula", "curso", "criado_em", "contrato", 
+            "relatorios", "historico"
+        ]
+        read_only_fields = ["id", "criado_em"]
+
+    def get_criado_em(self, obj):
+        if obj.data_criacao:
+            return obj.data_criacao.strftime("%Y-%m-%d")
+        return ""
+
+    def get_contrato(self, obj):
+        c = obj.contrato_set.last()
+        if c:
+            return NestedContratoSerializer(c).data
+        return None
+
+    def get_historico(self, obj):
+        eventos = []
+        if obj.data_criacao:
+            eventos.append({"data": obj.data_criacao.strftime("%Y-%m-%d"), "evento": "Processo iniciado"})
+        
+        for c in obj.contrato_set.all():
+            if c.data_upload:
+                eventos.append({"data": c.data_upload.strftime("%Y-%m-%d"), "evento": "Contrato enviado para análise"})
+            for h in c.historicoavaliacaocontrato_set.all():
+                evento_nome = "Contrato aprovado" if h.veredito == Veredito.APROVADO else f"Contrato reprovado: {h.justificativa or 'sem justificativa'}"
+                if h.data_avaliacao:
+                    eventos.append({"data": h.data_avaliacao.strftime("%Y-%m-%d"), "evento": evento_nome})
+
+        for r in obj.relatorio_set.all():
+            if r.data_upload:
+                eventos.append({"data": r.data_upload.strftime("%Y-%m-%d"), "evento": f"Relatório '{r.titulo or 'Sem Título'}' enviado"})
+            for h in r.historicoavaliacaorelatorio_set.all():
+                evento_nome = f"Relatório avaliado: {h.veredito} — {h.justificativa}" if h.justificativa else f"Relatório avaliado: {h.veredito}"
+                if h.data_avaliacao:
+                    eventos.append({"data": h.data_avaliacao.strftime("%Y-%m-%d"), "evento": evento_nome})
+        
+        eventos.sort(key=lambda x: x["data"])
+        return eventos
 
     def validate(self, attrs):
         aluno = attrs.get('aluno') or (self.instance.aluno if self.instance else None)
@@ -182,7 +222,31 @@ class ProcessoDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Processo
-        fields = ["id", "nome_empresa", "status", "aluno", "secretaria", "coordenacao", "contrato", "relatorio"]
+        fields = ["id", "nome_empresa", "status", "aluno", "secretaria", "coordenacao", "contrato", "relatorio", "historico"]
+
+    def get_historico(self, obj):
+        eventos = []
+        if obj.data_criacao:
+            eventos.append({"data": obj.data_criacao.strftime("%Y-%m-%d"), "evento": "Processo iniciado"})
+        
+        for c in obj.contrato_set.all():
+            if c.data_upload:
+                eventos.append({"data": c.data_upload.strftime("%Y-%m-%d"), "evento": "Contrato enviado para análise"})
+            for h in c.historicoavaliacaocontrato_set.all():
+                evento_nome = "Contrato aprovado" if h.veredito == Veredito.APROVADO else f"Contrato reprovado: {h.justificativa or 'sem justificativa'}"
+                if h.data_avaliacao:
+                    eventos.append({"data": h.data_avaliacao.strftime("%Y-%m-%d"), "evento": evento_nome})
+
+        for r in obj.relatorio_set.all():
+            if r.data_upload:
+                eventos.append({"data": r.data_upload.strftime("%Y-%m-%d"), "evento": f"Relatório '{r.titulo or 'Sem Título'}' enviado"})
+            for h in r.historicoavaliacaorelatorio_set.all():
+                evento_nome = f"Relatório avaliado: {h.veredito} — {h.justificativa}" if h.justificativa else f"Relatório avaliado: {h.veredito}"
+                if h.data_avaliacao:
+                    eventos.append({"data": h.data_avaliacao.strftime("%Y-%m-%d"), "evento": evento_nome})
+        
+        eventos.sort(key=lambda x: x["data"])
+        return eventos
 
 class ContratoSerializer(serializers.ModelSerializer):
     class Meta:
