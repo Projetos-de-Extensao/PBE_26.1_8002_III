@@ -682,3 +682,106 @@ class AlunoGradeAPIView(APIView):
 
         serializer = HorariosSerializer(aluno.grade.all().order_by('id'), many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class MeuHistoricoAPIView(APIView):
+    """
+    Endpoint de auditoria pessoal: retorna todos os documentos
+    que o Coordenador ou Secretária logado avaliou (aprovações e reprovações).
+    Query Params opcionais: ?tipo=contrato|relatorio&veredito=aprovado|reprovado
+    """
+    permission_classes = [IsSecretaria | IsCoordenador]
+
+    @extend_schema(
+        summary="Meu Histórico de Avaliações",
+        description="Retorna a lista unificada de avaliações realizadas pelo usuário logado.",
+        parameters=[
+            OpenApiParameter(name='tipo', description='Filtrar por tipo: contrato ou relatorio', required=False, type=str),
+            OpenApiParameter(name='veredito', description='Filtrar por veredito: aprovado ou reprovado', required=False, type=str),
+        ],
+        responses={200: inline_serializer(
+            name='MeuHistoricoResponse',
+            fields={
+                'id_historico': serializers.IntegerField(),
+                'tipo_documento': serializers.CharField(),
+                'documento_id': serializers.IntegerField(),
+                'nome_aluno': serializers.CharField(),
+                'nome_empresa': serializers.CharField(),
+                'data_avaliacao': serializers.DateTimeField(),
+                'veredito': serializers.CharField(),
+                'observacoes': serializers.CharField(),
+                'justificativa': serializers.CharField(),
+            },
+            many=True,
+        )},
+    )
+    def get(self, request, *args, **kwargs):
+        from .models import HistoricoAvaliacaoContrato, HistoricoAvaliacaoRelatorio
+        from .serializers import MeuHistoricoSerializer
+
+        tipo_filtro = request.query_params.get('tipo', None)
+        veredito_filtro = request.query_params.get('veredito', None)
+
+        resultados = []
+
+        # Buscar avaliações de Contratos (feitas por Secretaria)
+        if tipo_filtro is None or tipo_filtro == 'contrato':
+            try:
+                secretaria = Secretaria.objects.get(email=request.user.email)
+                qs_contratos = HistoricoAvaliacaoContrato.objects.filter(
+                    avaliador=secretaria
+                ).select_related('contrato_id__processoId__aluno')
+
+                if veredito_filtro:
+                    qs_contratos = qs_contratos.filter(veredito=veredito_filtro)
+
+                for h in qs_contratos:
+                    contrato = h.contrato_id
+                    processo = contrato.processoId
+                    resultados.append({
+                        'id_historico': h.id,
+                        'tipo_documento': 'Contrato',
+                        'documento_id': contrato.id,
+                        'nome_aluno': processo.aluno.nome,
+                        'nome_empresa': processo.nome_empresa,
+                        'data_avaliacao': h.data_avaliacao,
+                        'veredito': h.veredito,
+                        'observacoes': h.observacoes,
+                        'justificativa': h.justificativa or '',
+                    })
+            except Secretaria.DoesNotExist:
+                pass
+
+        # Buscar avaliações de Relatórios (feitas por Coordenador)
+        if tipo_filtro is None or tipo_filtro == 'relatorio':
+            try:
+                coordenador = Coordenador.objects.get(email=request.user.email)
+                qs_relatorios = HistoricoAvaliacaoRelatorio.objects.filter(
+                    avaliador=coordenador
+                ).select_related('relatorio_id__processo_id__aluno')
+
+                if veredito_filtro:
+                    qs_relatorios = qs_relatorios.filter(veredito=veredito_filtro)
+
+                for h in qs_relatorios:
+                    relatorio = h.relatorio_id
+                    processo = relatorio.processo_id
+                    resultados.append({
+                        'id_historico': h.id,
+                        'tipo_documento': 'Relatório',
+                        'documento_id': relatorio.id,
+                        'nome_aluno': processo.aluno.nome,
+                        'nome_empresa': processo.nome_empresa,
+                        'data_avaliacao': h.data_avaliacao,
+                        'veredito': h.veredito,
+                        'observacoes': h.observacoes,
+                        'justificativa': h.justificativa or '',
+                    })
+            except Coordenador.DoesNotExist:
+                pass
+
+        # Ordenar por data mais recente primeiro
+        resultados.sort(key=lambda x: x['data_avaliacao'], reverse=True)
+
+        serializer = MeuHistoricoSerializer(resultados, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+

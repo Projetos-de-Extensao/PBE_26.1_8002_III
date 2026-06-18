@@ -194,7 +194,7 @@ def processarRelatorioComIa(relatorio_id):
 
 @shared_task
 def avaliarRelatorioComIa(relatorio_id):
-    from core.services.AI.lerRelatorio import avaliarRelatorio
+    from core.services.AI.lerRelatorio import avaliarRelatorio, carregar_ementa_curso
     from core.services.email_service import EmailNotificationService
 
     relatorio = Relatorio.objects.select_related(
@@ -202,17 +202,22 @@ def avaliarRelatorioComIa(relatorio_id):
     ).get(id=relatorio_id)
     curso = relatorio.processo_id.aluno.curso
     
-    if not curso.ementa_md:
-        return
-
-    # Lê o conteúdo do arquivo .md de ementa
-    ementa_texto = curso.ementa_md.read().decode("utf-8")
+    # Roteamento Dinâmico de Ementas com fallback para o banco de dados
+    try:
+        ementa_texto = carregar_ementa_curso(curso.nome)
+    except FileNotFoundError:
+        if curso.ementa_md:
+            ementa_texto = curso.ementa_md.read().decode("utf-8")
+        else:
+            return
 
     resultado = avaliarRelatorio(relatorio.corpo or "", ementa_texto)
     justificativa = resultado.get("justificativa", "")
     coordenador = Coordenador.objects.first()
 
-    if resultado.get("compativel", True):
+    is_aprovado = resultado.get("status") == "APROVADO" if "status" in resultado else resultado.get("compativel", True)
+
+    if is_aprovado:
         relatorio.status = StatusRelatorio.APROVADO
         relatorio.save()
 

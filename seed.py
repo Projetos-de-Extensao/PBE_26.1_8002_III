@@ -1,5 +1,8 @@
 import os
 import django
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "setup.settings")
 django.setup()
@@ -33,9 +36,17 @@ sec, _ = Secretaria.objects.get_or_create(
     matricula='sec01', defaults={'nome': 'Secretaria Teste', 'email': 'sec@ibmec.edu.br', 'senha': make_password('senha123'), 'unidade': Unidade.BARRA, 'precisa_redefinir_senha': False, 'aceite_lgpd': True}
 )
 
-# 3. Criar Area e Curso
+# 3. Criar Area e Curso (com ementa vinculada)
 area, _ = Area.objects.get_or_create(nome='Computação', defaults={'coordenador': coord})
 curso, _ = Curso.objects.get_or_create(nome='Engenharia de Software', areaId=area)
+
+# Vincular arquivo de ementa ao curso (necessário para validação IA de relatórios)
+ementa_path = BASE_DIR / 'core' / 'fixtures' / 'ementas' / 'engenharia_de_software.md'
+if ementa_path.exists() and not curso.ementa_md:
+    from django.core.files import File
+    with open(ementa_path, 'rb') as f:
+        curso.ementa_md.save('engenharia_de_software.md', File(f), save=True)
+    print(f"  [OK] Ementa vinculada ao curso: {curso.nome}")
 
 # 4. Criar 3 Alunos e 3 Processos (Projetos)
 alunos = []
