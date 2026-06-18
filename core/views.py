@@ -248,8 +248,8 @@ class ProcessoDetailAPIView(APIView):
             id, request.user,
             select=['aluno', 'secretaria', 'coordenacao'],
             prefetch=[
-                'contrato_set__historicoavaliacaocontrato__avaliador',
-                'relatorio_set__historicoavaliacaorelatorio__avaliador',
+                'contrato_set__historicoavaliacaocontrato_set__avaliador',
+                'relatorio_set__historicoavaliacaorelatorio_set__avaliador',
             ]
         )
         serializer = ProcessoDetailSerializer(processo)
@@ -315,22 +315,21 @@ class AvaliarContratoAPIView(APIView):
     )
     def post(self, request, *args, **kwargs):
         contrato_id = request.data.get('contrato_id')
-        try:
-            existing_avaliacao = HistoricoAvaliacaoContrato.objects.get(contrato_id=contrato_id)
-            # Apenas permite sobrescrever se a avaliação anterior tiver sido gerada automaticamente pelo sistema
-            is_sistema = (
-                existing_avaliacao.observacoes.startswith("Reprovação Automática pelo Sistema:") or
-                existing_avaliacao.observacoes.startswith("Validação Automática pelo Sistema:")
+        
+        # Verificar se já existe avaliação manual realizada (auditoria preserva automáticas)
+        has_manual = HistoricoAvaliacaoContrato.objects.filter(contrato_id=contrato_id).exclude(
+            observacoes__startswith="Reprovação Automática pelo Sistema:"
+        ).exclude(
+            observacoes__startswith="Validação Automática pelo Sistema:"
+        ).exists()
+        if has_manual:
+            return Response(
+                {"detail": "Este contrato já foi avaliado manualmente por um membro da secretaria e não pode ser reavaliado."},
+                status=status.HTTP_400_BAD_REQUEST
             )
-            if not is_sistema:
-                return Response(
-                    {"detail": "Este contrato já foi avaliado manualmente por um membro da secretaria e não pode ser reavaliado."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            serializer = HistoricoAvaliacaoContratoSerializer(existing_avaliacao, data=request.data)
-        except HistoricoAvaliacaoContrato.DoesNotExist:
-            serializer = HistoricoAvaliacaoContratoSerializer(data=request.data)
-
+            
+        # Sempre cria uma nova avaliação, ao invés de sobrescrever
+        serializer = HistoricoAvaliacaoContratoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         avaliacao = serializer.save()
         contrato = avaliacao.contrato_id

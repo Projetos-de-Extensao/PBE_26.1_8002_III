@@ -176,7 +176,7 @@ class HistoricoAvaliacaoRelatorio(HistoricoAvaliacao):
     Caso seja reprovado, a justificativa é obrigatória para informar o aluno.
     """
     avaliador = models.ForeignKey(Coordenador, on_delete=models.PROTECT)
-    relatorio_id = models.OneToOneField(Relatorio, on_delete=models.CASCADE)
+    relatorio_id = models.ForeignKey(Relatorio, on_delete=models.CASCADE, related_name='historicoavaliacaorelatorio_set')
     justificativa = models.CharField(max_length=200, verbose_name="Justificativa", blank=True, default="")
 
     def delete(self, *args, **kwargs):
@@ -188,7 +188,7 @@ class HistoricoAvaliacaoContrato(HistoricoAvaliacao):
     Semelhante ao Relatório, impede exclusões para manter histórico legal das decisões.
     """
     avaliador = models.ForeignKey(Secretaria, on_delete=models.PROTECT)
-    contrato_id = models.OneToOneField(Contrato, on_delete=models.CASCADE)
+    contrato_id = models.ForeignKey(Contrato, on_delete=models.CASCADE, related_name='historicoavaliacaocontrato_set')
     justificativa = models.CharField(max_length=200,verbose_name="Justificativa", blank=True, default="")
 
     def delete(self, *args, **kwargs):

@@ -144,10 +144,10 @@ def validarContrato(fileId, alunoId):
         if secretaria_sistema:
             HistoricoAvaliacaoContrato.objects.update_or_create(
                 contrato_id=contrato,
+                avaliador=secretaria_sistema,
                 defaults={
                     'observacoes': justificativa_completa,
                     'veredito': Veredito.REPROVADO,
-                    'avaliador': secretaria_sistema,
                     'justificativa': justificativa_completa
                 }
             )
@@ -166,10 +166,10 @@ def validarContrato(fileId, alunoId):
         if secretaria_sistema:
             HistoricoAvaliacaoContrato.objects.update_or_create(
                 contrato_id=contrato,
+                avaliador=secretaria_sistema,
                 defaults={
                     'observacoes': "Validação Automática pelo Sistema: Contrato aprovado em todas as verificações.",
                     'veredito': Veredito.APROVADO,
-                    'avaliador': secretaria_sistema,
                     'justificativa': "Nenhuma irregularidade detectada nas regras de negócio."
                 }
             )

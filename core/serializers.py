@@ -31,7 +31,7 @@ class NestedHistoricoRelatorioSerializer(serializers.ModelSerializer):
 
 class NestedContratoSerializer(serializers.ModelSerializer):
     historico = NestedHistoricoContratoSerializer(
-        source='historicoavaliacaocontrato', read_only=True, default=None
+        source='historicoavaliacaocontrato_set', many=True, read_only=True
     )
 
     class Meta:
@@ -45,7 +45,7 @@ class NestedContratoSerializer(serializers.ModelSerializer):
 
 class NestedRelatorioSerializer(serializers.ModelSerializer):
     historico = NestedHistoricoRelatorioSerializer(
-        source='historicoavaliacaorelatorio', read_only=True, default=None
+        source='historicoavaliacaorelatorio_set', many=True, read_only=True
     )
 
     class Meta:
