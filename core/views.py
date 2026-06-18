@@ -70,24 +70,37 @@ class AlunoAPIView(APIView):
     def get(self, request, *args, **kwargs):
         """
         Lista alunos do sistema.
-        O uso de `select_related('curso')` e `prefetch_related('aluno')` 
+        - Secretaria: vê todos os alunos.
+        - Coordenador: vê apenas os alunos vinculados a processos onde ele é o coordenador responsável.
+        O uso de `select_related('curso')` e `prefetch_related('aluno')`
         resolve um problema grave de performance conhecido como N+1 Queries.
-        Ele força o banco a carregar os dados aninhados em uma única query 
-        em vez de dezenas.
         """
         data = Aluno.objects.select_related('curso').prefetch_related('aluno').all()
+
+        # Filtra por área do coordenador se o usuário logado for um coordenador
+        try:
+            coordenador = Coordenador.objects.get(email=request.user.email)
+            # Retorna apenas alunos que têm pelo menos um processo vinculado a este coordenador
+            aluno_matriculas = Processo.objects.filter(
+                coordenacao=coordenador
+            ).values_list('aluno__matricula', flat=True).distinct()
+            data = data.filter(matricula__in=aluno_matriculas)
+        except Coordenador.DoesNotExist:
+            # Usuário é Secretaria — mantém todos os alunos
+            pass
+
         matricula = request.query_params.get('matricula', None)
         cpf = request.query_params.get('cpf', None)
         nome = request.query_params.get('nome', None)
 
         if matricula:
             data = data.filter(matricula=matricula)
-            
+
         if cpf:
             data = data.filter(cpf=cpf)
 
         if nome:
-            termos_da_busca = nome.split() 
+            termos_da_busca = nome.split()
             for termo in termos_da_busca:
                 data = data.filter(nome__icontains=termo)
 
@@ -97,7 +110,7 @@ class AlunoAPIView(APIView):
                     "detail": "Nenhum aluno encontrado com os dados informados.",
                     "sugestao": "Tente buscar apenas pelo primeiro nome ou limpe os filtros e tente novamente.",
                     "resultados": []
-                }, 
+                },
                 status=status.HTTP_200_OK
             )
 
