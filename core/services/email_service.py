@@ -38,3 +38,13 @@ class EmailNotificationService:
         enviar_email_avaliacao.delay(
             email_destino, nome_aluno, str(status), observacoes
         )
+
+    @staticmethod
+    def notificar_grade_atualizada(email_destino, nome_aluno, matricula_aluno, grade_slots):
+        """
+        Notifica a secretaria sobre a atualização da grade horária do aluno.
+        """
+        from core.email_tasks import enviar_email_grade_atualizada
+        enviar_email_grade_atualizada.delay(
+            email_destino, nome_aluno, matricula_aluno, grade_slots
+        )

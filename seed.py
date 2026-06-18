@@ -1,13 +1,16 @@
 import os
 import django
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "setup.settings")
 django.setup()
 
-from core.models import Aluno, Coordenador, Secretaria, Curso, Area, Processo, Contrato, FeatureFlag
-from core.enums import Unidade, StatusProcesso, StatusContrato
-from django.contrib.auth import get_user_model
-from django.core.files.base import ContentFile
+from django.contrib.auth.models import User
+from core.models import Aluno, Coordenador, Secretaria, Curso, Area, Processo, FeatureFlag
+from core.enums import Unidade, StatusProcesso
+from django.contrib.auth.hashers import make_password
 
 User = get_user_model()
 
@@ -55,11 +58,19 @@ sec.set_password('senha123')
 sec.is_staff = True
 sec.save()
 
-# 3. Criar Area e Curso
+# 3. Criar Area e Curso (com ementa vinculada)
 area, _ = Area.objects.get_or_create(nome='Computação', defaults={'coordenador': coord})
 curso, _ = Curso.objects.get_or_create(nome='Engenharia de Software', areaId=area)
 
-# 4. Criar 3 Alunos, 3 Processos (Projetos) e seus respectivos Contratos pendentes
+# Vincular arquivo de ementa ao curso (necessário para validação IA de relatórios)
+ementa_path = BASE_DIR / 'core' / 'fixtures' / 'ementas' / 'engenharia_de_software.md'
+if ementa_path.exists() and not curso.ementa_md:
+    from django.core.files import File
+    with open(ementa_path, 'rb') as f:
+        curso.ementa_md.save('engenharia_de_software.md', File(f), save=True)
+    print(f"  [OK] Ementa vinculada ao curso: {curso.nome}")
+
+# 4. Criar 3 Alunos e 3 Processos (Projetos)
 alunos = []
 processos = []
 
@@ -99,23 +110,23 @@ for i in range(1, 4):
     )
     processos.append(processo)
 
-    # Criar Contrato pendente vinculado a este Processo
-    Contrato.objects.create(
-        processoId=processo,
-        nome_empresa=processo.nome_empresa,
-        cnpj_empresa=f"1234567800010{i}",
-        data_inicio="2026-06-01",
-        data_termino="2027-06-01",
-        apolice_seguro=f"AP-99887{i}",
-        plano_atividade=True,
-        arquivo=ContentFile(pdf_content, name=f"contrato_aluno_{i}.pdf"),
-        status=StatusContrato.PENDENTE.value
+# 5. Criar Feature Flags padrão ativas
+flags = ["async_contract_ai", "async_report_ai", "report_evaluation_ai"]
+for flag_name in flags:
+    flag, created = FeatureFlag.objects.get_or_create(
+        name=flag_name,
+        defaults={'is_enabled': True}
     )
+    if not created and not flag.is_enabled:
+        flag.is_enabled = True
+        flag.save()
 
-# 5. Criar Feature Flags de IA habilitadas por padrão
-FeatureFlag.objects.create(name="async_contract_ai", is_enabled=True)
-FeatureFlag.objects.create(name="async_report_ai", is_enabled=True)
-FeatureFlag.objects.create(name="report_evaluation_ai", is_enabled=True)
+# 6. Semeando Horários disponíveis (18 combinações: Segunda a Sábado x Manhã/Tarde/Noite)
+from core.models import Horarios
+from core.enums import DiasDaSemana, Turno
+for dia_choice in DiasDaSemana.choices:
+    for turno_choice in Turno.choices:
+        Horarios.objects.get_or_create(dia=dia_choice[0], turno=turno_choice[0])
 
 print("DB Seeded Successfully!")
 print("------------------------------------------------------------")
@@ -125,3 +136,4 @@ print(f"COORDENADOR -> Matricula: {coord.matricula} | Senha: senha123")
 print(f"SECRETARIA  -> Matricula: {sec.matricula}     | Senha: senha123")
 print(f"ALUNO (ex)  -> Matricula: {alunos[0].matricula}   | Senha: senha123")
 print("------------------------------------------------------------")
+

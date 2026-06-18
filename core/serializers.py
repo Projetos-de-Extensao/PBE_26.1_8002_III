@@ -12,57 +12,44 @@ from datetime import datetime
 from django.shortcuts import get_object_or_404
 
 
-import os
+class NestedHistoricoContratoSerializer(serializers.ModelSerializer):
+    avaliador_nome = serializers.CharField(source='avaliador.nome', read_only=True)
+
+    class Meta:
+        model = HistoricoAvaliacaoContrato
+        fields = ['id', 'observacoes', 'data_avaliacao', 'veredito', 'avaliador_nome', 'justificativa']
+
+
+class NestedHistoricoRelatorioSerializer(serializers.ModelSerializer):
+    avaliador_nome = serializers.CharField(source='avaliador.nome', read_only=True)
+
+    class Meta:
+        model = HistoricoAvaliacaoRelatorio
+        fields = ['id', 'observacoes', 'data_avaliacao', 'veredito', 'avaliador_nome', 'justificativa']
+
 
 class NestedContratoSerializer(serializers.ModelSerializer):
-    observacoes = serializers.SerializerMethodField()
-    nome_arquivo = serializers.SerializerMethodField()
-    data_envio = serializers.SerializerMethodField()
+    historico = NestedHistoricoContratoSerializer(
+        source='historicoavaliacaocontrato_set', many=True, read_only=True
+    )
 
     class Meta:
         model = Contrato
         fields = [
-            'id', 'nome_empresa', 'data_upload', 'status', 'conflito_grade', 
-            'arquivo', 'observacoes', 'nome_arquivo', 'data_envio', 
-            'data_inicio', 'apolice_seguro'
+            'id', 'nome_empresa', 'cnpj_empresa', 'data_upload', 'data_inicio', 'data_termino',
+            'status', 'conflito_grade', 'apolice_seguro', 'plano_atividade',
+            'assinatura_aluno', 'assinatura_empresa', 'assinatura_faculdade', 'historico'
         ]
 
-    def get_observacoes(self, obj):
-        if hasattr(obj, 'historicoavaliacaocontrato'):
-            return obj.historicoavaliacaocontrato.observacoes or obj.historicoavaliacaocontrato.justificativa
-        return None
-
-    def get_nome_arquivo(self, obj):
-        if obj.arquivo:
-            return os.path.basename(obj.arquivo.name)
-        return ""
-
-    def get_data_envio(self, obj):
-        if obj.data_upload:
-            return obj.data_upload.strftime("%Y-%m-%d")
-        return ""
 
 class NestedRelatorioSerializer(serializers.ModelSerializer):
-    nome_arquivo = serializers.SerializerMethodField()
-    data_envio = serializers.SerializerMethodField()
-    atraso = serializers.SerializerMethodField()
+    historico = NestedHistoricoRelatorioSerializer(
+        source='historicoavaliacaorelatorio_set', many=True, read_only=True
+    )
 
     class Meta:
         model = Relatorio
-        fields = ['id', 'titulo', 'corpo', 'data_upload', 'status', 'arquivo', 'nome_arquivo', 'data_envio', 'atraso']
-
-    def get_nome_arquivo(self, obj):
-        if obj.arquivo:
-            return os.path.basename(obj.arquivo.name)
-        return ""
-
-    def get_data_envio(self, obj):
-        if obj.data_upload:
-            return obj.data_upload.strftime("%Y-%m-%d")
-        return ""
-
-    def get_atraso(self, obj):
-        return obj.fora_do_prazo
+        fields = ['id', 'data_upload', 'status', 'fora_do_prazo', 'titulo', 'corpo', 'historico']
 
 class NestedProcessoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -168,50 +155,8 @@ class ProcessoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Processo
-        fields = [
-            "id", "nome_empresa", "empresa", "status", "matricula_aluno", 
-            "matricula_secretaria", "matricula_coordenacao", "aluno_id", 
-            "aluno_nome", "matricula", "curso", "criado_em", "contrato", 
-            "relatorios", "historico"
-        ]
-        read_only_fields = ["id", "criado_em"]
-
-    def get_criado_em(self, obj):
-        if obj.data_criacao:
-            return obj.data_criacao.strftime("%Y-%m-%d")
-        return ""
-
-    def get_contrato(self, obj):
-        c = obj.contrato_set.last()
-        if c:
-            return NestedContratoSerializer(c).data
-        return None
-
-    def get_historico(self, obj):
-        eventos = []
-        if obj.data_criacao:
-            eventos.append({"data": obj.data_criacao.strftime("%Y-%m-%d"), "evento": "Processo iniciado"})
-        
-        for c in obj.contrato_set.all():
-            if c.data_upload:
-                eventos.append({"data": c.data_upload.strftime("%Y-%m-%d"), "evento": "Contrato enviado para análise"})
-            if hasattr(c, 'historicoavaliacaocontrato'):
-                h = c.historicoavaliacaocontrato
-                evento_nome = "Contrato aprovado" if h.veredito == Veredito.APROVADO else f"Contrato reprovado: {h.justificativa or 'sem justificativa'}"
-                if h.data_avaliacao:
-                    eventos.append({"data": h.data_avaliacao.strftime("%Y-%m-%d"), "evento": evento_nome})
-
-        for r in obj.relatorio_set.all():
-            if r.data_upload:
-                eventos.append({"data": r.data_upload.strftime("%Y-%m-%d"), "evento": f"Relatório '{r.titulo or 'Sem Título'}' enviado"})
-            if hasattr(r, 'historicoavaliacaorelatorio'):
-                h = r.historicoavaliacaorelatorio
-                evento_nome = f"Relatório avaliado: {h.veredito} — {h.justificativa}" if h.justificativa else f"Relatório avaliado: {h.veredito}"
-                if h.data_avaliacao:
-                    eventos.append({"data": h.data_avaliacao.strftime("%Y-%m-%d"), "evento": evento_nome})
-        
-        eventos.sort(key=lambda x: x["data"])
-        return eventos
+        fields = ["id", "nome_empresa", "status", "matricula_aluno", "matricula_secretaria", "matricula_coordenacao"]
+        read_only_fields = ["id", "data_criacao"]
 
     def validate(self, attrs):
         aluno = attrs.get('aluno') or (self.instance.aluno if self.instance else None)
@@ -237,40 +182,7 @@ class ProcessoDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Processo
-        fields = ["nome_empresa", "status", "aluno", "secretaria", "coordenacao", "contrato", "relatorio", "historico"]
-
-    def get_historico(self, obj):
-        eventos = []
-        if obj.data_criacao:
-            eventos.append({"data": obj.data_criacao.strftime("%Y-%m-%d"), "evento": "Processo iniciado"})
-        
-        for c in obj.contrato_set.all():
-            if c.data_upload:
-                eventos.append({"data": c.data_upload.strftime("%Y-%m-%d"), "evento": "Contrato enviado para análise"})
-            if hasattr(c, 'historicoavaliacaocontrato'):
-                h = c.historicoavaliacaocontrato
-                evento_nome = "Contrato aprovado" if h.veredito == Veredito.APROVADO else f"Contrato reprovado: {h.justificativa or 'sem justificativa'}"
-                if h.data_avaliacao:
-                    eventos.append({"data": h.data_avaliacao.strftime("%Y-%m-%d"), "evento": evento_nome})
-
-        for r in obj.relatorio_set.all():
-            if r.data_upload:
-                eventos.append({"data": r.data_upload.strftime("%Y-%m-%d"), "evento": f"Relatório '{r.titulo or 'Sem Título'}' enviado"})
-            if hasattr(r, 'historicoavaliacaorelatorio'):
-                h = r.historicoavaliacaorelatorio
-                evento_nome = f"Relatório avaliado: {h.veredito} — {h.justificativa}" if h.justificativa else f"Relatório avaliado: {h.veredito}"
-                if h.data_avaliacao:
-                    eventos.append({"data": h.data_avaliacao.strftime("%Y-%m-%d"), "evento": evento_nome})
-        
-        eventos.sort(key=lambda x: x["data"])
-        return eventos
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        request = self.context.get('request')
-        if request and hasattr(request.user, 'coordenador') and not hasattr(request.user, 'secretaria'):
-            data.pop('contrato', None)
-        return data
+        fields = ["id", "nome_empresa", "status", "aluno", "secretaria", "coordenacao", "contrato", "relatorio"]
 
 class ContratoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -422,3 +334,21 @@ class HorariosSerializer(serializers.ModelSerializer):
     class Meta:
         model = Horarios
         fields = ['id', 'dia', 'turno']
+
+
+class MeuHistoricoSerializer(serializers.Serializer):
+    """
+    Serializer de leitura para o endpoint /meu-historico/.
+    Unifica registros de HistoricoAvaliacaoContrato e HistoricoAvaliacaoRelatorio
+    num formato plano para exibição em timeline.
+    """
+    id_historico = serializers.IntegerField()
+    tipo_documento = serializers.CharField()
+    documento_id = serializers.IntegerField()
+    nome_aluno = serializers.CharField()
+    nome_empresa = serializers.CharField()
+    data_avaliacao = serializers.DateTimeField()
+    veredito = serializers.CharField()
+    observacoes = serializers.CharField()
+    justificativa = serializers.CharField(allow_blank=True)
+

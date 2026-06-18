@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 from drf_spectacular.types import OpenApiTypes
 from .serializers import *
-from .models import Aluno, Processo, Secretaria, Coordenador, Contrato, HistoricoAvaliacaoContrato, Horarios, FeatureFlag
+from .models import Aluno, Processo, Secretaria, Coordenador, Contrato, Relatorio, HistoricoAvaliacaoContrato, Horarios, FeatureFlag
 from .permissions import IsSecretaria, IsAluno, IsCoordenador
 from .services.email_service import EmailNotificationService
 from core.enums import Veredito, StatusContrato, StatusRelatorio, StatusProcesso
@@ -79,17 +79,24 @@ class AlunoAPIView(APIView):
     def get(self, request, *args, **kwargs):
         """
         Lista alunos do sistema.
-        O uso de `select_related('curso')` e `prefetch_related('aluno')` 
+        - Secretaria: vê todos os alunos.
+        - Coordenador: vê apenas os alunos vinculados a processos onde ele é o coordenador responsável.
+        O uso de `select_related('curso')` e `prefetch_related('aluno')`
         resolve um problema grave de performance conhecido como N+1 Queries.
-        Ele força o banco a carregar os dados aninhados em uma única query 
-        em vez de dezenas.
         """
         data = Aluno.objects.select_related('curso').prefetch_related('aluno').all()
-        
-        if hasattr(request.user, 'aluno') and not is_user_staff(request.user):
-            data = data.filter(id=request.user.aluno.id)
-        elif hasattr(request.user, 'coordenador') and not hasattr(request.user, 'secretaria'):
-            data = data.filter(curso__areaId__coordenador=request.user.coordenador)
+
+        # Filtra por área do coordenador se o usuário logado for um coordenador
+        try:
+            coordenador = Coordenador.objects.get(email=request.user.email)
+            # Retorna apenas alunos que têm pelo menos um processo vinculado a este coordenador
+            aluno_matriculas = Processo.objects.filter(
+                coordenacao=coordenador
+            ).values_list('aluno__matricula', flat=True).distinct()
+            data = data.filter(matricula__in=aluno_matriculas)
+        except Coordenador.DoesNotExist:
+            # Usuário é Secretaria — mantém todos os alunos
+            pass
 
         matricula = request.query_params.get('matricula', None)
         cpf = request.query_params.get('cpf', None)
@@ -97,12 +104,12 @@ class AlunoAPIView(APIView):
 
         if matricula:
             data = data.filter(matricula=matricula)
-            
+
         if cpf:
             data = data.filter(cpf=cpf)
 
         if nome:
-            termos_da_busca = nome.split() 
+            termos_da_busca = nome.split()
             for termo in termos_da_busca:
                 data = data.filter(nome__icontains=termo)
 
@@ -112,7 +119,7 @@ class AlunoAPIView(APIView):
                     "detail": "Nenhum aluno encontrado com os dados informados.",
                     "sugestao": "Tente buscar apenas pelo primeiro nome ou limpe os filtros e tente novamente.",
                     "resultados": []
-                }, 
+                },
                 status=status.HTTP_200_OK
             )
 
@@ -275,7 +282,10 @@ class ProcessoDetailAPIView(APIView):
         processo = get_processo_seguro(
             id, request.user,
             select=['aluno', 'secretaria', 'coordenacao'],
-            prefetch=['contrato_set', 'relatorio_set']
+            prefetch=[
+                'contrato_set__historicoavaliacaocontrato_set__avaliador',
+                'relatorio_set__historicoavaliacaorelatorio_set__avaliador',
+            ]
         )
         serializer = ProcessoDetailSerializer(processo)
         return Response(serializer.data)
@@ -294,20 +304,22 @@ class UploadContrato(APIView):
         processo_id = kwargs.get('id')
         processo = get_processo_seguro(processo_id, request.user)
         
-        # Validar se o processo está aberto — não permitir envio em processos já concluídos/cancelados
-        if processo.status not in [StatusProcesso.ABERTO, StatusProcesso.REPROVADO]:
+        # Validar se o último contrato está reprovado (ou se não existe nenhum)
+        ultimo_contrato = Contrato.objects.filter(processoId=processo).order_by('id').last()
+        if ultimo_contrato and ultimo_contrato.status != StatusContrato.REPROVADO:
             return Response(
-                {"detail": "Não é permitido enviar contratos para processos que não estão abertos."},
+                {"detail": "Você só pode enviar um novo contrato caso o anterior tenha sido reprovado/recusado."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+            
         serializer = ContratoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
         contrato = serializer.save(processoId=processo)
         
         aluno = contrato.processoId.aluno
-        email_secretaria = "secretaria@ibmec.edu.br" 
+        from django.conf import settings
+        email_secretaria = getattr(settings, 'SECRETARIA_DEFAULT_EMAIL', 'secretaria@ibmec.edu.br') 
 
         EmailNotificationService.notificar_novo_envio(
             email_destino=email_secretaria,
@@ -337,6 +349,21 @@ class AvaliarContratoAPIView(APIView):
         responses={201: HistoricoAvaliacaoContratoSerializer}
     )
     def post(self, request, *args, **kwargs):
+        contrato_id = request.data.get('contrato_id')
+        
+        # Verificar se já existe avaliação manual realizada (auditoria preserva automáticas)
+        has_manual = HistoricoAvaliacaoContrato.objects.filter(contrato_id=contrato_id).exclude(
+            observacoes__startswith="Reprovação Automática pelo Sistema:"
+        ).exclude(
+            observacoes__startswith="Validação Automática pelo Sistema:"
+        ).exists()
+        if has_manual:
+            return Response(
+                {"detail": "Este contrato já foi avaliado manualmente por um membro da secretaria e não pode ser reavaliado."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        # Sempre cria uma nova avaliação, ao invés de sobrescrever
         serializer = HistoricoAvaliacaoContratoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         avaliacao = serializer.save()
@@ -386,6 +413,14 @@ class UploadRelatorio(APIView):
         if processo.status != StatusProcesso.EM_ANDAMENTO:
             return Response(
                 {"detail": "Não é permitido enviar relatórios para processos que não estão ativos/em andamento."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validar se o último relatório está reprovado (ou se não existe nenhum)
+        ultimo_relatorio = Relatorio.objects.filter(processo_id=processo).order_by('id').last()
+        if ultimo_relatorio and ultimo_relatorio.status != StatusRelatorio.REPROVADO:
+            return Response(
+                {"detail": "Você só pode enviar um novo relatório caso o anterior tenha sido reprovado/recusado."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -616,60 +651,199 @@ class AtualizarRelatorioAPIView(APIView):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-class CoordenadorMeAPIView(APIView):
-    permission_classes = [IsCoordenador]
+class AlunoGradeAPIView(APIView):
+    permission_classes = [IsAluno]
 
     @extend_schema(
-        summary="Meu Perfil (Coordenador)",
-        responses={200: CoordenadorSerializer}
+        responses={200: HorariosSerializer(many=True)}
     )
     def get(self, request, *args, **kwargs):
-        coordenador = request.user.coordenador
-        serializer = CoordenadorSerializer(coordenador)
-        return Response(serializer.data)
-
-class SecretariaMeAPIView(APIView):
-    permission_classes = [IsSecretaria]
-
-    @extend_schema(
-        summary="Meu Perfil (Secretaria)",
-        responses={200: SecretariaSerializer}
-    )
-    def get(self, request, *args, **kwargs):
-        secretaria = request.user.secretaria
-        serializer = SecretariaSerializer(secretaria)
-        return Response(serializer.data)
-
-class DownloadRelatorioAPIView(APIView):
-    permission_classes = [IsAluno | IsCoordenador]
-
-    @extend_schema(
-        summary="Download de Relatório de Estágio",
-        description="Retorna o arquivo PDF do relatório. Acesso protegido para o dono do processo ou coordenação.",
-        responses={200: OpenApiTypes.BINARY}
-    )
-    def get(self, request, id, *args, **kwargs):
-        if hasattr(request.user, 'secretaria') and not hasattr(request.user, 'coordenador'):
-            return Response({"detail": "Secretaria não tem permissão para baixar relatórios."}, status=status.HTTP_403_FORBIDDEN)
-        relatorio = get_object_or_404(Relatorio.objects.select_related('processo_id__aluno'), id=id)
-        processo = relatorio.processo_id
-        
-        # Validação de permissão (Aluno só baixa o dele)
-        if not is_user_staff(request.user):
-            try:
-                aluno = request.user.aluno
-                if processo.aluno != aluno:
-                    return Response({"detail": "Você não tem permissão para baixar este relatório."}, status=status.HTTP_403_FORBIDDEN)
-            except Aluno.DoesNotExist:
-                return Response({"detail": "Usuário não autorizado."}, status=status.HTTP_403_FORBIDDEN)
-                
-        if not relatorio.arquivo:
-            raise Http404("Arquivo não encontrado.")
-            
+        """
+        Retorna a grade horária de aulas do aluno logado.
+        """
         try:
-            arquivo_open = relatorio.arquivo.open('rb')
-        except (FileNotFoundError, ValueError):
-            raise Http404("Arquivo físico não encontrado no servidor.")
-            
-        return FileResponse(arquivo_open, as_attachment=True, filename=os.path.basename(relatorio.arquivo.name))
+            aluno = Aluno.objects.get(email=request.user.email)
+        except Aluno.DoesNotExist:
+            return Response({"detail": "Aluno não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+        
+        grade = aluno.grade.all().order_by('id')
+        serializer = HorariosSerializer(grade, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        request=HorariosSerializer(many=True),
+        responses={200: HorariosSerializer(many=True)}
+    )
+    def patch(self, request, *args, **kwargs):
+        """
+        Atualiza a grade horária de aulas do aluno logado.
+        Recebe uma lista de slots contendo {dia, turno}.
+        Exemplo: [{"dia": "segunda", "turno": "manha"}, ...]
+        """
+        try:
+            aluno = Aluno.objects.get(email=request.user.email)
+        except Aluno.DoesNotExist:
+            return Response({"detail": "Aluno não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+        slots = request.data
+        if not isinstance(slots, list):
+            return Response({"detail": "Os dados devem ser uma lista de horários."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validar as escolhas recebidas antes de realizar qualquer alteração
+        from core.enums import DiasDaSemana, Turno
+        valid_dias = [choice[0] for choice in DiasDaSemana.choices]
+        valid_turnos = [choice[0] for choice in Turno.choices]
+
+        horarios_instancias = []
+        for slot in slots:
+            dia = slot.get('dia')
+            turno = slot.get('turno')
+            if dia not in valid_dias or turno not in valid_turnos:
+                return Response(
+                    {"detail": f"Dia '{dia}' ou Turno '{turno}' inválido."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            # Obter o slot correspondente (deve já existir na tabela de Horarios)
+            try:
+                horario = Horarios.objects.get(dia=dia, turno=turno)
+            except Horarios.DoesNotExist:
+                return Response(
+                    {"detail": f"O horário '{dia}' - '{turno}' não está disponível no sistema."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            horarios_instancias.append(horario)
+
+
+        # Atualiza a relação no M2M
+        aluno.grade.set(horarios_instancias)
+        aluno.save()
+
+        # Notificar a secretaria por email utilizando a configuração do settings
+        from django.conf import settings
+        from core.services.email_service import EmailNotificationService
+        from core.enums import DiasDaSemana, Turno
+        dias_map = dict(DiasDaSemana.choices)
+        turnos_map = dict(Turno.choices)
+
+        grade_slots_formatted = [
+            {
+                'dia': dias_map.get(h.dia, h.dia),
+                'turno': turnos_map.get(h.turno, h.turno)
+            }
+            for h in horarios_instancias
+        ]
+
+        dest_email = getattr(settings, 'SECRETARIA_DEFAULT_EMAIL', 'secretaria@ibmec.edu.br')
+
+        EmailNotificationService.notificar_grade_atualizada(
+            email_destino=dest_email,
+            nome_aluno=aluno.nome,
+            matricula_aluno=aluno.matricula,
+            grade_slots=grade_slots_formatted
+        )
+
+        serializer = HorariosSerializer(aluno.grade.all().order_by('id'), many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class MeuHistoricoAPIView(APIView):
+    """
+    Endpoint de auditoria pessoal: retorna todos os documentos
+    que o Coordenador ou Secretária logado avaliou (aprovações e reprovações).
+    Query Params opcionais: ?tipo=contrato|relatorio&veredito=aprovado|reprovado
+    """
+    permission_classes = [IsSecretaria | IsCoordenador]
+
+    @extend_schema(
+        summary="Meu Histórico de Avaliações",
+        description="Retorna a lista unificada de avaliações realizadas pelo usuário logado.",
+        parameters=[
+            OpenApiParameter(name='tipo', description='Filtrar por tipo: contrato ou relatorio', required=False, type=str),
+            OpenApiParameter(name='veredito', description='Filtrar por veredito: aprovado ou reprovado', required=False, type=str),
+        ],
+        responses={200: inline_serializer(
+            name='MeuHistoricoResponse',
+            fields={
+                'id_historico': serializers.IntegerField(),
+                'tipo_documento': serializers.CharField(),
+                'documento_id': serializers.IntegerField(),
+                'nome_aluno': serializers.CharField(),
+                'nome_empresa': serializers.CharField(),
+                'data_avaliacao': serializers.DateTimeField(),
+                'veredito': serializers.CharField(),
+                'observacoes': serializers.CharField(),
+                'justificativa': serializers.CharField(),
+            },
+            many=True,
+        )},
+    )
+    def get(self, request, *args, **kwargs):
+        from .models import HistoricoAvaliacaoContrato, HistoricoAvaliacaoRelatorio
+        from .serializers import MeuHistoricoSerializer
+
+        tipo_filtro = request.query_params.get('tipo', None)
+        veredito_filtro = request.query_params.get('veredito', None)
+
+        resultados = []
+
+        # Buscar avaliações de Contratos (feitas por Secretaria)
+        if tipo_filtro is None or tipo_filtro == 'contrato':
+            try:
+                secretaria = Secretaria.objects.get(email=request.user.email)
+                qs_contratos = HistoricoAvaliacaoContrato.objects.filter(
+                    avaliador=secretaria
+                ).select_related('contrato_id__processoId__aluno')
+
+                if veredito_filtro:
+                    qs_contratos = qs_contratos.filter(veredito=veredito_filtro)
+
+                for h in qs_contratos:
+                    contrato = h.contrato_id
+                    processo = contrato.processoId
+                    resultados.append({
+                        'id_historico': h.id,
+                        'tipo_documento': 'Contrato',
+                        'documento_id': contrato.id,
+                        'nome_aluno': processo.aluno.nome,
+                        'nome_empresa': processo.nome_empresa,
+                        'data_avaliacao': h.data_avaliacao,
+                        'veredito': h.veredito,
+                        'observacoes': h.observacoes,
+                        'justificativa': h.justificativa or '',
+                    })
+            except Secretaria.DoesNotExist:
+                pass
+
+        # Buscar avaliações de Relatórios (feitas por Coordenador)
+        if tipo_filtro is None or tipo_filtro == 'relatorio':
+            try:
+                coordenador = Coordenador.objects.get(email=request.user.email)
+                qs_relatorios = HistoricoAvaliacaoRelatorio.objects.filter(
+                    avaliador=coordenador
+                ).select_related('relatorio_id__processo_id__aluno')
+
+                if veredito_filtro:
+                    qs_relatorios = qs_relatorios.filter(veredito=veredito_filtro)
+
+                for h in qs_relatorios:
+                    relatorio = h.relatorio_id
+                    processo = relatorio.processo_id
+                    resultados.append({
+                        'id_historico': h.id,
+                        'tipo_documento': 'Relatório',
+                        'documento_id': relatorio.id,
+                        'nome_aluno': processo.aluno.nome,
+                        'nome_empresa': processo.nome_empresa,
+                        'data_avaliacao': h.data_avaliacao,
+                        'veredito': h.veredito,
+                        'observacoes': h.observacoes,
+                        'justificativa': h.justificativa or '',
+                    })
+            except Coordenador.DoesNotExist:
+                pass
+
+        # Ordenar por data mais recente primeiro
+        resultados.sort(key=lambda x: x['data_avaliacao'], reverse=True)
+
+        serializer = MeuHistoricoSerializer(resultados, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 

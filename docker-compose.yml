@@ -40,6 +40,17 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  frontend:
+    build: ./interface/ibintern
+    container_name: pbe-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./interface/ibintern:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: pbe-rabbitmq
