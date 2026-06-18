@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Instala uv (gerenciador de pacotes)
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+RUN command -v uv >/dev/null 2>&1 || pip install uv
 
 WORKDIR /app
 

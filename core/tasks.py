@@ -199,24 +199,29 @@ def processarRelatorioComIa(self, relatorio_id):
     if FeatureFlag.objects.is_active("report_evaluation_ai"):
         avaliarRelatorioComIa.delay(relatorio.id)
 
-@shared_task
-def avaliarRelatorioComIa(relatorio_id):
+@shared_task(bind=True, max_retries=3)
+def avaliarRelatorioComIa(self, relatorio_id):
     from core.services.AI.lerRelatorio import avaliarRelatorio, carregar_ementa_curso
     from core.services.email_service import EmailNotificationService
 
-    relatorio = Relatorio.objects.select_related(
-        'processo_id__aluno__curso'
-    ).get(id=relatorio_id)
-    curso = relatorio.processo_id.aluno.curso
-    
-    # Roteamento Dinâmico de Ementas com fallback para o banco de dados
     try:
-        ementa_texto = carregar_ementa_curso(curso.nome)
-    except FileNotFoundError:
-        if curso.ementa_md:
-            ementa_texto = curso.ementa_md.read().decode("utf-8")
-        else:
-            return
+        relatorio = Relatorio.objects.select_related(
+            'processo_id__aluno__curso'
+        ).get(id=relatorio_id)
+        curso = relatorio.processo_id.aluno.curso
+        
+        # Roteamento Dinâmico de Ementas com fallback para o banco de dados
+        try:
+            ementa_texto = carregar_ementa_curso(curso.nome)
+        except FileNotFoundError:
+            if curso.ementa_md:
+                ementa_texto = curso.ementa_md.read().decode("utf-8")
+            else:
+                return
+
+        resultado = avaliarRelatorio(relatorio.corpo, ementa_texto)
+    except Exception as e:
+        raise self.retry(exc=e, countdown=60)
 
     justificativa = resultado.get("justificativa", "")
     coordenador = Coordenador.objects.first()

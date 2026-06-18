@@ -86,17 +86,19 @@ class AlunoAPIView(APIView):
         """
         data = Aluno.objects.select_related('curso').prefetch_related('aluno').all()
 
-        # Filtra por área do coordenador se o usuário logado for um coordenador
-        try:
-            coordenador = Coordenador.objects.get(email=request.user.email)
-            # Retorna apenas alunos que têm pelo menos um processo vinculado a este coordenador
-            aluno_matriculas = Processo.objects.filter(
-                coordenacao=coordenador
-            ).values_list('aluno__matricula', flat=True).distinct()
-            data = data.filter(matricula__in=aluno_matriculas)
-        except Coordenador.DoesNotExist:
-            # Usuário é Secretaria — mantém todos os alunos
-            pass
+        # Filtra por área do coordenador se o usuário logado for um coordenador e não for secretaria
+        is_secretaria = Secretaria.objects.filter(email=request.user.email).exists()
+        if not is_secretaria:
+            try:
+                coordenador = Coordenador.objects.get(email=request.user.email)
+                # Retorna apenas alunos que têm pelo menos um processo vinculado a este coordenador
+                aluno_matriculas = Processo.objects.filter(
+                    coordenacao=coordenador
+                ).values_list('aluno__matricula', flat=True).distinct()
+                data = data.filter(matricula__in=aluno_matriculas)
+            except Coordenador.DoesNotExist:
+                # Usuário não é coordenador
+                pass
 
         matricula = request.query_params.get('matricula', None)
         cpf = request.query_params.get('cpf', None)

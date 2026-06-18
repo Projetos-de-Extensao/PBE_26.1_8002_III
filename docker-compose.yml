@@ -3,7 +3,8 @@ services:
     build: .
     container_name: pbe-web
     command: >
-      sh -c "uv run python manage.py makemigrations &&
+      sh -c "command -v uv >/dev/null 2>&1 || pip install uv &&
+             uv run python manage.py makemigrations &&
              uv run python manage.py migrate &&
              uv run python seed.py &&
              echo '------------------------------------------------------------' &&
@@ -27,7 +28,9 @@ services:
   celery:
     build: .
     container_name: pbe-celery
-    command: uv run celery -A setup worker -l info
+    command: >
+      sh -c "command -v uv >/dev/null 2>&1 || pip install uv &&
+             uv run celery -A setup worker -l info"
     volumes:
       - .:/app
       - media_data:/app/media
