@@ -23,6 +23,7 @@ class TestPostProcesso:
 
     def test_aluno_existe_ativo(self,api_client,processo2):
         resp = api_client.post('/processo/',processo2)
+        print(resp.data)
         matricula_aluno = processo2['matricula_aluno']
         aluno_db = Aluno.objects.filter(matricula=matricula_aluno).first() 
         assert resp.status_code == 201

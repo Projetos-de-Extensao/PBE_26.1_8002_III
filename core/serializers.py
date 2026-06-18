@@ -2,7 +2,6 @@ from django.core.exceptions import ValidationError
 from rest_framework import status
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth.models import User
 from .models import *
 from .enums import *
 from .validators import validar_email_institucional
@@ -80,6 +79,7 @@ class AlunoSerializer(serializers.ModelSerializer):
     Sincroniza automaticamente a criação/edição do Aluno com o model `User` nativo do Django
     para manter a compatibilidade com a autenticação JWT.
     """
+    senha = serializers.CharField(write_only=True, required=False)
     processos = NestedProcessoSerializer(source="aluno", many=True, read_only=True)
 
     class Meta:
@@ -102,50 +102,27 @@ class AlunoSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        validated_data['senha'] = make_password(validated_data['senha'])
-        validated_data['nome'] = validated_data['nome'].lower().capitalize().strip()
+        validated_data['password'] = make_password(validated_data.pop('senha'))
+        validated_data['nome'] = validated_data['nome'].title().strip()
         aluno = Aluno.objects.create(**validated_data)
-
-        User.objects.get_or_create(
-            username=aluno.matricula,
-            defaults={
-                "email": aluno.email,
-                "password": aluno.senha,
-            }
-        )
         return aluno
 
     def update(self, instance, validated_data):
         if 'senha' in validated_data:
-            validated_data['senha'] = make_password(validated_data['senha'])
+            validated_data['password'] = make_password(validated_data.pop('senha'))
         if 'nome' in validated_data:
             validated_data['nome'] = validated_data['nome'].lower().capitalize().strip()
 
         instance.nome = validated_data.get("nome", instance.nome)
         instance.email = validated_data.get("email", instance.email)
         instance.matricula = validated_data.get("matricula", instance.matricula)
-        instance.senha = validated_data.get("senha", instance.senha)
+        if 'password' in validated_data:
+            instance.password = validated_data['password']
         instance.cpf = validated_data.get("cpf", instance.cpf)
         instance.is_ativo = validated_data.get("is_ativo", instance.is_ativo)
         instance.unidade = validated_data.get("unidade", instance.unidade)
         instance.aceite_lgpd = validated_data.get("aceite_lgpd", instance.aceite_lgpd)
         instance.save()
-
-        try:
-            user = User.objects.get(username=instance.matricula)
-            if 'email' in validated_data:
-                user.email = instance.email
-            if 'senha' in validated_data:
-                user.password = instance.senha
-            if 'matricula' in validated_data:
-                user.username = instance.matricula
-            user.save()
-        except User.DoesNotExist:
-            User.objects.create(
-                username=instance.matricula,
-                email=instance.email,
-                password=instance.senha,
-            )
 
         return instance
 
@@ -162,9 +139,19 @@ class AreaSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 class ProcessoSerializer(serializers.ModelSerializer):
-    matricula_aluno = serializers.SlugRelatedField(slug_field='matricula', queryset=Aluno.objects.all(), source='aluno')
-    matricula_secretaria = serializers.SlugRelatedField(slug_field='matricula', queryset=Secretaria.objects.all(), source='secretaria')
-    matricula_coordenacao = serializers.SlugRelatedField(slug_field='matricula', queryset=Coordenador.objects.all(), source='coordenacao')
+    matricula_aluno = serializers.SlugRelatedField(slug_field='matricula', queryset=Aluno.objects.all(), source='aluno', required=False)
+    matricula_secretaria = serializers.SlugRelatedField(slug_field='matricula', queryset=Secretaria.objects.all(), source='secretaria', required=False)
+    matricula_coordenacao = serializers.SlugRelatedField(slug_field='matricula', queryset=Coordenador.objects.all(), source='coordenacao', required=False)
+
+    aluno_id = serializers.CharField(source='aluno.id', read_only=True)
+    aluno_nome = serializers.CharField(source='aluno.nome', read_only=True)
+    matricula = serializers.CharField(source='aluno.matricula', read_only=True)
+    curso = serializers.CharField(source='aluno.curso.nome', read_only=True)
+    empresa = serializers.CharField(source='nome_empresa', read_only=True)
+    criado_em = serializers.SerializerMethodField()
+    contrato = serializers.SerializerMethodField()
+    relatorios = NestedRelatorioSerializer(source='relatorio_set', many=True, read_only=True)
+    historico = serializers.SerializerMethodField()
 
     class Meta:
         model = Processo
@@ -172,11 +159,6 @@ class ProcessoSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "data_criacao"]
 
     def validate(self, attrs):
-        """
-        Garante a regra de negócio central: um aluno só pode ter 
-        UM processo em aberto por vez. Impede que o usuário crie/atualize 
-        novos processos sem finalizar os anteriores.
-        """
         aluno = attrs.get('aluno') or (self.instance.aluno if self.instance else None)
         status_atual = attrs.get('status') or (self.instance.status if self.instance else None)
         if status_atual == StatusProcesso.ABERTO:
@@ -196,6 +178,7 @@ class ProcessoDetailSerializer(serializers.ModelSerializer):
     coordenacao = NestedCoordenacaoSerializer(read_only=True)
     contrato = NestedContratoSerializer(source='contrato_set', many=True, read_only=True)
     relatorio = NestedRelatorioSerializer(source='relatorio_set', many=True, read_only=True)
+    historico = serializers.SerializerMethodField()
 
     class Meta:
         model = Processo
@@ -216,6 +199,8 @@ class ContratoSerializer(serializers.ModelSerializer):
         return Contrato.objects.create(**validated_data)
 
 class CoordenadorSerializer(serializers.ModelSerializer):
+    senha = serializers.CharField(write_only=True, required=False)
+
     class Meta:
         model = Coordenador
         fields = ['nome', 'email', 'matricula', 'senha', 'unidade', 'areaId']
@@ -223,19 +208,13 @@ class CoordenadorSerializer(serializers.ModelSerializer):
         extra_kwargs = {'senha': {'write_only': True}}
 
     def create(self, validated_data):
-        validated_data['senha'] = make_password(validated_data['senha'])
+        validated_data['password'] = make_password(validated_data.pop('senha'))
         coordenador = Coordenador.objects.create(**validated_data)
-
-        User.objects.get_or_create(
-            username=coordenador.matricula,
-            defaults={
-                "email": coordenador.email,
-                "password": coordenador.senha,
-            }
-        )
         return coordenador
 
 class SecretariaSerializer(serializers.ModelSerializer):
+    senha = serializers.CharField(write_only=True, required=False)
+
     class Meta:
         model = Secretaria
         fields = ['nome', 'email', 'matricula', 'senha', 'unidade']
@@ -243,16 +222,8 @@ class SecretariaSerializer(serializers.ModelSerializer):
         extra_kwargs = {'senha': {'write_only': True}}
 
     def create(self, validated_data):
-        validated_data['senha'] = make_password(validated_data['senha'])
+        validated_data['password'] = make_password(validated_data.pop('senha'))
         secretaria = Secretaria.objects.create(**validated_data)
-
-        User.objects.get_or_create(
-            username=secretaria.matricula,
-            defaults={
-                "email": secretaria.email,
-                "password": secretaria.senha,
-            }
-        )
         return secretaria
 
 class RelatorioSerializer(serializers.ModelSerializer):
@@ -287,11 +258,18 @@ class AtualizarRelatorioSerializer(serializers.ModelSerializer):
 
 class HistoricoAvaliacaoRelatorioSerializer(serializers.ModelSerializer):
     justificativa = serializers.CharField(required=False, allow_blank=True, default="")
+    observacoes = serializers.CharField(required=False, allow_blank=True, default="")
 
     class Meta:
         model = HistoricoAvaliacaoRelatorio
         fields = ['observacoes', 'data_avaliacao', 'veredito', 'avaliador', 'relatorio_id', 'justificativa']
         read_only_fields = ['id', 'data_avaliacao']
+
+    def to_internal_value(self, data):
+        if 'veredito' in data and isinstance(data['veredito'], str):
+            data = data.copy()
+            data['veredito'] = data['veredito'].lower()
+        return super().to_internal_value(data)
 
     def validate(self, attrs):
         """
@@ -309,11 +287,18 @@ class HistoricoAvaliacaoRelatorioSerializer(serializers.ModelSerializer):
 
 class HistoricoAvaliacaoContratoSerializer(serializers.ModelSerializer):
     justificativa = serializers.CharField(required=False, allow_blank=True, default="")
+    observacoes = serializers.CharField(required=False, allow_blank=True, default="")
 
     class Meta:
         model = HistoricoAvaliacaoContrato
         fields = ['observacoes', 'data_avaliacao', 'veredito', 'avaliador', 'contrato_id', 'justificativa']
         read_only_fields = ['id', 'data_avaliacao']
+
+    def to_internal_value(self, data):
+        if 'veredito' in data and isinstance(data['veredito'], str):
+            data = data.copy()
+            data['veredito'] = data['veredito'].lower()
+        return super().to_internal_value(data)
 
     def validate(self, attrs):
         """

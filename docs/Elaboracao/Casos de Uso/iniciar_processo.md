@@ -6,7 +6,7 @@ title: Iniciar Processo de Estágio
 ### Iniciar Processo de Estágio 
 
 - **Atores:**
-    - Aluno / Secretaria
+    - Aluno / Secretaria / Coordenação
     - Sistema
 
 - **Pré-Condições:**

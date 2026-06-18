@@ -9,8 +9,11 @@ Cobre os cenários:
 """
 
 import pytest
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
 from rest_framework.test import APIClient
+
+User = get_user_model()
 
 from core.models import Aluno, Secretaria, Coordenador, Area, Curso
 from core.enums import Unidade
@@ -21,10 +24,11 @@ from core.enums import Unidade
 @pytest.fixture
 def usuario_sem_perfil():
     """User do Django sem nenhum perfil (Aluno/Secretaria/Coordenador)."""
-    user = User.objects.create_user(
-        username="sem_perfil",
+    user = User.objects.create(
+        matricula="sem_perfil",
+        nome="Sem Perfil",
         email="ninguem@ibmec.edu.br",
-        password="test1234",
+        password=make_password("test1234"),
     )
     client = APIClient()
     client.force_authenticate(user=user)
@@ -34,27 +38,29 @@ def usuario_sem_perfil():
 @pytest.fixture
 def usuario_aluno_only():
     """User do Django com perfil APENAS de Aluno."""
-    user = User.objects.create_user(
-        username="aluno_only",
+    user = User.objects.create(
+        matricula="aluno_only",
+        nome="Aluno Only",
         email="aluno_only@ibmec.edu.br",
-        password="test1234",
+        password=make_password("test1234"),
     )
     # Criar coordenador e área/curso necessários para o Aluno
     coord = Coordenador.objects.create(
         matricula="PERM_COORD01",
         nome="Coord Permissão",
         email="coord_perm@ibmec.edu.br",
-        senha="test",
+        password=make_password("test"),
         unidade=Unidade.BARRA.value,
     )
     area = Area.objects.create(nome="PermArea", coordenador=coord)
     curso = Curso.objects.create(nome="PermCurso", areaId=area)
 
     Aluno.objects.create(
+        usuario_ptr=user,
         matricula="PERM_ALU01",
         nome="Aluno Perm",
         email="aluno_only@ibmec.edu.br",
-        senha="test",
+        password=make_password("test"),
         cpf="98765432100",
         unidade=Unidade.BARRA.value,
         curso=curso,
@@ -67,16 +73,18 @@ def usuario_aluno_only():
 @pytest.fixture
 def usuario_secretaria_only():
     """User do Django com perfil APENAS de Secretaria."""
-    user = User.objects.create_user(
-        username="sec_only",
+    user = User.objects.create(
+        matricula="sec_only",
+        nome="Sec Only",
         email="sec_only@ibmec.edu.br",
-        password="test1234",
+        password=make_password("test1234"),
     )
     Secretaria.objects.create(
+        usuario_ptr=user,
         matricula="PERM_SEC01",
         nome="Sec Perm",
         email="sec_only@ibmec.edu.br",
-        senha="test",
+        password=make_password("test"),
         unidade=Unidade.BARRA.value,
     )
     client = APIClient()
@@ -119,10 +127,10 @@ class TestUsuarioSemPerfil:
 @pytest.mark.django_db
 class TestPermissaoPorPerfil:
 
-    def test_aluno_nao_acessa_rota_de_secretaria_aluno_list(self, usuario_aluno_only):
-        """Aluno não pode acessar /aluno/ (rota de Secretaria/Coordenador)."""
+    def test_aluno_acessa_rota_aluno_list(self, usuario_aluno_only):
+        """Aluno PODE acessar /aluno/ para ver seus próprios dados (status 200)."""
         response = usuario_aluno_only.get("/aluno/")
-        assert response.status_code == 403
+        assert response.status_code == 200
 
     def test_secretaria_nao_acessa_rota_de_coordenador(self, usuario_secretaria_only, processo, relatorio):
         """Secretaria não pode avaliar relatórios (rota de Coordenador)."""

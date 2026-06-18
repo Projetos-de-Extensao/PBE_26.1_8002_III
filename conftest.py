@@ -9,6 +9,7 @@ import pytest
 from datetime import date
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.contrib.auth.hashers import make_password
 from rest_framework.test import APIClient
 
 from core.models import (
@@ -49,33 +50,50 @@ def api_client():
     """
     EMAIL_TEST = "testuser@ibmec.edu.br"
 
-    # User do Django (necessário para autenticação)
-    user = User.objects.create_user(
-        username="testuser",
-        email=EMAIL_TEST,
-        password="test1234",
-    )
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    from django.contrib.auth.hashers import make_password
 
-    # Coordenador precisa existir antes de Area (Area.coordenador é OneToOne)
-    coord_test = Coordenador.objects.create(
-        matricula="TEST0003",
+    # User do Django (agora é o nosso core.Usuario)
+    user = User.objects.create(
+        matricula="TEST0001",
         nome="Test User",
         email=EMAIL_TEST,
-        senha="test",
+        password=make_password("test1234"),
+    )
+
+    coord_test = Coordenador.objects.create(
+        usuario_ptr=user,
+        matricula="TEST0001",
+        nome="Test User",
+        email=EMAIL_TEST,
+        password=make_password("test"),
         unidade=Unidade.BARRA.value,
     )
 
     area_test = Area.objects.create(nome="TestArea", coordenador=coord_test)
     curso_test = Curso.objects.create(nome="TestCurso", areaId=area_test)
 
-    Aluno.objects.create(
-        matricula="TEST0001", nome="Test User", email=EMAIL_TEST,
-        senha="test", cpf="45678912364", unidade=Unidade.BARRA.value,
+    # 2. Aluno
+    aluno_test = Aluno.objects.create(
+        usuario_ptr=user,
+        matricula="TEST0001",
+        nome="Test User",
+        email=EMAIL_TEST,
+        password=make_password("test"),
+        cpf="45678912364",
+        unidade=Unidade.BARRA.value,
         curso=curso_test,
     )
-    Secretaria.objects.create(
-        matricula="TEST0002", nome="Test User", email=EMAIL_TEST,
-        senha="test", unidade=Unidade.BARRA.value,
+
+    # 3. Secretaria
+    secretaria_test = Secretaria.objects.create(
+        usuario_ptr=user,
+        matricula="TEST0001",
+        nome="Test User",
+        email=EMAIL_TEST,
+        password=make_password("test"),
+        unidade=Unidade.BARRA.value,
     )
 
     import jwt
@@ -91,11 +109,12 @@ def api_client():
 @pytest.fixture
 def coordenador():
     """Cria um Coordenador."""
+    from django.contrib.auth.hashers import make_password
     return Coordenador.objects.create(
         matricula="COORD0001",
         nome="Prof. Orientador",
         email="coordenador@ibmec.edu.br",
-        senha="senha123",
+        password=make_password("senha123"),
         unidade=Unidade.BOTAFOGO.value,
     )
 
@@ -121,11 +140,12 @@ def curso(area):
 @pytest.fixture
 def aluno(curso):
     """Cria um Aluno (depende de Curso via FK)."""
+    from django.contrib.auth.hashers import make_password
     return Aluno.objects.create(
         matricula="20260001",
         nome="João Santos",
         email="joao@ibmec.edu.br",
-        senha="senha456",
+        password=make_password("senha456"),
         cpf="12345678909",
         is_ativo=True,
         unidade=Unidade.BOTAFOGO.value,
@@ -139,11 +159,12 @@ def aluno(curso):
 @pytest.fixture
 def secretaria():
     """Cria uma Secretaria."""
+    from django.contrib.auth.hashers import make_password
     return Secretaria.objects.create(
         matricula="SEC0001",
         nome="Ana Secretaria",
         email="secretaria@ibmec.edu.br",
-        senha="senha789",
+        password=make_password("senha789"),
         unidade=Unidade.BARRA.value,
     )
 

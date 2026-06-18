@@ -1,6 +1,6 @@
 ---
 site_author: Jonh Carvalho
-site_name: PBE_25.2_8003
+site_name: PBE_26.1_8002_III
 copyright: Copyright ©️ 2025, Jonh Carvalho
 
 nav: 
@@ -37,8 +37,7 @@ nav:
       - CodeSpace: Construcao/codespace.md
   - Transição:
       - Index: Transicao/index.md
-
-  - Bibliografia: Disciplina/bibliografia.md
+      - Manual do Usuário: Transicao/manual_usuario.md
 
 extra_css:
   - css/extra.css

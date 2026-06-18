@@ -7,19 +7,22 @@ from .services.validacao_sistema.validaGradeContrato import validarGradeContrato
 from .exceptions import gradeHorariaIncompativelException
 from . import email_tasks
 
-@shared_task
-def processarContratoComIa(fileId):
-    """
-    Tarefa assíncrona (Celery) para extrair dados do contrato via IA.
-    Executada em background pois chamadas a APIs de LLMs podem demorar 
-    (timeout), o que bloquearia a resposta do endpoint de upload.
-    """
-    contrato = Contrato.objects.get(id=fileId)
-    arquivoPath = contrato.arquivo
-    string_contrato = ler_pdf_modo_layout(arquivoPath)
+@shared_task(bind=True, max_retries=3)
+def processarContratoComIa(self, fileId):
+    try:
+        contrato = Contrato.objects.get(id=fileId)
+        arquivoPath = contrato.arquivo
+        string_contrato = ler_pdf_modo_layout(arquivoPath)
+    except Exception as e:
+        raise self.retry(exc=e, countdown=60)
+
     
     agente = ai_client
-    dados_contrato = lerContrato(string_contrato)
+    try:
+        dados_contrato = lerContrato(string_contrato)
+    except Exception as e:
+        raise self.retry(exc=e, countdown=60)
+        
     contrato.cnpj_empresa = dados_contrato["cnpj_empresa"]
     contrato.nome_empresa = dados_contrato["nome_empresa"]
     contrato.data_inicio = dados_contrato["data_inicio"]
@@ -174,17 +177,21 @@ def validarContrato(fileId, alunoId):
                 }
             )
 
-@shared_task
-def processarRelatorioComIa(relatorio_id):
+@shared_task(bind=True, max_retries=3)
+def processarRelatorioComIa(self, relatorio_id):
     from core.services.AI.lerRelatorio import lerRelatorio
 
-    relatorio = Relatorio.objects.get(id=relatorio_id)
-    if not relatorio.arquivo:
-        return
+    try:
+        relatorio = Relatorio.objects.get(id=relatorio_id)
+        if not relatorio.arquivo:
+            return
+            
+        string_relatorio = ler_pdf_modo_layout(relatorio.arquivo)
         
-    string_relatorio = ler_pdf_modo_layout(relatorio.arquivo)
-    
-    dados = lerRelatorio(string_relatorio)
+        dados = lerRelatorio(string_relatorio)
+    except Exception as e:
+        raise self.retry(exc=e, countdown=60)
+        
     relatorio.titulo = dados.get("titulo") or ""
     relatorio.corpo = dados.get("corpo") or ""
     relatorio.save()
@@ -211,7 +218,6 @@ def avaliarRelatorioComIa(relatorio_id):
         else:
             return
 
-    resultado = avaliarRelatorio(relatorio.corpo or "", ementa_texto)
     justificativa = resultado.get("justificativa", "")
     coordenador = Coordenador.objects.first()
 

@@ -14,12 +14,10 @@ from .enums import *
 from core.services.upload_relatorio import upload_relatorio_path
 from .validators import validar_email_institucional, validar_cpf
 
-class Usuario(models.Model):
-    """
-    Entidade base abstrata para todos os tipos de usuários.
-    Centraliza os campos de autenticação e informações gerais, garantindo que
-    as subclasses (Aluno, Coordenador, Secretaria) compartilhem a mesma estrutura base.
-    """
+from django.contrib.auth.models import AbstractUser
+
+class Usuario(AbstractUser):
+    username = None
     matricula = models.CharField(max_length=30, unique=True, db_index=True, verbose_name="Matrícula")    
     nome = models.CharField(max_length=255, verbose_name="Nome")
     email = models.EmailField(verbose_name="E-mail", validators=[validar_email_institucional], default="")
@@ -28,8 +26,8 @@ class Usuario(models.Model):
     precisa_redefinir_senha = models.BooleanField(default=True, verbose_name="Precisa redefinir senha?")
     aceite_lgpd = models.BooleanField(default=False, verbose_name="Aceite dos Termos de Uso e LGPD")
 
-    class Meta:
-        abstract = True 
+    USERNAME_FIELD = 'matricula'
+    REQUIRED_FIELDS = ['nome', 'email']
 
 class Aluno(Usuario):
     """
@@ -41,7 +39,6 @@ class Aluno(Usuario):
     is_ativo = models.BooleanField(default=True, verbose_name="Status Ativo")
     periodo = models.IntegerField(choices=Periodo, default=Periodo.PRIMEIRO)
     curso = models.ForeignKey("Curso", on_delete=models.CASCADE)
-    unidade = models.CharField(max_length=15, choices=Unidade)
     grade = models.ManyToManyField('Horarios',db_table='grade_horaria')
     is_pcd = models.BooleanField(default=False, verbose_name="PCD")
 
@@ -101,9 +98,9 @@ class Processo(models.Model):
     nome_empresa = models.CharField(max_length=255, verbose_name="Nome da empresa")
     data_criacao = models.DateField(verbose_name="Data de Criação", default=timezone.now)
     status = models.CharField(max_length=20, choices=StatusProcesso, default=StatusProcesso.ABERTO)
-    aluno = models.ForeignKey(Aluno, to_field='matricula', related_name="aluno", on_delete=models.CASCADE, max_length=30)
-    coordenacao = models.ForeignKey(Coordenador, to_field='matricula', related_name="coordenacao", on_delete=models.PROTECT)
-    secretaria = models.ForeignKey(Secretaria, to_field='matricula', related_name="secretaria", on_delete=models.PROTECT)
+    aluno = models.ForeignKey(Aluno, related_name="aluno", on_delete=models.CASCADE)
+    coordenacao = models.ForeignKey(Coordenador, related_name="coordenacao", on_delete=models.PROTECT)
+    secretaria = models.ForeignKey(Secretaria, related_name="secretaria", on_delete=models.PROTECT)
     criado_por = models.CharField(max_length=100, verbose_name="Criado por", null=True)
 
     class Meta:
@@ -180,7 +177,10 @@ class HistoricoAvaliacaoRelatorio(HistoricoAvaliacao):
     justificativa = models.CharField(max_length=200, verbose_name="Justificativa", blank=True, default="")
 
     def delete(self, *args, **kwargs):
-        raise ProtectedError("Histórico de Justificativas não pode ser alterado ou deletado.")
+        raise ProtectedError(
+            "Histórico de Justificativas não pode ser alterado ou deletado.",
+            set()
+        )
 
 class HistoricoAvaliacaoContrato(HistoricoAvaliacao):
     """
@@ -192,7 +192,10 @@ class HistoricoAvaliacaoContrato(HistoricoAvaliacao):
     justificativa = models.CharField(max_length=200,verbose_name="Justificativa", blank=True, default="")
 
     def delete(self, *args, **kwargs):
-        raise ProtectedError("Histórico de Justificativas não pode ser alterado ou deletado.")
+        raise ProtectedError(
+            "Histórico de Justificativas não pode ser alterado ou deletado.",
+            set()
+        )
 
 class Horarios(models.Model):
     turno = models.CharField(max_length=12, choices=Turno)
@@ -203,7 +206,7 @@ class Horarios(models.Model):
         verbose_name_plural = "Grades Horárias"
     
     def __str__(self):
-        return f"{self.aluno} - {self.dia} - {self.periodo}"
+        return f"{self.dia} - {self.turno}"
 
 
 # Sinais para regras de negócio automatizadas

@@ -16,4 +16,4 @@ urlpatterns = [
     path('processo/<int:id>/relatorio/atualizar/', AtualizarRelatorioAPIView.as_view(), name='atualizar_relatorio'),
     path('relatorio/avaliar/', AvaliarRelatorioAPIView.as_view(), name='avaliar_relatorio'),
     path('meu-historico/', MeuHistoricoAPIView.as_view(), name='meu_historico'),
-]
+]

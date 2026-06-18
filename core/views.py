@@ -36,7 +36,9 @@ def get_processo_seguro(processo_id, user, prefetch=None, select=None):
     Busca um processo e garante que o usuário possui o nível de acesso correto.
     - Se for aluno: Verifica se ele é o "dono" do Processo. Retorna 403 caso tente 
       acessar dados de outro aluno forçando o ID na URL.
-    - Se for staff: Passa livre.
+    - Se for staff:
+      - Secretaria: livre.
+      - Coordenador: apenas alunos do seu curso.
     """
     queryset = Processo.objects.all()
     if select:
@@ -48,16 +50,23 @@ def get_processo_seguro(processo_id, user, prefetch=None, select=None):
     
     if not is_user_staff(user):
         try:
-            aluno = Aluno.objects.get(email=user.email)
+            aluno = user.aluno
             if processo.aluno != aluno:
                 raise PermissionDenied("Você não tem permissão para acessar este processo.")
         except Aluno.DoesNotExist:
             raise PermissionDenied("Usuário não autorizado.")
+    else:
+        is_coordenador = hasattr(user, 'coordenador')
+        is_secretaria = hasattr(user, 'secretaria')
+        
+        # Se for Coordenador (e não Secretaria), restringe acesso apenas a processos de alunos da sua própria área/curso
+        if is_coordenador and not is_secretaria:
+            if processo.aluno.curso.areaId.coordenador != user.coordenador:
+                raise PermissionDenied("Você não tem permissão para acessar processos de alunos de outra área/curso.")
             
     return processo
-
 class AlunoAPIView(APIView):
-    permission_classes = [IsSecretaria | IsCoordenador]
+    permission_classes = [IsAluno | IsSecretaria | IsCoordenador]
 
     @extend_schema(
         parameters=[
@@ -138,6 +147,8 @@ class AlunoAPIView(APIView):
         responses={200: AlunoSerializer}
     )
     def patch(self, request, *args, **kwargs):
+        if not is_user_staff(request.user):
+            raise PermissionDenied("Alunos não podem alterar dados.")
         parsed_data = request.data
         matricula = request.query_params.get('matricula_aluno', None)
         if matricula:
@@ -167,9 +178,11 @@ class ProcessoAPIView(APIView):
     def get(self, request, *args, **kwargs):
         if is_user_staff(request.user):
             data = Processo.objects.select_related('aluno', 'secretaria', 'coordenacao').all()
+            if hasattr(request.user, 'coordenador') and not hasattr(request.user, 'secretaria'):
+                data = data.filter(aluno__curso__areaId__coordenador=request.user.coordenador)
         else:
             try:
-                aluno = Aluno.objects.get(email=request.user.email)
+                aluno = request.user.aluno
                 data = Processo.objects.filter(aluno=aluno)
             except Aluno.DoesNotExist:
                 data = Processo.objects.none()  
@@ -179,7 +192,7 @@ class ProcessoAPIView(APIView):
         nome_empresa = request.query_params.get('nome_empresa', None)
 
         if matricula_aluno is not None:
-            data = data.filter(aluno=matricula_aluno)    
+            data = data.filter(aluno__matricula=matricula_aluno)
         
         if status_filtro is not None:
             if status_filtro == StatusContrato.PENDENTE:
@@ -204,9 +217,12 @@ class ProcessoAPIView(APIView):
         
         # UC-08: iniciar_processo (Regras de Negócio)
         try:
-            aluno_logado = Aluno.objects.get(email=request.user.email)
+            if hasattr(request.user, 'cpf'):
+                aluno_logado = request.user
+            else:
+                aluno_logado = request.user.aluno
             parsed_data['matricula_aluno'] = aluno_logado.matricula
-        except Aluno.DoesNotExist:
+        except (Aluno.DoesNotExist, AttributeError):
             if 'matricula_aluno' not in parsed_data:
                 return Response(
                     {"detail": "Secretaria/Coordenação deve selecionar a matrícula do aluno."}, 
@@ -218,9 +234,13 @@ class ProcessoAPIView(APIView):
 
         grupo = request.user.groups.first()
         cargo = grupo.name if grupo else ""
-        nome_completo = f"{request.user.first_name} {request.user.last_name}"
-        username = request.user.username
-        criado_por_string = (cargo + nome_completo + username)[:100]
+        first_name = request.user.first_name or ""
+        last_name = request.user.last_name or ""
+        nome_completo = f"{first_name} {last_name}".strip()
+        if not nome_completo:
+            nome_completo = getattr(request.user, 'nome', '') or ""
+        username = getattr(request.user, 'matricula', '') or getattr(request.user, 'username', '') or ""
+        criado_por_string = f"{cargo} {nome_completo} ({username})".strip()[:100]
 
         try:    
             serializer.save(criado_por=criado_por_string)
@@ -236,6 +256,8 @@ class ProcessoAPIView(APIView):
         responses={200: ProcessoSerializer}
     )
     def patch(self, request, *args, **kwargs):
+        if not is_user_staff(request.user):
+            raise PermissionDenied("Alunos não podem alterar dados do processo.")
         parsed_data = request.data
         id = request.query_params.get('processo_id', None)
         if id is not None:
@@ -406,6 +428,15 @@ class UploadRelatorio(APIView):
         serializer.is_valid(raise_exception=True)
         relatorio = serializer.save(processo_id=processo)
         
+        # DIV-05: Verificar se o relatório está fora do prazo (>30 dias após aprovação do contrato)
+        from django.utils import timezone
+        contrato_aprovado = processo.contrato_set.filter(status=StatusContrato.APROVADO).order_by('-data_upload').first()
+        if contrato_aprovado and contrato_aprovado.data_upload:
+            dias_desde_aprovacao = (timezone.now().date() - contrato_aprovado.data_upload).days
+            if dias_desde_aprovacao > 30:
+                relatorio.fora_do_prazo = True
+                relatorio.save(update_fields=['fora_do_prazo'])
+
         aluno = relatorio.processo_id.aluno
         email_coordenacao = "coordenacao@ibmec.edu.br" 
         
@@ -461,6 +492,10 @@ class AvaliarRelatorioAPIView(APIView):
         return Response({"detail": f"Relatório {avaliacao.veredito} e aluno notificado."}, status=status.HTTP_201_CREATED)
     
 class ReprovarContratoAPIView(APIView):
+    """
+    Endpoint para a Secretaria reprovar um contrato de estágio associado a um processo.
+    Altera o status do contrato e do processo para REPROVADO mediante justificativa obrigatória.
+    """
     permission_classes = [IsSecretaria]
 
     @extend_schema(
@@ -473,7 +508,7 @@ class ReprovarContratoAPIView(APIView):
         responses={200: ProcessoSerializer}
     )
     def patch(self, request, id, *args, **kwargs):
-        processo = get_object_or_404(Processo, id=id)
+        processo = get_processo_seguro(id, request.user)
 
         justificativa = request.data.get('justificativa')
         if not justificativa or not str(justificativa).strip():
@@ -495,7 +530,7 @@ class ReprovarContratoAPIView(APIView):
         processo.status = StatusProcesso.REPROVADO
         processo.save()
 
-        secretaria = get_object_or_404(Secretaria, email=request.user.email)
+        secretaria = request.user.secretaria
         HistoricoAvaliacaoContrato.objects.create(
             observacoes=justificativa,
             veredito=Veredito.REPROVADO,
@@ -514,6 +549,10 @@ class ReprovarContratoAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class HorariosAPIView(APIView):
+    """
+    Endpoint para listar todos os horários de turnos e dias cadastrados no sistema.
+    Acessível por qualquer usuário autenticado.
+    """
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
@@ -527,21 +566,23 @@ class HorariosAPIView(APIView):
 
 class DownloadContratoAPIView(APIView):
     # UC-06: fazer_download
-    permission_classes = [IsAluno | IsSecretaria | IsCoordenador]
+    permission_classes = [IsAluno | IsSecretaria]
 
     @extend_schema(
         summary="Download de Contrato de Estágio",
-        description="Retorna o arquivo PDF do contrato. Acesso protegido para o dono do processo, secretaria ou coordenação.",
+        description="Retorna o arquivo PDF do contrato. Acesso protegido para o dono do processo ou secretaria.",
         responses={200: OpenApiTypes.BINARY}
     )
     def get(self, request, id, *args, **kwargs):
+        if hasattr(request.user, 'coordenador') and not hasattr(request.user, 'secretaria'):
+            return Response({"detail": "Coordenadores não têm permissão para baixar contratos."}, status=status.HTTP_403_FORBIDDEN)
         contrato = get_object_or_404(Contrato.objects.select_related('processoId__aluno'), id=id)
         processo = contrato.processoId
         
         # Validação de permissão (Aluno só baixa o dele)
         if not is_user_staff(request.user):
             try:
-                aluno = Aluno.objects.get(email=request.user.email)
+                aluno = request.user.aluno
                 if processo.aluno != aluno:
                     return Response({"detail": "Você não tem permissão para baixar este contrato."}, status=status.HTTP_403_FORBIDDEN)
             except Aluno.DoesNotExist:
@@ -558,6 +599,10 @@ class DownloadContratoAPIView(APIView):
         return FileResponse(arquivo_open, as_attachment=True, filename=os.path.basename(contrato.arquivo.name))
 
 class AtualizarContratoAPIView(APIView):
+    """
+    Endpoint para a Secretaria atualizar dados de um contrato de estágio já enviado.
+    Dispara a validação assíncrona do contrato após a alteração.
+    """
     permission_classes = [IsSecretaria]
 
     @extend_schema(
@@ -580,6 +625,10 @@ class AtualizarContratoAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class AtualizarRelatorioAPIView(APIView):
+    """
+    Endpoint para o Coordenador atualizar dados de um relatório de estágio já enviado.
+    Dispara o processamento com inteligência artificial para avaliar o relatório após a alteração.
+    """
     permission_classes = [IsCoordenador]
 
     @extend_schema(
