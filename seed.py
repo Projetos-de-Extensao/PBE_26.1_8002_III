@@ -7,8 +7,8 @@ BASE_DIR = Path(__file__).resolve().parent
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "setup.settings")
 django.setup()
 
-from django.contrib.auth.models import User
-from core.models import Aluno, Coordenador, Secretaria, Curso, Area, Processo, FeatureFlag
+from django.contrib.auth import get_user_model
+from core.models import Aluno, Coordenador, Secretaria, Curso, Area, Processo, FeatureFlag, Contrato
 from core.enums import Unidade, StatusProcesso
 from django.contrib.auth.hashers import make_password
 
