@@ -206,3 +206,7 @@ AXES_LOCKOUT_PARAMETERS = ['username']  # Bloqueia por matrícula (USERNAME_FIEL
 AXES_RESET_ON_SUCCESS = True  # Reseta o contador quando o login é bem-sucedido
 AXES_VERBOSE = True
 
+# Metabase Embedding
+METABASE_SITE_URL = os.environ.get('METABASE_SITE_URL', 'http://localhost:3000')
+METABASE_SECRET_KEY = os.environ.get('METABASE_SECRET_KEY', 'my-metabase-dev-secret-key-change-in-production')
+
