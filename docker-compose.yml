@@ -3,14 +3,13 @@ services:
     build: .
     container_name: pbe-web
     command: >
-      sh -c "command -v uv >/dev/null 2>&1 || pip install uv &&
-             uv run python manage.py makemigrations &&
-             uv run python manage.py migrate &&
-             uv run python seed.py &&
+      sh -c "python manage.py makemigrations &&
+             python manage.py migrate &&
+             python seed.py &&
              echo '------------------------------------------------------------' &&
              echo '🚀 API do Django disponível em: http://localhost:8000' &&
              echo '------------------------------------------------------------' &&
-             uv run python manage.py runserver 0.0.0.0:8000"
+             python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
     volumes:
@@ -18,9 +17,14 @@ services:
       - media_data:/app/media
       - /app/.venv
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-django-insecure-dev-key-ibintern-local}
+      - DEBUG=${DEBUG:-True}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0,web}
       - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_TASK_ALWAYS_EAGER=False
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -28,31 +32,36 @@ services:
   celery:
     build: .
     container_name: pbe-celery
-    command: >
-      sh -c "command -v uv >/dev/null 2>&1 || pip install uv &&
-             uv run celery -A setup worker -l info"
+    command: celery -A setup worker -l info
     volumes:
       - .:/app
       - media_data:/app/media
       - /app/.venv
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-django-insecure-dev-key-ibintern-local}
+      - DEBUG=${DEBUG:-True}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0,web}
       - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_TASK_ALWAYS_EAGER=False
     depends_on:
       rabbitmq:
         condition: service_healthy
 
-  frontend:
-    build: ./interface/ibintern
-    container_name: pbe-frontend
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./interface/ibintern:/app
-      - /app/node_modules
-    environment:
-      - NODE_ENV=development
+  # frontend:
+  #   Desativado temporariamente pois o diretório ./interface/ibintern não existe neste repositório.
+  #   Para reativar quando a interface for adicionada, descomente as linhas abaixo:
+  #   build: ./interface/ibintern
+  #   container_name: pbe-frontend
+  #   ports:
+  #     - "5173:5173"
+  #   volumes:
+  #     - ./interface/ibintern:/app
+  #     - /app/node_modules
+  #   environment:
+  #     - NODE_ENV=development
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -74,3 +83,4 @@ services:
 volumes:
   rabbitmq_data:
   media_data:
+
