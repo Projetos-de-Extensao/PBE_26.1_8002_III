@@ -5,6 +5,10 @@ Cada fixture cria 1 instância de um model concreto via ORM.
 O pytest resolve as dependências automaticamente pela cadeia de fixtures.
 """
 
+import os
+os.environ["DEBUG"] = "True"
+os.environ.setdefault("GEMINI_API_KEY", "dummy-api-key-for-tests")
+
 import pytest
 from datetime import date
 from django.contrib.auth.models import User
