@@ -9,6 +9,17 @@ import os
 os.environ["DEBUG"] = "True"
 os.environ.setdefault("GEMINI_API_KEY", "dummy-api-key-for-tests")
 
+class DisableMigrations:
+    def __contains__(self, item):
+        return True
+
+    def __getitem__(self, item):
+        return None
+
+def pytest_configure():
+    from django.conf import settings
+    settings.MIGRATION_MODULES = DisableMigrations()
+
 import pytest
 from datetime import date
 from django.contrib.auth.models import User
