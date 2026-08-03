@@ -1,29 +1,30 @@
-name: Testes  
-on: 
+name: Testes
+
+on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 jobs:
   test:
-    runs-on: unbuntu-latest
+    runs-on: ubuntu-latest
 
     steps:
-
       - name: Baixa o código
         uses: actions/checkout@v4
 
-      - name: Instala Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+      - name: Instala Python e uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          version: "latest"
+          enable-cache: true
+          python-version: "3.12"
 
-      - name: Instala uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - name: Instala dependências do projeto
+        run: uv sync --frozen
 
-      - name: Instala dependências
-        run: uv sync
-
-      - name: roda Testes
-        run: pytest
+      - name: Executa os testes com pytest
+        env:
+          GEMINI_API_KEY: "dummy-key-for-ci"
+        run: uv run pytest
