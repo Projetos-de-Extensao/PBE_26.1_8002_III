@@ -24,6 +24,9 @@ jobs:
       - name: Instala dependências do projeto
         run: uv sync --frozen
 
+      - name: Gera as migrações do banco
+        run: uv run python manage.py makemigrations
+
       - name: Executa os testes com pytest
         env:
           GEMINI_API_KEY: "dummy-key-for-ci"
