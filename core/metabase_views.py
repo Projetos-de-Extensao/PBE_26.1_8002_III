@@ -51,17 +51,25 @@ class MetabaseDashboardAPIView(APIView):
         },
     )
     def get(self, request, *args, **kwargs):
-        # Validar que o Metabase está configurado
+        user = request.user
+
+        # 1. Verificar se existem URLs públicas (Guest/Public Embed) configuradas e retornar diretamente
+        if hasattr(user, 'secretaria') and getattr(settings, 'METABASE_PUBLIC_DASHBOARD_SECRETARIA', ''):
+            return Response({"iframe_url": settings.METABASE_PUBLIC_DASHBOARD_SECRETARIA}, status=status.HTTP_200_OK)
+        elif hasattr(user, 'coordenador') and getattr(settings, 'METABASE_PUBLIC_DASHBOARD_COORDENADOR', ''):
+            return Response({"iframe_url": settings.METABASE_PUBLIC_DASHBOARD_COORDENADOR}, status=status.HTTP_200_OK)
+
+        # 2. Validar que o Metabase está configurado caso não use URLs públicas
         if not settings.METABASE_SECRET_KEY:
             return Response(
                 {"detail": "Integração com Metabase não configurada. Defina METABASE_SECRET_KEY."},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
-        user = request.user
         dashboard_ids = settings.METABASE_DASHBOARD_IDS
 
         # Determinar o ID do dashboard com base no perfil do usuário
+        params = {}
         if hasattr(user, 'secretaria'):
             dashboard_id = dashboard_ids['secretaria']
         elif hasattr(user, 'coordenador'):
@@ -76,7 +84,7 @@ class MetabaseDashboardAPIView(APIView):
         # Gerar o token JWT de embedding (HS256)
         payload = {
             "resource": {"dashboard": dashboard_id},
-            "params": {},
+            "params": params,
             "exp": int(time.time()) + (10 * 60),  # Expira em 10 minutos
         }
 

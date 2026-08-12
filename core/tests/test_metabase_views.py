@@ -111,6 +111,8 @@ class TestMetabaseDashboardAPIView:
         payload = jwt.decode(token, TEST_SECRET, algorithms=["HS256"])
 
         assert payload["resource"]["dashboard"] == DASHBOARD_IDS["coordenador"]
+        assert payload["params"] == {}
+
 
     @override_settings(**METABASE_OVERRIDES)
     def test_jwt_token_expires_in_10_minutes(self, secretaria):
@@ -139,3 +141,30 @@ class TestMetabaseDashboardAPIView:
 
         assert response.status_code == 503
         assert "METABASE_SECRET_KEY" in response.data["detail"]
+
+    @override_settings(
+        METABASE_PUBLIC_DASHBOARD_COORDENADOR="http://localhost:3000/public/dashboard/coord-uuid",
+        METABASE_PUBLIC_DASHBOARD_SECRETARIA="http://localhost:3000/public/dashboard/sec-uuid",
+    )
+    def test_coordenador_gets_public_url_directly_when_configured(self, coordenador):
+        client = APIClient()
+        client.force_authenticate(user=coordenador)
+
+        response = client.get(METABASE_URL)
+
+        assert response.status_code == 200
+        assert response.data["iframe_url"] == "http://localhost:3000/public/dashboard/coord-uuid"
+
+    @override_settings(
+        METABASE_PUBLIC_DASHBOARD_COORDENADOR="http://localhost:3000/public/dashboard/coord-uuid",
+        METABASE_PUBLIC_DASHBOARD_SECRETARIA="http://localhost:3000/public/dashboard/sec-uuid",
+    )
+    def test_secretaria_gets_public_url_directly_when_configured(self, secretaria):
+        client = APIClient()
+        client.force_authenticate(user=secretaria)
+
+        response = client.get(METABASE_URL)
+
+        assert response.status_code == 200
+        assert response.data["iframe_url"] == "http://localhost:3000/public/dashboard/sec-uuid"
+
