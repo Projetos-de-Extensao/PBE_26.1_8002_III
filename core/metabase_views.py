@@ -14,8 +14,8 @@ class MetabaseDashboardAPIView(APIView):
     Endpoint protegido por JWT que gera uma URL de Signed Embedding do Metabase.
 
     Regras de Acesso (RBAC):
-    - Secretaria  → Dashboard ID 1
-    - Coordenador → Dashboard ID 2
+    - Secretaria  → Dashboard configurado em METABASE_DASHBOARD_IDS['secretaria']
+    - Coordenador → Dashboard configurado em METABASE_DASHBOARD_IDS['coordenador']
     - Aluno / Outros → 403 Forbidden
 
     O token de embedding é assinado com HS256 usando a chave secreta do Metabase
@@ -42,17 +42,30 @@ class MetabaseDashboardAPIView(APIView):
                     'detail': serializers.CharField(),
                 }
             ),
+            503: inline_serializer(
+                name='MetabaseDashboard503',
+                fields={
+                    'detail': serializers.CharField(),
+                }
+            ),
         },
     )
     def get(self, request, *args, **kwargs):
+        # Validar que o Metabase está configurado
+        if not settings.METABASE_SECRET_KEY:
+            return Response(
+                {"detail": "Integração com Metabase não configurada. Defina METABASE_SECRET_KEY."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
         user = request.user
+        dashboard_ids = settings.METABASE_DASHBOARD_IDS
 
         # Determinar o ID do dashboard com base no perfil do usuário
-        # Usa o mesmo mecanismo de detecção das permission classes existentes
         if hasattr(user, 'secretaria'):
-            dashboard_id = 1
+            dashboard_id = dashboard_ids['secretaria']
         elif hasattr(user, 'coordenador'):
-            dashboard_id = 2
+            dashboard_id = dashboard_ids['coordenador']
         else:
             # Aluno ou qualquer outro perfil não autorizado
             return Response(
