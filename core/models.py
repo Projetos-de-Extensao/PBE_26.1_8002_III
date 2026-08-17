@@ -174,7 +174,7 @@ class HistoricoAvaliacaoRelatorio(HistoricoAvaliacao):
     """
     avaliador = models.ForeignKey(Coordenador, on_delete=models.PROTECT)
     relatorio_id = models.ForeignKey(Relatorio, on_delete=models.CASCADE, related_name='historicoavaliacaorelatorio_set')
-    justificativa = models.CharField(max_length=200, verbose_name="Justificativa", blank=True, default="")
+    justificativa = models.TextField(verbose_name="Justificativa", blank=True, default="")
 
     def delete(self, *args, **kwargs):
         raise ProtectedError(
@@ -189,7 +189,7 @@ class HistoricoAvaliacaoContrato(HistoricoAvaliacao):
     """
     avaliador = models.ForeignKey(Secretaria, on_delete=models.PROTECT)
     contrato_id = models.ForeignKey(Contrato, on_delete=models.CASCADE, related_name='historicoavaliacaocontrato_set')
-    justificativa = models.CharField(max_length=200,verbose_name="Justificativa", blank=True, default="")
+    justificativa = models.TextField(verbose_name="Justificativa", blank=True, default="")
 
     def delete(self, *args, **kwargs):
         raise ProtectedError(

@@ -14,8 +14,8 @@ class MetabaseDashboardAPIView(APIView):
     Endpoint protegido por JWT que gera uma URL de Signed Embedding do Metabase.
 
     Regras de Acesso (RBAC):
-    - Secretaria  → Dashboard ID 1
-    - Coordenador → Dashboard ID 2
+    - Secretaria  → Dashboard configurado em METABASE_DASHBOARD_IDS['secretaria']
+    - Coordenador → Dashboard configurado em METABASE_DASHBOARD_IDS['coordenador']
     - Aluno / Outros → 403 Forbidden
 
     O token de embedding é assinado com HS256 usando a chave secreta do Metabase
@@ -42,17 +42,38 @@ class MetabaseDashboardAPIView(APIView):
                     'detail': serializers.CharField(),
                 }
             ),
+            503: inline_serializer(
+                name='MetabaseDashboard503',
+                fields={
+                    'detail': serializers.CharField(),
+                }
+            ),
         },
     )
     def get(self, request, *args, **kwargs):
         user = request.user
 
+        # 1. Verificar se existem URLs públicas (Guest/Public Embed) configuradas e retornar diretamente
+        if hasattr(user, 'secretaria') and getattr(settings, 'METABASE_PUBLIC_DASHBOARD_SECRETARIA', ''):
+            return Response({"iframe_url": settings.METABASE_PUBLIC_DASHBOARD_SECRETARIA}, status=status.HTTP_200_OK)
+        elif hasattr(user, 'coordenador') and getattr(settings, 'METABASE_PUBLIC_DASHBOARD_COORDENADOR', ''):
+            return Response({"iframe_url": settings.METABASE_PUBLIC_DASHBOARD_COORDENADOR}, status=status.HTTP_200_OK)
+
+        # 2. Validar que o Metabase está configurado caso não use URLs públicas
+        if not settings.METABASE_SECRET_KEY:
+            return Response(
+                {"detail": "Integração com Metabase não configurada. Defina METABASE_SECRET_KEY."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        dashboard_ids = settings.METABASE_DASHBOARD_IDS
+
         # Determinar o ID do dashboard com base no perfil do usuário
-        # Usa o mesmo mecanismo de detecção das permission classes existentes
+        params = {}
         if hasattr(user, 'secretaria'):
-            dashboard_id = 1
+            dashboard_id = dashboard_ids['secretaria']
         elif hasattr(user, 'coordenador'):
-            dashboard_id = 2
+            dashboard_id = dashboard_ids['coordenador']
         else:
             # Aluno ou qualquer outro perfil não autorizado
             return Response(
@@ -63,7 +84,7 @@ class MetabaseDashboardAPIView(APIView):
         # Gerar o token JWT de embedding (HS256)
         payload = {
             "resource": {"dashboard": dashboard_id},
-            "params": {},
+            "params": params,
             "exp": int(time.time()) + (10 * 60),  # Expira em 10 minutos
         }
 

@@ -208,5 +208,12 @@ AXES_VERBOSE = True
 
 # Metabase Embedding
 METABASE_SITE_URL = os.environ.get('METABASE_SITE_URL', 'http://localhost:3000')
-METABASE_SECRET_KEY = os.environ.get('METABASE_SECRET_KEY', 'my-metabase-dev-secret-key-change-in-production')
+METABASE_SECRET_KEY = os.environ.get('METABASE_SECRET_KEY', '')
+METABASE_DASHBOARD_IDS = {
+    'secretaria': int(os.environ.get('METABASE_DASHBOARD_SECRETARIA', 1)),
+    'coordenador': int(os.environ.get('METABASE_DASHBOARD_COORDENADOR', 2)),
+}
+METABASE_PUBLIC_DASHBOARD_SECRETARIA = os.environ.get('METABASE_PUBLIC_DASHBOARD_SECRETARIA', '')
+METABASE_PUBLIC_DASHBOARD_COORDENADOR = os.environ.get('METABASE_PUBLIC_DASHBOARD_COORDENADOR', '')
+
 

@@ -7,7 +7,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/Django-5.x-092E20?logo=django&logoColor=white" alt="Django">
-  <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white" alt="MySQL">
+  <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3FCF8E?logo=supabase&logoColor=white" alt="Supabase">
   <img src="https://img.shields.io/badge/Gemini_API-AI-8E75B2?logo=google&logoColor=white" alt="Gemini">
 </p>
 
@@ -41,7 +41,7 @@ Atualmente, o processo de estágio envolve diversas tarefas manuais, burocrátic
 |------------|-----------|
 | **Python** | Linguagem principal |
 | **Django + DRF** | Framework web e API RESTful |
-| **MySQL** | Banco de dados relacional |
+| **Supabase** | Banco de dados PostgreSQL remoto |
 | **Gemini API** | Modelo de IA |
 ---
 
@@ -53,10 +53,11 @@ O projeto pode ser executado de duas formas: através de **Containers (Docker Co
 
 ### Método 1: Utilizando Docker Compose (Recomendado)
 
-Esta forma inicializa automaticamente todos os serviços necessários em paralelo (Django API, RabbitMQ Broker e Celery Worker).
+Esta forma inicializa automaticamente todos os serviços necessários em paralelo (Django API, RabbitMQ Broker e Celery Worker). O banco de dados é o **Supabase** (PostgreSQL remoto).
 
 #### Pré-requisitos:
 * [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado e rodando em sua máquina.
+* Conta no [Supabase](https://supabase.com/) com um projeto criado.
 
 #### Passo a Passo:
 
@@ -75,6 +76,10 @@ Esta forma inicializa automaticamente todos os serviços necessários em paralel
    ```env
    GEMINI_API_KEY=sua_chave_aqui
    ```
+   E a **connection string do Supabase** (copie de **Settings > Database > Connection string > URI** no dashboard):
+   ```env
+   DATABASE_URL=postgresql://postgres.SEU_PROJECT_REF:SUA_SENHA@aws-0-sa-east-1.pooler.supabase.com:6543/postgres
+   ```
 
 3. **Subir os containers:**
    ```bash
@@ -83,12 +88,14 @@ Esta forma inicializa automaticamente todos os serviços necessários em paralel
 
 4. **Acessar as plataformas:**
    * **API Django & Swagger UI (Documentação):** [http://localhost:8000/api/docs/](http://localhost:8000/api/docs/)
+   * **Dashboard Metabase:** [http://localhost:3000/](http://localhost:3000/)
    * **Painel Administrativo do RabbitMQ:** [http://localhost:15672/](http://localhost:15672/) (Login: `guest` / Senha: `guest`)
 
 ### Método 2: Execução Local (Desenvolvimento Manual)
 
 #### Pré-requisitos:
 * Ter o **RabbitMQ** instalado e rodando localmente no host na porta `5672`.
+* Conta no [Supabase](https://supabase.com/) com um projeto criado.
 
 #### Passo a Passo:
 
@@ -109,7 +116,7 @@ Esta forma inicializa automaticamente todos os serviços necessários em paralel
    ```
 
 3. **Configurar as variáveis de ambiente:**
-   Copie `.env.example` para `.env` e adicione a sua `GEMINI_API_KEY`.
+   Copie `.env.example` para `.env`, adicione a sua `GEMINI_API_KEY` e a **connection string do Supabase** em `DATABASE_URL`.
 
 4. **Rodar as migrações do banco de dados:**
    ```bash
